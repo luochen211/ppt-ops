@@ -5,20 +5,6 @@ import PptxGenJS from "pptxgenjs";
 
 const EMU_PER_INCH = 914400;
 
-export function planPptxBuild(project) {
-  return {
-    format: "pptx",
-    project: project.project.name,
-    editable: true,
-    pages: project.pages.map((page) => ({
-      page: page.page,
-      title: page.screen_text.title,
-      relation: page.relation,
-      renderer: "pptx"
-    }))
-  };
-}
-
 /** Render a normalized shared project to an editable PowerPoint file. */
 export async function buildPptx(project, outputFile) {
   if (!project?.project || !project?.theme || !Array.isArray(project?.pages)) {
