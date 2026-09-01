@@ -80,6 +80,7 @@ src/cli.js                    CLI 入口
 src/contracts/                V1 运行时契约与跨实体语义校验
 src/core/                     项目加载、兼容投影与状态机
 src/migrations/               Foundation 到 V1 的只读迁移器
+src/infrastructure/           SQLite 元数据、持久队列、文件存储与本地 API
 src/adapters/html.js          自包含 HTML renderer
 src/adapters/pptx.js          原生 PPTX renderer
 src/review/                   review 报告
@@ -89,6 +90,8 @@ examples/demo-project/        可重复构建的 demo
 ```
 
 V1 实体统一携带 `contract_version`、`kind` 和稳定 `id`。Foundation 兼容只存在于读取时的内存投影，新项目不会双写旧数据模型。版本策略与迁移边界见 [ADR 0001](docs/adr/0001-contract-versioning.md)。
+
+本地基础设施使用 SQLite 保存项目索引、实体修订、Build、Attempt 和可补读事件；不可变版本快照及构建产物保存在项目根目录的 `.pptops/` 下。失败重试保留旧 Attempt，进程中断后的活动任务会在重启时留下失败证据并回到队列。本地 JSON API 仅允许监听 loopback。存储边界见 [ADR 0002](docs/adr/0002-local-persistence.md)。
 
 ## 验收边界与已知限制
 
