@@ -10,5 +10,9 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "check": "node src/cli.js review examples/demo-project"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "pptxgenjs": "^4.0.1"
   }
 }
