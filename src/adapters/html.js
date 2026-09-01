@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { compileProjectLayout } from "../layout/catalog.js";
 
 const MIME_TYPES = new Map([
   [".avif", "image/avif"], [".gif", "image/gif"], [".jpeg", "image/jpeg"],
@@ -11,7 +12,8 @@ const MIME_TYPES = new Map([
 /** Build a deterministic, directly openable HTML presentation. */
 export async function buildHtml(project) {
   const embeddedAssets = await embedAssets(project);
-  const slides = project.pages.map((page, index) => renderSlide(page, index, project.pages.length, embeddedAssets)).join("\n");
+  const plans = compileProjectLayout(project);
+  const slides = project.pages.map((page, index) => renderSlide(page, plans[index], index, project.pages.length, embeddedAssets)).join("\n");
   const theme = project.theme;
   const title = escapeHtml(project.project.title);
   const headingFont = cssString(theme.typography.heading_font);
@@ -38,6 +40,7 @@ body{display:grid;place-items:center}
 .slide-number{font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:.08em;opacity:.58}
 h1{max-width:1500px;margin:0;font-family:var(--heading),sans-serif;font-size:76px;line-height:1.08;letter-spacing:-.025em}
 .slide-content{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(420px,.65fr);align-items:center;gap:88px;min-height:0}
+.template-template-comparison .slide-content{grid-template-columns:1fr 1fr}.template-template-sequence .body-copy,.template-template-process .body-copy{grid-template-columns:repeat(3,1fr)}.template-template-cycle .slide-content{border:3px solid var(--accent);border-radius:50%;padding:64px}.template-template-hero h1{font-size:92px}.template-template-data .message{font-size:58px}
 .slide-copy{align-self:center}
 .subtitle{margin:0 0 24px;color:var(--accent);font:600 30px/1.3 var(--heading),sans-serif;letter-spacing:.04em}
 .message{margin:0;max-width:1120px;font-size:46px;line-height:1.25;font-weight:600}
@@ -77,12 +80,13 @@ async function embedAssets(project) {
   return new Map(entries);
 }
 
-function renderSlide(page, index, count, assets) {
+function renderSlide(page, plan, index, count, assets) {
   const screen = page.screen_text;
   const subtitle = screen.subtitle ? `<p class="subtitle">${escapeHtml(screen.subtitle)}</p>` : "";
   const body = screen.body?.length ? `<ul class="body-copy">${screen.body.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
   const figures = page.asset_slots.map((slot) => renderAsset(slot, assets.get(slot.asset_id))).join("");
-  return `<section class="slide relation-${escapeAttribute(page.relation)}" data-page="${page.page}" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
+  const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
+  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" data-html-layout="${escapeAttribute(plan.renderer.html)}" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
   <header class="slide-header"><h1 id="slide-title-${page.page}">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
   <div class="slide-content"><div class="slide-copy">${subtitle}<p class="message">${escapeHtml(page.three_second_message)}</p>${body}</div><div class="assets">${figures}</div></div>
   <footer class="slide-footer"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
+import { compileProjectLayout } from "../layout/catalog.js";
 
 const EMU_PER_INCH = 914400;
 
@@ -15,7 +16,8 @@ export async function buildPptx(project, outputFile) {
   }
 
   const pptx = createPresentation(project);
-  for (const page of project.pages) renderSlide(pptx, page, project.theme);
+  const plans = compileProjectLayout(project);
+  for (const [index, page] of project.pages.entries()) renderSlide(pptx, page, plans[index]);
 
   const resolvedOutput = path.resolve(outputFile);
   await fs.mkdir(path.dirname(resolvedOutput), { recursive: true });
@@ -89,7 +91,8 @@ function createPresentation(project) {
   return pptx;
 }
 
-function renderSlide(pptx, page, theme) {
+function renderSlide(pptx, page, plan) {
+  const theme = plan.theme;
   const slide = pptx.addSlide();
   const { width, height } = theme.dimensions;
   const margin = theme.spacing.page_margin;
@@ -103,9 +106,9 @@ function renderSlide(pptx, page, theme) {
     fill: { color: colors.accent }, line: { color: colors.accent }, objectName: "Theme accent"
   });
   addText(slide, page.screen_text.title, {
-    x: margin + 0.28, y: margin - 0.02, w: width - (margin * 2) - 0.28, h: 0.82,
+    ...plan.geometry.title,
     fontFace: headingFont, fontSize: 28, bold: true, color: colors.text,
-    margin: 0, fit: "shrink", valign: "mid", objectName: `Slide ${page.page} title`
+    margin: 0, valign: "mid", objectName: `Slide ${page.page} ${plan.renderer.pptx} title`
   });
 
   const body = bodyLines(page.screen_text);
@@ -154,7 +157,7 @@ function renderBody(slide, pptx, lines, theme, colors, bodyFont) {
     addText(slide, line, {
       ...geometry,
       fontFace: bodyFont, fontSize: columns === 2 ? 21 : 19, color: colors.text,
-      bold: columns === 2, margin: 0.28, fit: "shrink", valign: "mid",
+      bold: columns === 2, margin: 0.28, valign: "mid",
       objectName: `Body text ${index + 1}`
     });
   });
@@ -172,7 +175,7 @@ function renderMessage(slide, pptx, message, theme, colors, bodyFont) {
   addText(slide, message, {
     x: margin + 0.45, y: 2.35, w: width - (margin * 2) - 0.9, h: 1.85,
     fontFace: bodyFont, fontSize: 24, color: colors.text, margin: 0,
-    fit: "shrink", valign: "mid", align: "center", objectName: "Message text"
+    valign: "mid", align: "center", objectName: "Message text"
   });
 }
 

@@ -84,6 +84,7 @@ src/migrations/               Foundation 到 V1 的只读迁移器
 src/infrastructure/           SQLite 元数据、持久队列、文件存储与本地 API
 src/sources/                  Markdown、DOCX、PPTX 安全导入与定位
 src/ai/                       Provider-neutral 候选管线与隐私边界
+src/layout/                   8 类语义模板、容量检查与 Layout Plan
 src/adapters/html.js          自包含 HTML renderer
 src/adapters/pptx.js          原生 PPTX renderer
 src/review/                   review 报告
@@ -99,6 +100,8 @@ V1 实体统一携带 `contract_version`、`kind` 和稳定 `id`。Foundation �
 Source Intake 支持 Markdown、DOCX 和 PPTX，导入时检查文件签名、Open XML 包结构、ZIP 路径与展开资源上限，并按 SHA-256 去重。提取结果保留行、段落或幻灯片文本定位；人工修正创建新提取修订，不改写原文件。边界见 [ADR 0003](docs/adr/0003-source-intake.md)。
 
 AI 只能生成经过任务级字段白名单、结构校验和目标校验的 Candidate。原始 Source 文本默认不出站，只有调用方明确授权的选中片段才进入载荷；审计记录只保存字段路径、计数和哈希。Candidate 必须由用户接受且 Draft 基线未变化后才能应用。边界见 [ADR 0004](docs/adr/0004-ai-candidate-boundary.md)。
+
+Layout 层提供 hero、statement、comparison、sequence、process、hierarchy、data、cycle 八类模板。Theme 按“基础 → 项目 → 单页”合并；超容量会明确失败，HTML 与原生 PPTX 分别消费同一确定性 Layout Plan。PDF/PNG 仅作为带来源 Build 的派生产物。边界见 [ADR 0005](docs/adr/0005-layout-and-renderers.md)。
 
 ## 验收边界与已知限制
 
