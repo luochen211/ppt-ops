@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/asset.schema.json", "title": "V1 Asset", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["type", "file", "sha256"], "properties": { "kind": { "const": "asset" }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } }] }

@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/candidate.schema.json", "title": "V1 Candidate", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["target_id", "target_kind", "state", "patch"], "properties": { "kind": { "const": "candidate" } } }] }

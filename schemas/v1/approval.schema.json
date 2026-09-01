@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/approval.schema.json", "title": "V1 Approval", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["subject_id", "subject_hash", "decision"], "properties": { "kind": { "const": "approval" } } }] }

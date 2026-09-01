@@ -8,12 +8,14 @@ import { initializeProject } from "./core/init.js";
 import { outputDir, readProject } from "./core/project.js";
 import { validateProject } from "./core/validate.js";
 import { createHandoff } from "./handoff/index.js";
+import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 
 const HELP = `PPT-Ops 1.0
 
 Usage:
   pptops init <project-dir> [--name <id>] [--title <title>]
+  pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops validate <project-dir>
   pptops intake <project-dir>
   pptops outline <project-dir>
@@ -45,6 +47,10 @@ try {
   if (command === "init") {
     const result = await initializeProject(projectDir, { name: options.name, title: options.title });
     console.log(JSON.stringify({ command, ...result }, null, 2));
+  } else if (command === "migrate") {
+    if (!options.to) throw new Error("migrate requires --to <v1-project-dir>");
+    const result = await writeMigratedProject(projectDir, options.to);
+    console.log(JSON.stringify({ command, source: path.resolve(projectDir), destination: result.destination, contract_version: result.contract_version, warnings: result.warnings }, null, 2));
   } else {
     const project = await readProject(projectDir);
     const errors = validateProject(project);
@@ -132,7 +138,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;

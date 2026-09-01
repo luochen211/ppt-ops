@@ -28,6 +28,7 @@ npm test
 
 ```bash
 node src/cli.js init path/to/my-deck --title "My Deck"
+node src/cli.js migrate examples/demo-project --to path/to/migrated-deck
 node src/cli.js validate path/to/my-deck
 node src/cli.js intake examples/demo-project
 node src/cli.js outline examples/demo-project
@@ -40,7 +41,7 @@ node src/cli.js handoff examples/demo-project
 node src/cli.js deliver examples/demo-project
 ```
 
-`init` 会创建一套可直接校验和构建的 1.0 项目骨架，并拒绝覆盖非空目录。`deliver` 按 `project.json` 中配置的 HTML/PPTX 输出执行构建、自动检查和交付打包；它不会把自动检查表述为视觉验收或真实 PowerPoint 验收。现有 0.1 项目仍可读取和构建。
+`init` 会创建一套可直接校验和构建的 V1 实体契约，并拒绝覆盖非空目录。`migrate` 将 Foundation 项目只读迁移到新的目标目录，不修改输入。`deliver` 按 `project.json` 中配置的 HTML/PPTX 输出执行构建、自动检查和交付打包；它不会把自动检查表述为视觉验收或真实 PowerPoint 验收。现有 Foundation 项目仍可读取和构建。
 
 `build` 会先校验项目，输入无效时非零退出。生成物只写入项目的 `outputs/`，不会覆盖项目源文件：
 
@@ -61,10 +62,13 @@ examples/demo-project/outputs/
 ## 项目结构
 
 ```text
-project.json                  项目元数据、源文件和主题/资产清单入口
-pages.json                    两种 renderer 共享的页面语义规格
-theme.json                    16:9 尺寸、字体、颜色与间距
-assets.json                   本地资产声明
+project.json                  V1 Project 实体和公共指针
+sources.json                 Source 实体、哈希和 MIME
+outline.json                 Outline 实体和页面顺序
+pages.json                   两种 renderer 共享的 PageSpec 实体
+theme.json                   Theme 实体和设计 Token
+assets.json                  Asset 实体、哈希和来源
+templates.json               Template 实体
 assets/                       项目资产
 outputs/                      生成物（不纳入 Git）
 ```
@@ -73,14 +77,18 @@ outputs/                      生成物（不纳入 Git）
 
 ```text
 src/cli.js                    CLI 入口
-src/core/                     项目加载与校验
+src/contracts/                V1 运行时契约与跨实体语义校验
+src/core/                     项目加载、兼容投影与状态机
+src/migrations/               Foundation 到 V1 的只读迁移器
 src/adapters/html.js          自包含 HTML renderer
 src/adapters/pptx.js          原生 PPTX renderer
 src/review/                   review 报告
 src/handoff/                  handoff 打包与校验和
-schemas/                      v0.1 共享数据契约
+schemas/v1/                   V1 JSON Schema
 examples/demo-project/        可重复构建的 demo
 ```
+
+V1 实体统一携带 `contract_version`、`kind` 和稳定 `id`。Foundation 兼容只存在于读取时的内存投影，新项目不会双写旧数据模型。版本策略与迁移边界见 [ADR 0001](docs/adr/0001-contract-versioning.md)。
 
 ## 验收边界与已知限制
 
