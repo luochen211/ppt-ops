@@ -69,6 +69,7 @@ async function copyDemo(t) {
   t.after(() => fs.rm(temporary, { recursive: true, force: true }));
   const project = path.join(temporary, "project");
   await fs.cp(demo, project, { recursive: true });
+  await fs.rm(path.join(project, "outputs"), { recursive: true, force: true });
   return project;
 }
 
