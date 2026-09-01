@@ -64,6 +64,20 @@ test("migrate writes V1 contracts to a separate destination", async (t) => {
   assert.equal(review.schema_version, "1.0");
 });
 
+test("import persists an extracted source and reports hash deduplication", async (t) => {
+  const parent = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-import-cli-"));
+  const project = path.join(parent, "project");
+  const source = path.join(parent, "source.md");
+  t.after(() => fs.rm(parent, { recursive: true, force: true }));
+  await runCli("init", project, "--title", "Import Demo");
+  await fs.writeFile(source, "# Evidence\nOne verified fact.\n");
+  const first = JSON.parse((await runCli("import", project, "--file", source)).stdout);
+  const second = JSON.parse((await runCli("import", project, "--file", source)).stdout);
+  assert.equal(first.duplicate, false);
+  assert.equal(second.duplicate, true);
+  assert.equal(second.source.id, first.source.id);
+});
+
 function runCli(...args) {
   return execFileAsync(process.execPath, [cli, ...args], { encoding: "utf8" });
 }
