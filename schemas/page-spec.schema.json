@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/page-spec.schema.json",
+  "title": "PPT-Ops Page Spec",
+  "type": "object",
+  "required": ["page", "task", "three_second_message", "relation", "screen_text", "visual_job", "status"],
+  "properties": {
+    "page": { "type": "integer", "minimum": 1 },
+    "source": { "type": "string" },
+    "task": { "type": "string", "minLength": 1 },
+    "three_second_message": { "type": "string", "minLength": 1 },
+    "relation": {
+      "type": "string",
+      "enum": ["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]
+    },
+    "screen_text": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string" },
+        "body": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "visual_job": { "type": "string", "minLength": 1 },
+    "asset_slots": { "type": "array", "items": { "type": "object" } },
+    "status": { "type": "string", "enum": ["draft", "prototype", "approved", "built", "reviewed"] }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+dist/
+*.tmp
+*.lock
+
+# Local research corpus; source materials are intentionally not published.
+references/
+
+# Project-generated deliverables.
+examples/*/outputs/

@@ -1,0 +1,14 @@
+{
+  "name": "ppt-ops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A controlled production workflow for HTML presentations and editable PPTX delivery.",
+  "type": "module",
+  "bin": {
+    "pptops": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node src/cli.js review examples/demo-project"
+  }
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "page": 1,
+    "source": "brief.md#opening",
+    "task": "建立主题和观看预期",
+    "three_second_message": "这不是一次随意生成，而是一条可控的生产流程",
+    "relation": "hero",
+    "screen_text": { "title": "让演示产出变得可控", "subtitle": "PPT-Ops" },
+    "visual_job": "用一个明确的主视觉建立产品记忆点",
+    "asset_slots": [],
+    "status": "approved"
+  },
+  {
+    "page": 2,
+    "source": "brief.md#outputs",
+    "task": "解释两种输出方式的分工",
+    "three_second_message": "HTML 用来快速试错，PPTX 用来正式交付",
+    "relation": "comparison",
+    "screen_text": { "title": "一份页面定义，两种交付载体", "body": ["HTML：预览与分享", "PPTX：编辑与播放"] },
+    "visual_job": "让两个输出端的关系和边界一眼可见",
+    "asset_slots": [],
+    "status": "prototype"
+  }
+]
