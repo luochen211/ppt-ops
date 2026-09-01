@@ -16,6 +16,7 @@ test("clean demo validates, builds both formats, reviews, and packages a handoff
   t.after(() => fs.rm(temporary, { recursive: true, force: true }));
   const project = path.join(temporary, "demo-project");
   await fs.cp(demo, project, { recursive: true });
+  await fs.rm(path.join(project, "outputs"), { recursive: true, force: true });
 
   const cleanReview = JSON.parse((await runCli("review", project)).stdout);
   assert.equal(cleanReview.passed, true);
