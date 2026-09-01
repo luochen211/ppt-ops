@@ -7,7 +7,7 @@
     "relation": "hero",
     "screen_text": { "title": "让演示产出变得可控", "subtitle": "PPT-Ops" },
     "visual_job": "用一个明确的主视觉建立产品记忆点",
-    "asset_slots": [],
+    "asset_slots": [{ "role": "workflow-mark", "asset_id": "workflow-mark", "fit": "contain" }],
     "status": "approved"
   },
   {

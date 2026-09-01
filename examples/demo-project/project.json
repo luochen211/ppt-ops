@@ -1,7 +1,10 @@
 {
+  "schema_version": "0.1",
   "name": "demo-presentation",
   "title": "一个可控的演示项目",
   "format": "16:9",
   "source_files": ["transcript.md", "brief.md"],
+  "theme_file": "theme.json",
+  "assets_file": "assets.json",
   "outputs": ["html", "pptx", "pdf", "png"]
 }
