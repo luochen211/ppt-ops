@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/theme.schema.json", "title": "V1 Theme", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["tokens"], "properties": { "kind": { "const": "theme" }, "tokens": { "type": "object" } } }] }

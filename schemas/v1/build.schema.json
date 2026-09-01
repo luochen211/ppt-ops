@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/build.schema.json", "title": "V1 Build", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["version_id", "state", "targets", "attempts"], "properties": { "kind": { "const": "build" } } }] }

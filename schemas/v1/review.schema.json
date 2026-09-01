@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/review.schema.json", "title": "V1 Review", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["build_id", "state", "automated", "human"], "properties": { "kind": { "const": "review" } } }] }

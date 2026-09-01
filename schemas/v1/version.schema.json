@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/version.schema.json", "title": "V1 Version", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["state", "snapshot_hash", "component_hashes"], "properties": { "kind": { "const": "version" } } }] }

@@ -33,7 +33,7 @@ export async function reviewProject(project) {
   const requiredFailures = automatedChecks.filter((check) => check.required && check.status === "failed");
 
   return {
-    schema_version: "0.1",
+    schema_version: project.contractModel === "v1" ? "1.0" : "0.1",
     command: "review",
     project: project.project.name,
     passed: requiredFailures.length === 0,

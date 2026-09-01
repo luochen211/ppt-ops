@@ -102,3 +102,10 @@ test("all shared contract schemas are valid JSON", async () => {
     assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
   }
 });
+
+test("all V1 entity schemas are valid JSON and identify draft 2020-12", async () => {
+  for (const file of await fs.readdir(path.join("schemas", "v1"))) {
+    const schema = JSON.parse(await fs.readFile(path.join("schemas", "v1", file), "utf8"));
+    assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
+  }
+});

@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/handoff.schema.json", "title": "V1 Handoff", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["build_id", "review_id", "state", "files"], "properties": { "kind": { "const": "handoff" } } }] }

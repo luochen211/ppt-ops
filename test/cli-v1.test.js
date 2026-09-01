@@ -17,7 +17,8 @@ test("init creates a valid V1 project without overwriting an existing directory"
   const initialized = JSON.parse((await runCli("init", project, "--title", "Launch Deck")).stdout);
   assert.equal(initialized.name, "launch-deck");
   assert.equal(initialized.title, "Launch Deck");
-  assert.equal(JSON.parse(await fs.readFile(path.join(project, "project.json"))).schema_version, "1.0");
+  const contract = JSON.parse(await fs.readFile(path.join(project, "project.json")));
+  assert.deepEqual({ contract_version: contract.contract_version, kind: contract.kind }, { contract_version: "1.0", kind: "project" });
 
   const validation = JSON.parse((await runCli("validate", project)).stdout);
   assert.deepEqual({ valid: validation.valid, page_count: validation.page_count }, { valid: true, page_count: 1 });
@@ -48,6 +49,19 @@ test("V1 CLI rejects malformed page selections and unknown options", async () =>
 
 test("version reports the stable package version", async () => {
   assert.equal((await runCli("--version")).stdout.trim(), "1.0.0");
+});
+
+test("migrate writes V1 contracts to a separate destination", async (t) => {
+  const parent = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-migrate-cli-"));
+  const destination = path.join(parent, "migrated");
+  t.after(() => fs.rm(parent, { recursive: true, force: true }));
+  const result = JSON.parse((await runCli("migrate", "examples/demo-project", "--to", destination)).stdout);
+  assert.equal(result.contract_version, "1.0");
+  assert.equal(JSON.parse(await fs.readFile(path.join(destination, "project.json"), "utf8")).kind, "project");
+  const validation = JSON.parse((await runCli("validate", destination)).stdout);
+  assert.equal(validation.valid, true);
+  const review = JSON.parse((await runCli("review", destination)).stdout);
+  assert.equal(review.schema_version, "1.0");
 });
 
 function runCli(...args) {

@@ -1,3 +1,5 @@
+import { validateV1Bundle } from "../contracts/v1.js";
+
 const RELATIONS = new Set(["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]);
 const STATUSES = new Set(["draft", "prototype", "approved", "built", "reviewed"]);
 const ASSET_TYPES = new Set(["image", "icon", "video", "data"]);
@@ -35,6 +37,9 @@ export function validatePage(page, assetIds = new Set()) {
 
 export function validateProject(loaded) {
   const errors = [];
+  if (loaded.contractModel === "v1") {
+    for (const error of validateV1Bundle({ ...loaded.contracts, candidates: [], approvals: [], versions: [], builds: [], reviews: [], handoffs: [] })) errors.push(`v1: ${error}`);
+  }
   const project = loaded.project;
   if (!project || typeof project !== "object") return ["project manifest is required"];
   if (!SCHEMA_VERSIONS.has(project.schema_version)) errors.push("project.schema_version must be 0.1 or 1.0");
