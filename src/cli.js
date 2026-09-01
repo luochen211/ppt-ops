@@ -16,6 +16,7 @@ const HELP = `PPT-Ops 1.0
 Usage:
   pptops init <project-dir> [--name <id>] [--title <title>]
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
+  pptops import <project-dir> --file <markdown|docx|pptx>
   pptops validate <project-dir>
   pptops intake <project-dir>
   pptops outline <project-dir>
@@ -56,7 +57,16 @@ try {
     const errors = validateProject(project);
     if (!["review", "handoff"].includes(command) && errors.length > 0) failValidation(errors);
 
-    if (command === "validate") {
+    if (command === "import") {
+      if (!options.file) throw new Error("import requires --file <markdown|docx|pptx>");
+      const [{ InfrastructureStore }, { SourceIntake }] = await Promise.all([import("./infrastructure/store.js"), import("./sources/intake.js")]);
+      const store = new InfrastructureStore(path.join(project.root, ".pptops", "metadata.sqlite"));
+      try {
+        store.registerProject({ id: project.project.name, root: project.root, title: project.project.title });
+        const result = await new SourceIntake({ projectRoot: project.root, store, projectId: project.project.name }).importFile(options.file);
+        console.log(JSON.stringify({ command, project: project.project.name, duplicate: result.duplicate, source: result.source, extracted: result.extracted }, null, 2));
+      } finally { store.close(); }
+    } else if (command === "validate") {
       console.log(JSON.stringify({ command, project: project.project.name, valid: true, error_count: 0, page_count: project.pages.length }, null, 2));
     } else if (command === "intake") {
       console.log(JSON.stringify({ command, project: project.project, source_files: project.project.source_files ?? [] }, null, 2));
@@ -138,7 +148,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
