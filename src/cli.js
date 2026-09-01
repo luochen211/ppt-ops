@@ -5,18 +5,20 @@ import { readProject, outputDir } from "./core/project.js";
 import { validateProject } from "./core/validate.js";
 import { planHtmlBuild } from "./adapters/html.js";
 import { planPptxBuild } from "./adapters/pptx.js";
+import { reviewProject, writeReviewReport } from "./review/index.js";
+import { createHandoff } from "./handoff/index.js";
 
 const [command, projectDir = "examples/demo-project", ...args] = process.argv.slice(2);
 
 if (!command || command === "help") {
-  console.log("Usage: pptops <intake|outline|prototype|build|review> <project-dir> [options]");
+  console.log("Usage: pptops <intake|outline|prototype|build|review|handoff> <project-dir> [options]");
   process.exit(0);
 }
 
 try {
   const project = await readProject(projectDir);
   const errors = validateProject(project);
-  if (errors.length > 0) {
+  if (!["review", "handoff"].includes(command) && errors.length > 0) {
     console.error(errors.map((error) => `- ${error}`).join("\n"));
     process.exit(1);
   }
@@ -39,7 +41,16 @@ try {
     await fs.writeFile(output, `${JSON.stringify(plan, null, 2)}\n`);
     console.log(`Build plan written: ${output}`);
   } else if (command === "review") {
-    console.log(JSON.stringify({ command, valid: true, page_count: project.pages.length }, null, 2));
+    const report = await reviewProject(project);
+    const reportFile = await writeReviewReport(project, report);
+    console.log(JSON.stringify({ ...report, report_file: reportFile }, null, 2));
+    if (!report.passed) process.exitCode = 1;
+  } else if (command === "handoff") {
+    const report = await reviewProject(project);
+    const reportFile = await writeReviewReport(project, report);
+    const handoff = await createHandoff(project, report);
+    console.log(JSON.stringify({ ...handoff.manifest, review_report: reportFile, manifest_file: handoff.manifestFile }, null, 2));
+    if (!report.passed) process.exitCode = 1;
   } else {
     throw new Error(`unknown command: ${command}`);
   }
