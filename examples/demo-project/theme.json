@@ -1,0 +1,6 @@
+{
+  "dimensions": { "width": 13.333, "height": 7.5 },
+  "typography": { "heading_font": "Aptos Display", "body_font": "Aptos" },
+  "colors": { "background": "#F7F4EE", "text": "#202124", "accent": "#DA5A3A" },
+  "spacing": { "unit": 0.25, "page_margin": 0.6 }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/assets.schema.json",
+  "title": "PPT-Ops Asset Manifest",
+  "type": "array",
+  "items": {
+    "type": "object", "required": ["id", "type", "file"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+      "type": { "type": "string", "enum": ["image", "icon", "video", "data"] },
+      "file": { "type": "string", "minLength": 1 },
+      "alt": { "type": "string" }
+    },
+    "additionalProperties": false
+  }
+}

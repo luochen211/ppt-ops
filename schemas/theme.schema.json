@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/theme.schema.json",
+  "title": "PPT-Ops Shared Theme",
+  "type": "object",
+  "required": ["dimensions", "typography", "colors", "spacing"],
+  "properties": {
+    "dimensions": {
+      "type": "object", "required": ["width", "height"],
+      "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } },
+      "additionalProperties": false
+    },
+    "typography": {
+      "type": "object", "required": ["heading_font", "body_font"],
+      "properties": { "heading_font": { "type": "string", "minLength": 1 }, "body_font": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "colors": {
+      "type": "object", "required": ["background", "text", "accent"],
+      "properties": { "background": { "$ref": "#/$defs/color" }, "text": { "$ref": "#/$defs/color" }, "accent": { "$ref": "#/$defs/color" } },
+      "additionalProperties": { "$ref": "#/$defs/color" }
+    },
+    "spacing": {
+      "type": "object", "required": ["unit", "page_margin"],
+      "properties": { "unit": { "type": "number", "exclusiveMinimum": 0 }, "page_margin": { "type": "number", "minimum": 0 } },
+      "additionalProperties": false
+    }
+  },
+  "$defs": { "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" } },
+  "additionalProperties": false
+}

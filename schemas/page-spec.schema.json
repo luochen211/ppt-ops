@@ -2,30 +2,42 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ppt-ops.local/schemas/page-spec.schema.json",
   "title": "PPT-Ops Page Spec",
+  "description": "Shared semantic page contract consumed by every renderer.",
   "type": "object",
-  "required": ["page", "task", "three_second_message", "relation", "screen_text", "visual_job", "status"],
+  "required": ["page", "task", "three_second_message", "relation", "screen_text", "visual_job", "asset_slots", "status"],
   "properties": {
     "page": { "type": "integer", "minimum": 1 },
-    "source": { "type": "string" },
+    "source": { "type": "string", "minLength": 1, "description": "Project-relative source file, optionally followed by a #fragment." },
     "task": { "type": "string", "minLength": 1 },
     "three_second_message": { "type": "string", "minLength": 1 },
-    "relation": {
-      "type": "string",
-      "enum": ["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]
-    },
+    "relation": { "type": "string", "enum": ["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"] },
     "screen_text": {
       "type": "object",
       "required": ["title"],
       "properties": {
         "title": { "type": "string", "minLength": 1 },
         "subtitle": { "type": "string" },
-        "body": { "type": "array", "items": { "type": "string" } }
+        "body": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       },
       "additionalProperties": false
     },
     "visual_job": { "type": "string", "minLength": 1 },
-    "asset_slots": { "type": "array", "items": { "type": "object" } },
-    "status": { "type": "string", "enum": ["draft", "prototype", "approved", "built", "reviewed"] }
+    "asset_slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "asset_id"],
+        "properties": {
+          "role": { "type": "string", "minLength": 1 },
+          "asset_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+          "fit": { "type": "string", "enum": ["cover", "contain"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "status": { "type": "string", "enum": ["draft", "prototype", "approved", "built", "reviewed"] },
+    "html": { "type": "object" },
+    "pptx": { "type": "object" }
   },
   "additionalProperties": false
 }
