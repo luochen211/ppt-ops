@@ -4,6 +4,7 @@ const ASSET_TYPES = new Set(["image", "icon", "video", "data"]);
 const OUTPUTS = new Set(["html", "pptx", "pdf", "png"]);
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const SCHEMA_VERSIONS = new Set(["0.1", "1.0"]);
 
 export function validatePage(page, assetIds = new Set()) {
   const errors = [];
@@ -36,7 +37,7 @@ export function validateProject(loaded) {
   const errors = [];
   const project = loaded.project;
   if (!project || typeof project !== "object") return ["project manifest is required"];
-  if (project.schema_version !== "0.1") errors.push("project.schema_version must be 0.1");
+  if (!SCHEMA_VERSIONS.has(project.schema_version)) errors.push("project.schema_version must be 0.1 or 1.0");
   if (!hasText(project.name)) errors.push("project.name is required");
   else if (!ID_PATTERN.test(project.name)) errors.push("project.name must be a stable lowercase identifier");
   if (!hasText(project.title)) errors.push("project.title is required");

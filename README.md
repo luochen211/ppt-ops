@@ -1,4 +1,4 @@
-# PPT-Ops
+# PPT-Ops 1.0
 
 PPT-Ops 是一个本地优先的演示内容生产工作台。它让同一份结构化项目和页面规格分别生成可直接打开的 HTML 演示文稿与可编辑的 PPTX 文件；PPTX 不是由 HTML 转换而来。
 
@@ -19,14 +19,20 @@ npm test
 ## 命令
 
 ```bash
+node src/cli.js init path/to/my-deck --title "My Deck"
+node src/cli.js validate path/to/my-deck
 node src/cli.js intake examples/demo-project
 node src/cli.js outline examples/demo-project
 node src/cli.js prototype examples/demo-project --pages 1,2
 node src/cli.js build examples/demo-project --format html
 node src/cli.js build examples/demo-project --format pptx
+node src/cli.js build examples/demo-project --format all
 node src/cli.js review examples/demo-project
 node src/cli.js handoff examples/demo-project
+node src/cli.js deliver examples/demo-project
 ```
+
+`init` 会创建一套可直接校验和构建的 1.0 项目骨架，并拒绝覆盖非空目录。`deliver` 按 `project.json` 中配置的 HTML/PPTX 输出执行构建、自动检查和交付打包；它不会把自动检查表述为视觉验收或真实 PowerPoint 验收。现有 0.1 项目仍可读取和构建。
 
 `build` 会先校验项目，输入无效时非零退出。生成物只写入项目的 `outputs/`，不会覆盖项目源文件：
 
@@ -72,6 +78,6 @@ examples/demo-project/        可重复构建的 demo
 
 自动测试与 `review` 可以证明项目结构有效、HTML 已生成、PPTX 包结构为 16:9、页数正确且未发现负坐标；它们不能证明视觉质量，也不能证明 Microsoft PowerPoint 中的真实编辑、字体替换、动画或现场播放效果。`review-report.json` 会把视觉验收和真实 PowerPoint 验收明确保留为 `pending`。
 
-v0.1 不提供 HTML/PPTX 像素级一致保证、HTML 转 PPTX、浏览器协作编辑、在线托管/分享、现有 PPTX 往返编辑或自动补造业务事实。HTML 资源内嵌并支持键盘翻页，但尚未做跨浏览器人工视觉验收；PPTX 使用本机可用字体，换机时可能发生字体替换。
+V1.0 不提供 HTML/PPTX 像素级一致保证、HTML 转 PPTX、浏览器协作编辑、在线托管/分享、现有 PPTX 往返编辑或自动补造业务事实。HTML 资源内嵌并支持键盘翻页；PPTX 使用本机可用字体，换机时可能发生字体替换。
 
 CI 在 push 与 pull request 上运行 `npm ci`、全部测试、两种 demo build、`review` 和 `handoff`。CI 成功仍不替代上述人工视觉与真实 PowerPoint 验收。
