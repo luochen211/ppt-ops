@@ -2,6 +2,14 @@
 
 PPT-Ops 是一个本地优先的演示内容生产工作台。它让同一份结构化项目和页面规格分别生成可直接打开的 HTML 演示文稿与可编辑的 PPTX 文件；PPTX 不是由 HTML 转换而来。
 
+> 当前状态：V1 Foundation available; full V1 product in development。当前 CLI 和双渲染引擎是完整产品 V1.0 的基础，不代表 Web 工作台、AI 管线、项目版本和真实用户验收已完成。
+
+V1.0 真源文档：
+
+- [产品备案](docs/product-v1.0-blueprint.md)
+- [系统架构](docs/architecture-v1.0.md)
+- [交付 DAG](docs/delivery-v1.0-dag.md)
+
 ## 环境与安装
 
 - Node.js 22（CI 使用的版本）
