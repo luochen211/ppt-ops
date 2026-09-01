@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { readProject, outputDir } from "./core/project.js";
 import { validateProject } from "./core/validate.js";
-import { planHtmlBuild } from "./adapters/html.js";
-import { planPptxBuild } from "./adapters/pptx.js";
+import { buildHtml } from "./adapters/html.js";
+import { buildPptx } from "./adapters/pptx.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { createHandoff } from "./handoff/index.js";
 
@@ -34,12 +34,12 @@ try {
   } else if (command === "build") {
     const format = getOption(args, "--format") ?? "html";
     if (!(["html", "pptx"].includes(format))) throw new Error("--format must be html or pptx");
-    const plan = format === "html" ? planHtmlBuild(project) : planPptxBuild(project);
     const dir = outputDir(project);
     await fs.mkdir(dir, { recursive: true });
-    const output = path.join(dir, `${format}-build-plan.json`);
-    await fs.writeFile(output, `${JSON.stringify(plan, null, 2)}\n`);
-    console.log(`Build plan written: ${output}`);
+    const output = path.join(dir, `slides.${format}`);
+    if (format === "html") await fs.writeFile(output, await buildHtml(project));
+    else await buildPptx(project, output);
+    console.log(`Built ${format.toUpperCase()}: ${output}`);
   } else if (command === "review") {
     const report = await reviewProject(project);
     const reportFile = await writeReviewReport(project, report);

@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node src/cli.js build examples/demo-project --format html
+      - run: node src/cli.js build examples/demo-project --format pptx
+      - run: node src/cli.js review examples/demo-project
+      - run: node src/cli.js handoff examples/demo-project

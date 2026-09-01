@@ -8,19 +8,6 @@ const MIME_TYPES = new Map([
   [".json", "application/json"], [".csv", "text/csv"], [".txt", "text/plain"]
 ]);
 
-export function planHtmlBuild(project) {
-  return {
-    format: "html",
-    project: project.project.name,
-    pages: project.pages.map((page) => ({
-      page: page.page,
-      title: page.screen_text.title,
-      relation: page.relation,
-      renderer: "html"
-    }))
-  };
-}
-
 /** Build a deterministic, directly openable HTML presentation. */
 export async function buildHtml(project) {
   const embeddedAssets = await embedAssets(project);

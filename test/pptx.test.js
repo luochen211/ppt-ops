@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import JSZip from "jszip";
-import { buildPptx, planPptxBuild, validatePptx } from "../src/adapters/pptx.js";
+import { buildPptx, validatePptx } from "../src/adapters/pptx.js";
 import { readProject } from "../src/core/project.js";
 
 async function withDemoBuild(t) {
@@ -15,14 +15,6 @@ async function withDemoBuild(t) {
   const result = await buildPptx(project, outputFile);
   return { project, outputFile, result, zip: await JSZip.loadAsync(await fs.readFile(outputFile)) };
 }
-
-test("PPTX build plan remains suitable for renderer dispatch", async () => {
-  const project = await readProject(path.resolve("examples/demo-project"));
-  const plan = planPptxBuild(project);
-  assert.equal(plan.format, "pptx");
-  assert.equal(plan.editable, true);
-  assert.deepEqual(plan.pages.map(({ page }) => page), [1, 2]);
-});
 
 test("demo project builds a structurally valid editable 16:9 PPTX", async (t) => {
   const { outputFile, result, zip } = await withDemoBuild(t);

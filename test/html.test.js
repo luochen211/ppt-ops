@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
-import { buildHtml, planHtmlBuild } from "../src/adapters/html.js";
+import { buildHtml } from "../src/adapters/html.js";
 import { readProject } from "../src/core/project.js";
 
 test("buildHtml creates a deterministic self-contained semantic deck", async () => {
@@ -37,11 +37,4 @@ test("buildHtml rejects assets outside the project root", async () => {
   const project = await readProject(path.resolve("examples/demo-project"));
   project.assets[0].file = "../outside.svg";
   await assert.rejects(buildHtml(project), /asset escapes project root/);
-});
-
-test("HTML build planning remains compatible", async () => {
-  const project = await readProject(path.resolve("examples/demo-project"));
-  assert.deepEqual(planHtmlBuild(project).pages[0], {
-    page: 1, title: "让演示产出变得可控", relation: "hero", renderer: "html"
-  });
 });
