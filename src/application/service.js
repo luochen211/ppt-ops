@@ -97,6 +97,7 @@ export class ApplicationService {
     await this.files.writeVersionSnapshot(id, snapshot);
     let version = this.store.saveEntity(this.projectId, createV1Entity("version", id, { state: "draft", snapshot_hash: snapshotHash, component_hashes: componentHashes }));
     for (const state of ["approval_pending", "approved", "frozen"]) version = this.store.saveEntity(this.projectId, { ...stripRevision(version), state });
+    await this.files.writeManifest("version", id, stripRevision(version));
     return version;
   }
 
@@ -123,15 +124,17 @@ export class ApplicationService {
     let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: path.relative(this.project.root, reportFile) }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
+    await this.files.writeManifest("review", id, stripRevision(review));
     return { review, report };
   }
 
-  recordReview(reviewId, { decision, expectedRevision, evidence = {} }) {
+  async recordReview(reviewId, { decision, expectedRevision, evidence = {} }) {
     const review = this.requireEntity("review", reviewId);
     if (review.revision !== expectedRevision) throw new ApplicationError("STALE_OBJECT_REVISION", "review revision is stale", { expected: review.revision, received: expectedRevision });
     if (review.state !== "human_pending") throw new ApplicationError("REVIEW_NOT_PENDING", `review is not awaiting a decision: ${review.state}`);
     if (!["accepted", "rejected"].includes(decision)) throw new ApplicationError("REVIEW_DECISION_INVALID", "review decision must be accepted or rejected");
-    return this.store.saveEntity(this.projectId, { ...stripRevision(review), state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
+    const recorded = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
+    return this.replaceManifest("review", review.id, stripRevision(recorded));
   }
 
   async createHandoff(buildId, reviewId) {
@@ -144,6 +147,7 @@ export class ApplicationService {
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
     let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
+    await this.files.writeManifest("handoff", id, stripRevision(handoff));
     return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
   }
 
@@ -184,6 +188,7 @@ export class ApplicationService {
       }
       this.store.transitionBuild(buildId, "validating");
       const result = this.store.transitionBuild(buildId, "succeeded");
+      await this.files.writeManifest("build", buildId, result);
       return { build: result, artifacts };
     } catch (error) {
       this.store.transitionBuild(buildId, "failed", { error: { code: error.code ?? "BUILD_FAILED", message: error.message } });
@@ -244,6 +249,13 @@ export class ApplicationService {
   }
 
   async refresh() { this.project = await readProject(this.project.root); }
+
+  async replaceManifest(kind, id, value) {
+    const relative = path.join(".pptops", `${kind}s`, id, "manifest.json");
+    const file = resolveProjectPath(this.project.root, relative);
+    await atomicWriteJson(file, value);
+    return { ...value, revision: this.store.getEntity(this.projectId, kind, id).revision };
+  }
 }
 
 async function atomicWriteJson(file, value) {

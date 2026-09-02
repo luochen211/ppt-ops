@@ -35,6 +35,8 @@ Usage:
   pptops review-run <project-dir> --build <id>
   pptops review-record <project-dir> --review <id> --decision <accepted|rejected> --expected-revision <n> [--evidence <json>]
   pptops handoff-create <project-dir> --build <id> --review <id>
+  pptops doctor [project-dir]
+  pptops reindex <project-dir>
   pptops --version`;
 
 const argv = process.argv.slice(2);
@@ -52,6 +54,13 @@ if (["--version", "-v"].includes(command)) {
 
 try {
   const projectDir = argv[1];
+  if (command === "doctor") {
+    if (argv.length > (projectDir && !projectDir.startsWith("--") ? 2 : 1)) throw new Error("doctor accepts only an optional <project-dir>");
+    const { runDoctor } = await import("./doctor/index.js");
+    const result = await runDoctor(projectDir && !projectDir.startsWith("--") ? projectDir : undefined);
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exitCode = 1;
+  } else {
   if (!projectDir || projectDir.startsWith("--")) throw new Error(`${command} requires <project-dir>`);
   const options = parseOptions(argv.slice(2));
 
@@ -62,6 +71,9 @@ try {
     if (!options.to) throw new Error("migrate requires --to <v1-project-dir>");
     const result = await writeMigratedProject(projectDir, options.to);
     console.log(JSON.stringify({ command, source: path.resolve(projectDir), destination: result.destination, contract_version: result.contract_version, warnings: result.warnings }, null, 2));
+  } else if (command === "reindex") {
+    const { reindexProject } = await import("./doctor/index.js");
+    console.log(JSON.stringify(await reindexProject(projectDir), null, 2));
   } else if (APPLICATION_COMMANDS.has(command)) {
     console.log(JSON.stringify({ ok: true, command, data: await runApplicationCommand(command, projectDir, options) }, null, 2));
   } else {
@@ -108,6 +120,7 @@ try {
       throw new Error(`unknown command: ${command}`);
     }
   }
+  }
 } catch (error) {
   console.error(JSON.stringify({ ok: false, error: { code: error.code ?? "COMMAND_FAILED", message: error.message, ...(error.details ? { details: error.details } : {}) } }));
   process.exit(1);
@@ -127,7 +140,7 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "build-create") return await service.createBuild({ versionId: required(options, "version"), targets: required(options, "targets").split(",").map((item) => item.trim()).filter(Boolean) });
     if (command === "build-retry") return await service.retryBuild(required(options, "build"));
     if (command === "review-run") return await service.runReview(required(options, "build"));
-    if (command === "review-record") return service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });
+    if (command === "review-record") return await service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });
     if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"));
     throw new ApplicationError("COMMAND_UNKNOWN", `unknown application command: ${command}`);
   } finally { service.close(); }
