@@ -475,6 +475,7 @@
   body.motion-ready [data-anim="right"]{transform:translateX(24px)}
   body.motion-ready [data-anim="line"]{opacity:0;transform:translateY(10px)}
   body.motion-ready [data-animate="pipeline"] [data-anim]{opacity:.15}
+  #overview .slide [data-anim]{opacity:1!important;transform:none!important}
   body.low-power #deck{transition:none!important}
   body.low-power *,
   body.low-power *::before,
@@ -579,14 +580,6 @@
   .compare-panel h2{font-size:3.6vw;line-height:1.08;font-weight:900;margin:3vh 0 5vh}
   .compare-panel ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:1.3vh 1.4vw}
   .compare-panel li{border-top:1px solid currentColor;padding-top:1vh;font-size:1.08vw;line-height:1.4;opacity:.78}
-  .eval-loop{display:grid;grid-template-columns:repeat(6,1fr);gap:1vw;align-items:center;flex:1}
-  .eval-node{min-height:27vh;border-top:2px solid currentColor;padding:2vh 1vw;display:flex;flex-direction:column;justify-content:space-between;position:relative}
-  .eval-node:not(:last-child)::after{content:"→";position:absolute;right:-.8vw;top:50%;font-family:var(--mono);opacity:.42}
-  .eval-node .n{font-family:var(--mono);font-size:.88vw;opacity:.5}
-  .eval-node h3{font-size:1.42vw;line-height:1.2;font-weight:900}
-  .eval-node p{font-size:.86vw;line-height:1.48;opacity:.68}
-  .eval-node.eval{background:rgba(var(--ink-rgb),.08);border-top-width:5px;padding-top:1.65vh}
-  .eval-band{position:absolute;left:35%;right:17%;bottom:17vh;border-bottom:1px dashed currentColor;text-align:center;font-family:var(--mono);font-size:.8vw;letter-spacing:.18em;padding-bottom:.8vh;opacity:.55}
   .vector-layout{display:grid;grid-template-columns:1fr 1fr;gap:3vw;flex:1;align-items:center}
   .vector{min-height:48vh;border-top:2px solid currentColor;padding-top:2vh;display:flex;flex-direction:column;justify-content:space-between}
   .vector .symbol{font-family:var(--mono);font-size:7vw;font-weight:300;line-height:1;opacity:.45}
@@ -840,22 +833,19 @@
   <div class="foot"><div>工具可以替你执行，不能替你负责</div><div>14 / 22</div></div>
 </section>
 
-<section class="slide light" data-layout="EVAL-LOOP" data-animate="pipeline">
-  <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>THE HUMAN LOOP</div></div>
-  <div class="frame" style="padding-top:3.4vh;position:relative">
-    <div class="eyebrow">最容易漏掉的一类工作</div>
-    <h1 class="statement" style="font-size:3.8vw;margin-top:1.4vh">真正的 Loop，中间必须有 <span style="font-family:var(--mono)">Eval</span></h1>
-    <div class="eval-loop">
-      <div class="eval-node" data-anim="step"><div class="n">01 · DEFINE</div><h3>定义关系</h3><p>谁、为什么、做什么、怎样算完成。</p></div>
-      <div class="eval-node" data-anim="step"><div class="n">02 · GENERATE</div><h3>AI 生成</h3><p>代码、页面、结构和候选方案。</p></div>
-      <div class="eval-node eval" data-anim="step"><div class="n">03 · CHECK</div><h3>自动检查</h3><p>测试、构建、静态检查与错误日志。</p></div>
-      <div class="eval-node eval" data-anim="step"><div class="n">04 · OBSERVE</div><h3>演示观察</h3><p>在真实界面与真实路径中看关系。</p></div>
-      <div class="eval-node eval" data-anim="step"><div class="n">05 · FEEDBACK</div><h3>用户反馈</h3><p>否定不是改字，而是暴露理解偏差。</p></div>
-      <div class="eval-node" data-anim="step"><div class="n">06 · REBUILD</div><h3>关系重构</h3><p>回到信息结构，再生成下一版。</p></div>
+<section class="slide light" data-layout="AI-RESPONSIBILITY" data-animate="cascade">
+  <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>AI 的边界</div></div>
+  <div class="frame" style="padding-top:3.4vh">
+    <div class="eyebrow" data-anim>人和 AI 如何分工</div>
+    <h1 class="statement" data-anim style="font-size:3.8vw;margin-top:1.4vh">AI 可以缩短执行时间，<br>但不能替你承担责任</h1>
+    <div class="signal-grid">
+      <div class="signal-item" data-anim><div class="n">01 · HUMAN</div><h3>需求判断</h3><p>客户真正要解决什么，必须由人先判断。</p></div>
+      <div class="signal-item" data-anim><div class="n">02 · AI</div><h3>执行提速</h3><p>读代码、拆任务、生成、排错、测试与文档。</p></div>
+      <div class="signal-item" data-anim><div class="n">03 · HUMAN</div><h3>质量判断</h3><p>是否稳定、可用，是否符合验收标准，由人验证。</p></div>
+      <div class="signal-item" data-anim><div class="n">04 · HUMAN</div><h3>结果责任</h3><p>沟通、上线、验收和交接，最终由人负责。</p></div>
     </div>
-    <div class="eval-band">EVAL CATEGORY · CHECK → OBSERVE → FEEDBACK</div>
   </div>
-  <div class="foot"><div>生成 → 评估 → 反馈 → 关系重构</div><div>15 / 22</div></div>
+  <div class="foot"><div>AI 负责提速，人负责判断与结果</div><div>15 / 22</div></div>
 </section>
 
 <section class="slide dark" data-layout="SPEED-CONTRAST" data-animate="directional">
@@ -1318,8 +1308,8 @@ if(motion){
   window.__playSlide = playSlide;
   window.__pipeAdvance = pipeAdvance;
 
-  // 首屏:go(0) 已跑过(同步),没来得及触发动效 → 这里补一下
-  playSlide(0);
+  // 首屏:go(initialSlide) 已跑过(同步),没来得及触发动效 → 补播当前页
+  playSlide(window.__currentSlideIndex ?? 0);
 }
 </script>
 </body>
