@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "project_id": "ai-delivery-first-order",
+  "observed_at": "2026-09-02T07:53:47Z",
+  "review_scope": "imagegen_decision_and_evidence",
+  "source": {
+    "assets_file": "assets.json",
+    "assets_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "pages_file": "pages.json",
+    "pages_sha256": "313cffcbc30596a730cabfbc87e1f3cc8e40533703afb7e213af0bdeb786d1e1",
+    "design_file": "design-direction.json",
+    "design_sha256": "cedf011751efea057808f47eaf43ef28a311cd5e3ccb86097e14fb51575b3a09",
+    "html_file": "ppt/index.html",
+    "html_sha256": "770a3c7f90212c912d134c4358733344a028d5a8f0a9faf4bd45fa1ad1806570"
+  },
+  "inventory": {
+    "pages": 22,
+    "registered_assets": 0,
+    "selected_asset_slots": 0,
+    "generated_asset_evidence_chains": 0
+  },
+  "classification_counts": {
+    "native-sufficient": 22,
+    "generated-needed": 0,
+    "generated-present": 0
+  },
+  "page_decisions": [
+    {"page": 1, "classification": "native-sufficient", "reason": "The typographic opening and WebGL field perform the journey-opening job without a scene image."},
+    {"page": 2, "classification": "native-sufficient", "reason": "The thesis depends on one memorable sentence; generated imagery would compete with it."},
+    {"page": 3, "classification": "native-sufficient", "reason": "The four-stage route is clearer as an editable node-and-connector diagram."},
+    {"page": 4, "classification": "native-sufficient", "reason": "The chapter divider needs cognitive breathing space rather than illustration."},
+    {"page": 5, "classification": "native-sufficient", "reason": "The completion record and four proof branches are explicit as a native hierarchy."},
+    {"page": 6, "classification": "native-sufficient", "reason": "The OK-to-undefined-items-to-responsibility flow expresses causality without fabricating documentary evidence."},
+    {"page": 7, "classification": "native-sufficient", "reason": "The trust sequence is directly inspectable as four native steps."},
+    {"page": 8, "classification": "native-sufficient", "reason": "The chapter divider needs separation and emphasis, not a generated scene."},
+    {"page": 9, "classification": "native-sufficient", "reason": "The vague request and unanswered blanks are the visual argument."},
+    {"page": 10, "classification": "native-sufficient", "reason": "Goal, scope, boundary, and acceptance are clearer as an editable scope map."},
+    {"page": 11, "classification": "native-sufficient", "reason": "Responsibility accumulation is clearer as a linked native chain."},
+    {"page": 12, "classification": "native-sufficient", "reason": "Four editable gates visibly encode staged risk control."},
+    {"page": 13, "classification": "native-sufficient", "reason": "The approved design explicitly avoids a robot illustration on the chapter divider."},
+    {"page": 14, "classification": "native-sufficient", "reason": "The AI engine, transfer, and human owner relationship is explicit as a native comparison."},
+    {"page": 15, "classification": "native-sufficient", "reason": "Containment communicates that AI execution sits inside human responsibility more precisely than an illustration."},
+    {"page": 16, "classification": "native-sufficient", "reason": "Opposing vectors make direction and acceleration immediately comparable."},
+    {"page": 17, "classification": "native-sufficient", "reason": "The evidence stack must remain readable and editable as ordered proof levels."},
+    {"page": 18, "classification": "native-sufficient", "reason": "The chapter divider intentionally delays the complete flywheel until the later page."},
+    {"page": 19, "classification": "native-sufficient", "reason": "The five readiness questions are a sequential self-check, not a scene."},
+    {"page": 20, "classification": "native-sufficient", "reason": "The ladder directly expresses progressive risk reduction."},
+    {"page": 21, "classification": "native-sufficient", "reason": "The directional native flywheel exposes the reusable assets and return path."},
+    {"page": 22, "classification": "native-sufficient", "reason": "The close is designed to leave one sentence and negative space as the final memory."}
+  ],
+  "result": {
+    "status": "passed",
+    "finding_count": 0,
+    "decision": "ImageGen is now an explicit Review concern, but no generated raster is required for this accepted native graphic direction.",
+    "future_trigger": "If a later Design or Revise decision introduces a character, scene, conceptual raster diagram, or generated background, the complete brief-to-render evidence chain becomes mandatory."
+  },
+  "acceptance": {
+    "agent_visual_observation": "passed_for_native_asset_decision",
+    "user_acceptance": "pending",
+    "powerpoint_acceptance": "not_applicable_html_only",
+    "business_acceptance": "pending"
+  }
+}

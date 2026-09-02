@@ -14,6 +14,22 @@ Use generated raster assets only when a character, scene, conceptual diagram, or
 
 Every retry is a new immutable generation. A reference edit records selected reference hashes, parent generation when supplied, change scope, and invariants. Never overwrite a rejected attempt or an accepted project asset.
 
+## Review integration
+
+Review must load this reference even when the selected project currently has no generated assets. It must not silently equate an empty asset registry with a completed image decision.
+
+For each page, classify the selected visual treatment:
+
+- `native-sufficient`: editable text, native shapes, or a semantic HTML/PPTX diagram already performs the page's `visual_job` and three-second message clearly;
+- `generated-needed`: a character, scene, conceptual diagram, or background is necessary because native composition is not clear enough, but no accepted registered asset fills the declared slot;
+- `generated-present`: the selected Build contains a registered generated asset for the page.
+
+`generated-needed` is a Review finding and reroutes the page to Design or Revise. Review never calls the provider, accepts a generation on the user's behalf, or changes `assets.json` or `asset_slots`.
+
+For every `generated-present` asset, verify one continuous identity chain: Visual Asset Brief -> compiled prompt hash -> immutable generation and raster inspection -> exact-candidate visual observation -> explicit user acceptance -> registration -> `assets.json` provenance and file hash -> page `asset_slots` selection -> exact rendered Build. Render and inspect the selected page for semantic action, prohibited interpretation, subject count, identity boundary, visible or pseudo-text, logos or watermarks, reference-edit invariants, edge integration, crop, and copy-safe space. A broken, pending, rejected, continued, stale, or hash-mismatched chain cannot pass Review.
+
+Record classification totals and page-addressable findings in the immutable Review. An empty ImageGen inventory is a valid result only when the Review explicitly records why the native treatments are sufficient.
+
 ## Default character and scene language
 
 The initial reusable preset is a restrained faceted low-poly editorial illustration: premium documentary-infographic tone, mature proportions, optional faceless/non-identifiable subjects, charcoal and graphite with warm ivory and muted antique gold. Avoid stick figures, childish cartoons, toy-like 3D, stock-photo poses, glossy plastic skin, presentation text, pseudo-text, logos, watermarks, and fake UI.

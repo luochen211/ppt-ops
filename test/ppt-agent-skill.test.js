@@ -60,18 +60,30 @@ test("design, prototype, and review progressively load the guizang-informed visu
   assert.match(reference, /do not copy WebGL.*web-only machinery into PPTX/);
 });
 
-test("visual-producing modes load the controlled visual asset workflow", async () => {
+test("visual-producing and review modes load the controlled visual asset workflow", async () => {
   const [routing, reference] = await Promise.all([
     fs.readFile(routingUrl, "utf8").then(JSON.parse),
     fs.readFile(visualAssetsUrl, "utf8")
   ]);
-  for (const mode of ["design", "prototype", "revise"]) assert.ok(routing.modes[mode].loads.includes("visual_assets"));
+  for (const mode of ["design", "prototype", "revise", "review"]) assert.ok(routing.modes[mode].loads.includes("visual_assets"));
   assert.match(reference, /page `visual_job` and three-second message come first/);
   assert.match(reference, /visual-asset-prepare/);
   assert.match(reference, /visual-asset-ingest/);
   assert.match(reference, /only after an explicit accept/i);
   assert.match(reference, /restrained faceted low-poly editorial illustration/);
   assert.match(reference, /Microsoft PowerPoint acceptance/);
+  assert.match(reference, /native-sufficient/);
+  assert.match(reference, /generated-needed/);
+  assert.match(reference, /generated-present/);
+  assert.match(reference, /empty ImageGen inventory.*valid result only/s);
+});
+
+test("review audits ImageGen decisions without generating or accepting assets", async () => {
+  const review = await fs.readFile(new URL("references/modes/review.md", skillRoot), "utf8");
+  assert.match(review, /including when `assets\.json` or every `asset_slots` list is empty/);
+  assert.match(review, /Review does not call an image provider or mutate asset state/);
+  assert.match(review, /explicit user acceptance/);
+  assert.match(review, /asset hash.*exact rendered Build/s);
 });
 
 test("routing starts multi-stage work from the earliest unmet prerequisite", async () => {
