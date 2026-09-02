@@ -1,0 +1,50 @@
+{
+  "contract_version": "1.0",
+  "kind": "visual_asset_review",
+  "reviewed_at": "2026-09-02T16:04:32+08:00",
+  "project_id": "ai-delivery-first-order",
+  "page_id": "page-014",
+  "page": 14,
+  "asset": {
+    "id": "page-14-human-owner",
+    "slot": "human-owner",
+    "file": "../../assets/generated/page-14-human-owner.png",
+    "mime": "image/png",
+    "sha256": "fd2346b232bdf218e47175082132bdd8dda36a5c11932eb74ffc35193178166d",
+    "width": 1254,
+    "height": 1254,
+    "alt": "手持罗盘、承担判断与结果责任的人物插画"
+  },
+  "provenance": {
+    "provider": "built-in-imagegen",
+    "model": "unspecified",
+    "brief_id": "visual-brief-57b7b150eefa6b24",
+    "generation_id": "visual-generation-5a2b322c-436b-4b15-9e0c-9da6cd5c4682",
+    "prompt_sha256": "26292ff574df023a864c7bdf17d4752b43d57f228d8b7fb64f5a67310e797eb0",
+    "observation_id": "visual-observation-96ccdb4c-edf5-499c-8e51-acc7e8aa79a7",
+    "decision_id": "visual-decision-b794c173-0b55-4bb9-b930-c5fecab9a568"
+  },
+  "integration": {
+    "html": "../../ppt/index.html",
+    "html_sha256": "6ef09e34f64a74525383f183f9077b130a0e47a87c997ea0cd2649b30e5bb22f",
+    "pages_sha256": "1c7f0e697575ed32bf424ebb834b7198c2a9c56554fd090672bff21d1a2cf274",
+    "design_direction_sha256": "f7b92cfb9b7093a09dd32d126650e9018457abe0be71cde0bcf07e75f4e893d0",
+    "mode": "embedded-data-uri",
+    "fit": "contain"
+  },
+  "render": {
+    "file": "page-14-final.png",
+    "sha256": "9603f3b8f0bed53ee3803e0e4f30d1ab57eb5a2571a2fa627367149a2e381e57",
+    "bytes": 377739,
+    "viewport": "1600x900",
+    "query": "?static=1&slide=14"
+  },
+  "acceptance": {
+    "automated_integrity": "passed",
+    "agent_visual_observation": "passed",
+    "user_visual_decision": "accepted",
+    "user_feedback_raw": "认可",
+    "native_powerpoint": "not_applicable_html_only",
+    "business_acceptance": "pending"
+  }
+}

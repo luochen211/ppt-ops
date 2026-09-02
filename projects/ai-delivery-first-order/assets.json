@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "page-14-human-owner",
+    "type": "generated_image",
+    "file": "assets/generated/page-14-human-owner.png",
+    "mime": "image/png",
+    "sha256": "fd2346b232bdf218e47175082132bdd8dda36a5c11932eb74ffc35193178166d",
+    "bytes": 1397919,
+    "width": 1254,
+    "height": 1254,
+    "alt": "手持罗盘、承担判断与结果责任的人物插画",
+    "provenance": {
+      "brief_id": "visual-brief-57b7b150eefa6b24",
+      "generation_id": "visual-generation-5a2b322c-436b-4b15-9e0c-9da6cd5c4682",
+      "prompt_sha256": "26292ff574df023a864c7bdf17d4752b43d57f228d8b7fb64f5a67310e797eb0",
+      "provider": "built-in-imagegen",
+      "model": "unspecified",
+      "decision_id": "visual-decision-b794c173-0b55-4bb9-b930-c5fecab9a568"
+    }
+  }
+]
