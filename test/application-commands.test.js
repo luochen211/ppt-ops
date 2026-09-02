@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import JSZip from "jszip";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
 
@@ -23,7 +24,10 @@ test("candidate commands enforce base and object revisions before applying a loc
   await assert.rejects(service.acceptCandidate(candidate.id, candidate.revision - 1), { code: "STALE_OBJECT_REVISION" });
   await assert.rejects(service.acceptCandidate(candidate.id, candidate.revision), { code: "ILLEGAL_RESUME_EVENT" });
   const rendered = await service.renderCandidate(candidate.id, candidate.revision);
-  await fs.access(path.join(project, rendered.render_evidence.artifact));
+  const preview = path.join(project, rendered.render_evidence.artifact);
+  await fs.access(preview);
+  const archive = await JSZip.loadAsync(await fs.readFile(preview));
+  assert.match(await archive.file("ppt/slides/slide1.xml").async("text"), /Accepted title/);
   assert.equal(JSON.parse(await fs.readFile(path.join(project, "pages.json"), "utf8"))[0].screen_text.title, "Application Commands");
   await assert.rejects(service.renderCandidate(candidate.id, rendered.candidate.revision), { code: "ILLEGAL_RESUME_EVENT" });
   assert.throws(() => service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: { ...powerpointEvidence(rendered), sha256: "0".repeat(64) } }), { code: "POWERPOINT_EVIDENCE_MISMATCH" });

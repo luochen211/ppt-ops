@@ -74,7 +74,7 @@ export class ApplicationService {
     const target = this.findTarget(candidate.target_kind, candidate.target_id);
     const updated = deepMerge(target, candidate.patch);
     if (updated.id !== target.id || updated.kind !== target.kind) throw new ApplicationError("TARGET_IDENTITY_CHANGED", "candidate cannot change target kind or id");
-    const previewProject = { ...this.project, pages: this.project.pages.map((page) => page.id === updated.id ? deepMerge(page, candidate.patch) : page) };
+    const previewProject = { ...this.project, pages: this.project.pages.map((page) => page.page === target.page ? deepMerge(page, candidate.patch) : page) };
     const relative = path.join(".pptops", "candidates", candidate.id, "preview.pptx");
     const output = resolveProjectPath(this.project.root, relative);
     try { await fs.access(output); throw new ApplicationError("CANDIDATE_PREVIEW_EXISTS", `candidate preview is immutable: ${candidate.id}`); }
