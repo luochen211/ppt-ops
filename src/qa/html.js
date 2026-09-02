@@ -106,7 +106,7 @@ export async function inspectHtmlPresentation({ htmlFile, browserPath, timeoutMs
     }
   } finally {
     await terminateProcess(processHandle);
-    await fs.rm(profile, { recursive: true, force: true });
+    await fs.rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 }
 
@@ -176,6 +176,12 @@ async function terminateProcess(processHandle) {
     delay(750)
   ]);
   if (processHandle.exitCode === null) processHandle.kill("SIGKILL");
+  if (processHandle.exitCode === null) {
+    await Promise.race([
+      new Promise((resolve) => processHandle.once("exit", resolve)),
+      delay(2000)
+    ]);
+  }
 }
 
 async function collectGeometry(client) {
