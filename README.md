@@ -2,7 +2,7 @@
 
 PPT-Ops 是一个运行在 Codex 中的本地优先 PPT 生成 Agent。用户通过对话提交主题或资料，Agent 调用同一套结构化项目、页面规格和本地工具生成可编辑 PPTX；CLI 是内部执行能力，不是产品界面。
 
-> 当前状态：V1.0 Release Candidate。自动化与真实 54 页项目集成已通过；人工视觉、手动 PowerPoint、Chrome/Safari 产物检查和 3 位目标用户试用仍为 pending，因此尚未发布 GA。
+> 当前状态：V1.0 Release Candidate。自动化、真实 54 页项目及 Chrome/Safari 产物交互已通过；人工视觉、手动 PowerPoint、交付包确认和 3 位目标用户试用仍为 pending，因此尚未发布 GA。
 
 V1.0 真源文档：
 

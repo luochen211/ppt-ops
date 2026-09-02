@@ -19,17 +19,17 @@
     {
       "id": "manual_powerpoint_acceptance",
       "status": "pending",
-      "evidence": []
+      "evidence": ["docs/acceptance/v1-powerpoint-observation.md"]
     },
     {
       "id": "chrome_html_acceptance",
-      "status": "pending",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["docs/acceptance/v1-browser-acceptance.md", "docs/acceptance/v1-chrome-fullscreen.jpeg"]
     },
     {
       "id": "safari_html_acceptance",
-      "status": "pending",
-      "evidence": []
+      "status": "passed",
+      "evidence": ["docs/acceptance/v1-browser-acceptance.md", "docs/acceptance/v1-safari-final-slide.jpeg"]
     },
     {
       "id": "delivery_package_acceptance",

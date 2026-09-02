@@ -8,6 +8,7 @@ const metadataUrl = new URL("agents/openai.yaml", skillRoot);
 const toolingUrl = new URL("references/tooling.md", skillRoot);
 const routingUrl = new URL("references/routing-contract.json", skillRoot);
 const dataContractUrl = new URL("references/data-contract.md", skillRoot);
+const visualQualityUrl = new URL("references/visual-quality.md", skillRoot);
 const expectedModes = ["discovery", "new", "intake", "outline", "design", "prototype", "revise", "build", "review", "handoff", "archive", "doctor"];
 
 test("repository exposes one conversation-native PPT agent router", async () => {
@@ -42,6 +43,20 @@ test("every route has one progressive Mode reference and bounded context", async
     assert.ok(contract.loads.includes("shared"), `${mode} must load shared rules`);
     assert.ok(contract.forbids.length > 0, `${mode} needs a negative context boundary`);
   }
+});
+
+test("design, prototype, and review progressively load the guizang-informed visual quality rules", async () => {
+  const [routing, reference] = await Promise.all([
+    fs.readFile(routingUrl, "utf8").then(JSON.parse),
+    fs.readFile(visualQualityUrl, "utf8")
+  ]);
+  for (const mode of ["design", "prototype", "review"]) assert.ok(routing.modes[mode].loads.includes("visual_quality"));
+  assert.match(reference, /guizang-ppt-skill/);
+  assert.match(reference, /three-second message/);
+  assert.match(reference, /page rhythm/);
+  assert.match(reference, /copy an object, edit text, play the deck, and confirm fonts/);
+  assert.match(reference, /never a substitute for a named human decision/);
+  assert.match(reference, /do not copy WebGL.*web-only machinery into PPTX/);
 });
 
 test("routing starts multi-stage work from the earliest unmet prerequisite", async () => {

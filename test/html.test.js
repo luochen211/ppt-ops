@@ -16,6 +16,9 @@ test("buildHtml creates a deterministic self-contained semantic deck", async () 
   assert.equal((first.match(/<section class="slide /g) ?? []).length, project.pages.length);
   assert.match(first, /<progress value="1" max="2"/);
   assert.match(first, /ArrowRight/);
+  assert.match(first, /data-nav="fullscreen"/);
+  assert.match(first, /requestFullscreen\|\|document\.documentElement\.webkitRequestFullscreen/);
+  assert.match(first, /event\.key\.toLowerCase\(\)===['"]f['"]/);
   assert.match(first, /prefers-reduced-motion:reduce/);
   assert.match(first, /data:image\/svg\+xml;base64,/);
   assert.doesNotMatch(first, /(?:src|href)="(?:\.\/|assets\/)/);
