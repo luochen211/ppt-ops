@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/candidate-feedback.schema.json",
+  "title": "V1 Candidate Feedback",
+  "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["candidate_id", "target_id", "decision", "actor", "eval_category", "root_cause", "raw_feedback", "root_cause_fingerprint"], "properties": { "kind": { "const": "candidate_feedback" } } }]
+}

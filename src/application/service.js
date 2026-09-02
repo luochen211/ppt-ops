@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { buildHtml } from "../adapters/html.js";
 import { buildPptx } from "../adapters/pptx.js";
-import { createV1Entity } from "../contracts/v1.js";
+import { createV1Entity, EVAL_CATEGORIES, ROOT_CAUSES } from "../contracts/v1.js";
 import { readProject, resolveProjectPath } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { createHandoff } from "../handoff/index.js";
@@ -40,17 +40,31 @@ export class ApplicationService {
 
   close() { this.store.close(); }
 
-  async proposeCandidate({ targetKind, targetId, patch, baseRevision }) {
+  async proposeCandidate({ targetKind, targetId, patch, baseRevision, parentCandidateId, hypothesis = "", reconstruction }) {
     if (!isPlainObject(patch)) throw new ApplicationError("PATCH_INVALID", "candidate patch must be a JSON object");
     const target = this.findTarget(targetKind, targetId);
     const current = this.ensureTracked(target);
     if (baseRevision !== current.revision) throw new ApplicationError("STALE_BASE_REVISION", "candidate base revision is stale", { expected: current.revision, received: baseRevision });
-    const id = nextId("candidate", this.store.listEntities(this.projectId, "candidate"));
+    let parent;
+    if (parentCandidateId) {
+      parent = this.requireEntity("candidate", parentCandidateId);
+      if (parent.target_id !== targetId || parent.target_kind !== targetKind) throw new ApplicationError("PARENT_TARGET_MISMATCH", "parent candidate targets a different object");
+      if (!["continued", "rejected", "reconstruction_required"].includes(parent.state)) throw new ApplicationError("PARENT_NOT_TERMINAL", `parent candidate cannot start another attempt: ${parent.state}`);
+      if (parent.state === "reconstruction_required") validateReconstruction(reconstruction, patch);
+    }
+    const candidates = this.store.listEntities(this.projectId, "candidate");
+    const id = nextId("candidate", candidates);
     const baseHash = hashJson(stripRevision(current));
-    let candidate = createV1Entity("candidate", id, { target_id: targetId, target_kind: targetKind, state: "generated", base_revision: baseRevision, base_hash: baseHash, patch });
+    const targetAttempts = candidates.filter((candidate) => candidate.target_id === targetId && candidate.target_kind === targetKind);
+    let candidate = createV1Entity("candidate", id, {
+      target_id: targetId, target_kind: targetKind, state: "generated", base_revision: baseRevision, base_hash: baseHash, patch,
+      attempt: targetAttempts.length + 1, parent_candidate_id: parentCandidateId ?? null, hypothesis: String(hypothesis),
+      ...(reconstruction ? { reconstruction: structuredClone(reconstruction) } : {})
+    });
     candidate = this.store.saveEntity(this.projectId, candidate);
     candidate = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "validating" });
     candidate = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "ready_for_review" });
+    candidate = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "awaiting_powerpoint_observation" });
     return candidate;
   }
 
@@ -66,10 +80,10 @@ export class ApplicationService {
     };
   }
 
-  async acceptCandidate(candidateId, expectedRevision) {
+  async acceptCandidate(candidateId, expectedRevision, rawFeedback = "Explicit acceptance") {
+    await this.decideCandidate(candidateId, { decision: "accept", expectedRevision, rawFeedback, evalCategory: "user_acceptance", rootCause: "process" });
     const candidate = this.requireEntity("candidate", candidateId);
-    if (candidate.revision !== expectedRevision) throw new ApplicationError("STALE_OBJECT_REVISION", "candidate revision is stale", { expected: candidate.revision, received: expectedRevision });
-    if (candidate.state !== "ready_for_review") throw new ApplicationError("CANDIDATE_NOT_REVIEWABLE", `candidate is not ready for review: ${candidate.state}`);
+    if (candidate.state !== "accepted") throw new ApplicationError("CANDIDATE_NOT_ACCEPTED", `candidate is not accepted: ${candidate.state}`);
     const target = this.findTarget(candidate.target_kind, candidate.target_id);
     const current = this.ensureTracked(target);
     if (candidate.base_revision !== current.revision || candidate.base_hash !== hashJson(stripRevision(current))) {
@@ -79,9 +93,84 @@ export class ApplicationService {
     if (updated.id !== target.id || updated.kind !== target.kind) throw new ApplicationError("TARGET_IDENTITY_CHANGED", "candidate cannot change target kind or id");
     await this.writeTarget(updated);
     const savedTarget = this.store.saveEntity(this.projectId, updated);
-    let accepted = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "accepted" });
-    accepted = this.store.saveEntity(this.projectId, { ...stripRevision(accepted), state: "applied_to_draft" });
+    const accepted = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "applied_to_draft" });
     return { candidate: accepted, target: savedTarget };
+  }
+
+  recordPowerPointObservation(candidateId, { expectedRevision, status, evidence }) {
+    const candidate = this.requireCurrentCandidate(candidateId, expectedRevision, "awaiting_powerpoint_observation");
+    this.assertCandidateBaseCurrent(candidate);
+    if (!["viewed", "not_viewed"].includes(status)) throw new ApplicationError("POWERPOINT_STATUS_INVALID", "PowerPoint observation status must be viewed or not_viewed");
+    if (!isPlainObject(evidence)) throw new ApplicationError("EVIDENCE_INVALID", "PowerPoint observation evidence must be a JSON object");
+    if (status === "viewed") validatePowerPointEvidence(evidence);
+    const id = nextId("powerpoint-observation", this.store.listEntities(this.projectId, "powerpoint_observation"));
+    const observation = this.store.saveEntity(this.projectId, createV1Entity("powerpoint_observation", id, {
+      candidate_id: candidate.id, target_id: candidate.target_id, status, evidence, candidate_revision: candidate.revision, base_revision: candidate.base_revision
+    }));
+    if (status === "not_viewed") return { observation, candidate };
+    const next = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "awaiting_user_decision", powerpoint_observation_id: observation.id });
+    return { observation, candidate: next };
+  }
+
+  rejectCandidateByAutomatedQa(candidateId, { expectedRevision, rawFeedback, evalCategory, rootCause, rootCauseFingerprint, evidence }) {
+    const candidate = this.requireCurrentCandidate(candidateId, expectedRevision, "awaiting_powerpoint_observation");
+    this.assertCandidateBaseCurrent(candidate);
+    if (!hasText(rawFeedback) || !isPlainObject(evidence)) throw new ApplicationError("QA_EVIDENCE_INVALID", "automated QA rejection requires feedback and evidence");
+    if (!EVAL_CATEGORIES.includes(evalCategory) || evalCategory === "user_acceptance") throw new ApplicationError("EVAL_CATEGORY_INVALID", `invalid automated evaluation category: ${evalCategory}`);
+    if (!ROOT_CAUSES.includes(rootCause)) throw new ApplicationError("ROOT_CAUSE_INVALID", `invalid feedback root cause: ${rootCause}`);
+    const id = nextId("feedback", this.store.listEntities(this.projectId, "candidate_feedback"));
+    const feedback = this.store.saveEntity(this.projectId, createV1Entity("candidate_feedback", id, {
+      candidate_id: candidate.id, target_id: candidate.target_id, target_kind: candidate.target_kind, decision: "reject", actor: "automated_qa",
+      eval_category: evalCategory, root_cause: rootCause, root_cause_fingerprint: rootCauseFingerprint ?? rootCause,
+      raw_feedback: rawFeedback, evidence, force_reconstruction: false, candidate_revision: candidate.revision, base_revision: candidate.base_revision
+    }));
+    const rejected = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "rejected", decision_feedback_id: feedback.id });
+    return { candidate: rejected, feedback, force_reconstruction: false };
+  }
+
+  async decideCandidate(candidateId, { decision, expectedRevision, rawFeedback, evalCategory, rootCause, rootCauseFingerprint, confidence, correctedRootCause }) {
+    const candidate = this.requireCurrentCandidate(candidateId, expectedRevision, "awaiting_user_decision");
+    if (!["accept", "continue_iteration", "reject"].includes(decision)) throw new ApplicationError("CANDIDATE_DECISION_INVALID", "candidate decision must be accept, continue_iteration, or reject");
+    if (!hasText(rawFeedback)) throw new ApplicationError("FEEDBACK_REQUIRED", "raw user feedback is required");
+    if (!EVAL_CATEGORIES.includes(evalCategory)) throw new ApplicationError("EVAL_CATEGORY_INVALID", `invalid evaluation category: ${evalCategory}`);
+    if (!ROOT_CAUSES.includes(rootCause)) throw new ApplicationError("ROOT_CAUSE_INVALID", `invalid feedback root cause: ${rootCause}`);
+    if (correctedRootCause && !ROOT_CAUSES.includes(correctedRootCause)) throw new ApplicationError("ROOT_CAUSE_INVALID", `invalid corrected root cause: ${correctedRootCause}`);
+    if (confidence !== undefined && (!Number.isFinite(confidence) || confidence < 0 || confidence > 1)) throw new ApplicationError("CONFIDENCE_INVALID", "confidence must be between 0 and 1");
+    this.assertCandidateBaseCurrent(candidate);
+    const effectiveCause = correctedRootCause ?? rootCause;
+    const fingerprint = hasText(rootCauseFingerprint) ? rootCauseFingerprint.trim() : effectiveCause;
+    const previousMatches = this.store.listEntities(this.projectId, "candidate_feedback").filter((feedback) =>
+      feedback.target_id === candidate.target_id && feedback.decision === "reject" && feedback.actor === "user" && feedback.root_cause_fingerprint === fingerprint
+    ).length;
+    const forceReconstruction = decision === "reject" && previousMatches >= 1;
+    const id = nextId("feedback", this.store.listEntities(this.projectId, "candidate_feedback"));
+    const feedback = this.store.saveEntity(this.projectId, createV1Entity("candidate_feedback", id, {
+      candidate_id: candidate.id, target_id: candidate.target_id, target_kind: candidate.target_kind, actor: "user",
+      decision, eval_category: evalCategory, root_cause: rootCause, root_cause_fingerprint: fingerprint, raw_feedback: rawFeedback,
+      ...(confidence !== undefined ? { classification_confidence: confidence } : {}),
+      ...(correctedRootCause ? { corrected_root_cause: correctedRootCause } : {}),
+      force_reconstruction: forceReconstruction, candidate_revision: candidate.revision, base_revision: candidate.base_revision
+    }));
+    const state = decision === "accept" ? "accepted" : decision === "continue_iteration" ? "continued" : forceReconstruction ? "reconstruction_required" : "rejected";
+    const updated = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state, decision_feedback_id: feedback.id });
+    return { candidate: updated, feedback, force_reconstruction: forceReconstruction };
+  }
+
+  candidateFeedback(candidateId) {
+    this.requireEntity("candidate", candidateId);
+    return this.store.listEntities(this.projectId, "candidate_feedback").filter((feedback) => feedback.candidate_id === candidateId);
+  }
+
+  candidateAttempts({ targetKind, targetId }) {
+    this.findTarget(targetKind, targetId);
+    return this.store.listEntities(this.projectId, "candidate").filter((candidate) => candidate.target_kind === targetKind && candidate.target_id === targetId)
+      .sort((left, right) => left.attempt - right.attempt);
+  }
+
+  compareCandidates(leftId, rightId) {
+    const left = this.requireEntity("candidate", leftId); const right = this.requireEntity("candidate", rightId);
+    if (left.target_id !== right.target_id || left.target_kind !== right.target_kind) throw new ApplicationError("CANDIDATE_TARGET_MISMATCH", "candidates must target the same object");
+    return { target: { kind: left.target_kind, id: left.target_id }, left: summarizeCandidate(left), right: summarizeCandidate(right), patch_changed: hashJson(left.patch) !== hashJson(right.patch) };
   }
 
   async freezeVersion() {
@@ -240,6 +329,18 @@ export class ApplicationService {
     return build;
   }
 
+  requireCurrentCandidate(id, expectedRevision, state) {
+    const candidate = this.requireEntity("candidate", id);
+    if (candidate.revision !== expectedRevision) throw new ApplicationError("STALE_OBJECT_REVISION", "candidate revision is stale", { expected: candidate.revision, received: expectedRevision });
+    if (candidate.state !== state) throw new ApplicationError("ILLEGAL_RESUME_EVENT", `candidate ${candidate.id} is ${candidate.state}; expected ${state}`);
+    return candidate;
+  }
+
+  assertCandidateBaseCurrent(candidate) {
+    const current = this.ensureTracked(this.findTarget(candidate.target_kind, candidate.target_id));
+    if (candidate.base_revision !== current.revision || candidate.base_hash !== hashJson(stripRevision(current))) throw new ApplicationError("STALE_BASE_REVISION", "candidate target changed after proposal");
+  }
+
   async writeTarget(entity) {
     const collection = COLLECTIONS[entity.kind];
     if (!collection) throw new ApplicationError("TARGET_KIND_UNSUPPORTED", `candidate target kind is unsupported: ${entity.kind}`);
@@ -278,3 +379,15 @@ function deepMerge(base, patch) {
   return result;
 }
 function isPlainObject(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
+function hasText(value) { return typeof value === "string" && value.trim() !== ""; }
+function summarizeCandidate(candidate) { return { id: candidate.id, attempt: candidate.attempt, state: candidate.state, parent_candidate_id: candidate.parent_candidate_id, hypothesis: candidate.hypothesis, patch: candidate.patch, reconstruction: candidate.reconstruction }; }
+function validateReconstruction(value, patch) {
+  if (!isPlainObject(value)) throw new ApplicationError("RECONSTRUCTION_REQUIRED", "a semantic reconstruction record is required after repeated rejection");
+  for (const field of ["page_task", "semantic_roles", "information_relationship", "visual_mapping_hypothesis", "discarded_hypothesis"]) if (!(field in value) || value[field] === null || value[field] === "") throw new ApplicationError("RECONSTRUCTION_REQUIRED", `semantic reconstruction field is required: ${field}`);
+  for (const field of ["task", "three_second_message", "relation"]) if (!(field in patch)) throw new ApplicationError("RECONSTRUCTION_PATCH_INCOMPLETE", `semantic reconstruction patch must update ${field}`);
+}
+function validatePowerPointEvidence(evidence) {
+  if (evidence.application !== "Microsoft PowerPoint") throw new ApplicationError("POWERPOINT_EVIDENCE_INVALID", "viewed evidence must name Microsoft PowerPoint");
+  if (!hasText(evidence.artifact)) throw new ApplicationError("POWERPOINT_EVIDENCE_INVALID", "viewed evidence must identify the candidate artifact");
+  if (!Array.isArray(evidence.pages) || evidence.pages.length === 0 || evidence.pages.some((page) => !Number.isInteger(page) || page < 1)) throw new ApplicationError("POWERPOINT_EVIDENCE_INVALID", "viewed evidence must contain positive page numbers");
+}

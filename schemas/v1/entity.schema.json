@@ -6,7 +6,7 @@
   "required": ["contract_version", "kind", "id"],
   "properties": {
     "contract_version": { "const": "1.0" },
-    "kind": { "enum": ["project", "source", "outline", "page_spec", "theme", "template", "asset", "candidate", "approval", "version", "build", "review", "handoff"] },
+    "kind": { "enum": ["project", "source", "outline", "page_spec", "theme", "template", "asset", "candidate", "candidate_feedback", "powerpoint_observation", "approval", "version", "build", "review", "handoff"] },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" }
   }
 }

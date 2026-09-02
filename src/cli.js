@@ -11,7 +11,7 @@ import { createHandoff } from "./handoff/index.js";
 import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-diff", "candidate-accept", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
 const HELP = `PPT-Ops 1.0
 
 Usage:
@@ -26,9 +26,17 @@ Usage:
   pptops review <project-dir>
   pptops handoff <project-dir>
   pptops deliver <project-dir>
-  pptops candidate-propose <project-dir> --target-kind <kind> --target-id <id> --patch <json> --base-revision <n>
+  pptops candidate-propose <project-dir> --target-kind <kind> --target-id <id> --patch <json> --base-revision <n> [--parent-candidate <id>] [--hypothesis <text>]
+  pptops candidate-reconstruct-relations <project-dir> --target-kind page_spec --target-id <id> --patch <json> --base-revision <n> --parent-candidate <id> --reconstruction <json>
   pptops candidate-diff <project-dir> --candidate <id>
-  pptops candidate-accept <project-dir> --candidate <id> --expected-revision <n>
+  pptops candidate-record-powerpoint-observation <project-dir> --candidate <id> --expected-revision <n> --status <viewed|not_viewed> --evidence <json>
+  pptops candidate-accept <project-dir> --candidate <id> --expected-revision <n> [--raw-feedback <explicit acceptance>]
+  pptops candidate-reject <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --eval-category <category> --root-cause <category> [--root-cause-fingerprint <id>] [--confidence <0..1>]
+  pptops candidate-auto-reject <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --eval-category <category> --root-cause <category> --evidence <json>
+  pptops candidate-continue <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --eval-category <category> --root-cause <category>
+  pptops candidate-feedback-show <project-dir> --candidate <id>
+  pptops candidate-attempts <project-dir> --target-kind <kind> --target-id <id>
+  pptops candidate-compare <project-dir> --left-candidate <id> --right-candidate <id>
   pptops version-freeze <project-dir>
   pptops build-create <project-dir> --version <id> --targets <html,pptx>
   pptops build-retry <project-dir> --build <id>
@@ -136,12 +144,27 @@ async function runApplicationCommand(command, projectDir, options) {
   const { ApplicationError, ApplicationService } = await import("./application/service.js");
   const service = await ApplicationService.open(projectDir);
   try {
-    if (command === "candidate-propose") return await service.proposeCandidate({
+    if (["candidate-propose", "candidate-reconstruct-relations"].includes(command)) return await service.proposeCandidate({
       targetKind: required(options, "target-kind"), targetId: required(options, "target-id"),
-      patch: jsonOption(options, "patch"), baseRevision: integerOption(options, "base-revision")
+      patch: jsonOption(options, "patch"), baseRevision: integerOption(options, "base-revision"),
+      parentCandidateId: options["parent-candidate"], hypothesis: options.hypothesis ?? "",
+      reconstruction: options.reconstruction ? jsonOption(options, "reconstruction") : undefined
     });
     if (command === "candidate-diff") return service.diffCandidate(required(options, "candidate"));
-    if (command === "candidate-accept") return await service.acceptCandidate(required(options, "candidate"), integerOption(options, "expected-revision"));
+    if (command === "candidate-record-powerpoint-observation") return service.recordPowerPointObservation(required(options, "candidate"), { expectedRevision: integerOption(options, "expected-revision"), status: required(options, "status"), evidence: jsonOption(options, "evidence") });
+    if (command === "candidate-accept") return await service.acceptCandidate(required(options, "candidate"), integerOption(options, "expected-revision"), options["raw-feedback"] ?? "Explicit acceptance");
+    if (command === "candidate-auto-reject") return service.rejectCandidateByAutomatedQa(required(options, "candidate"), {
+      expectedRevision: integerOption(options, "expected-revision"), rawFeedback: required(options, "raw-feedback"), evalCategory: required(options, "eval-category"),
+      rootCause: required(options, "root-cause"), rootCauseFingerprint: options["root-cause-fingerprint"], evidence: jsonOption(options, "evidence")
+    });
+    if (["candidate-reject", "candidate-continue"].includes(command)) return await service.decideCandidate(required(options, "candidate"), {
+      decision: command === "candidate-reject" ? "reject" : "continue_iteration", expectedRevision: integerOption(options, "expected-revision"),
+      rawFeedback: required(options, "raw-feedback"), evalCategory: required(options, "eval-category"), rootCause: required(options, "root-cause"), rootCauseFingerprint: options["root-cause-fingerprint"],
+      confidence: options.confidence === undefined ? undefined : numberOption(options, "confidence"), correctedRootCause: options["corrected-root-cause"]
+    });
+    if (command === "candidate-feedback-show") return service.candidateFeedback(required(options, "candidate"));
+    if (command === "candidate-attempts") return service.candidateAttempts({ targetKind: required(options, "target-kind"), targetId: required(options, "target-id") });
+    if (command === "candidate-compare") return service.compareCandidates(required(options, "left-candidate"), required(options, "right-candidate"));
     if (command === "version-freeze") return await service.freezeVersion();
     if (command === "build-create") return await service.createBuild({ versionId: required(options, "version"), targets: required(options, "targets").split(",").map((item) => item.trim()).filter(Boolean) });
     if (command === "build-retry") return await service.retryBuild(required(options, "build"));
@@ -199,7 +222,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "eval-category", "root-cause", "root-cause-fingerprint", "corrected-root-cause", "confidence", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
@@ -213,6 +236,11 @@ function required(options, name) {
 function integerOption(options, name) {
   const value = Number(required(options, name));
   if (!Number.isInteger(value) || value < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
+  return value;
+}
+function numberOption(options, name) {
+  const value = Number(required(options, name));
+  if (!Number.isFinite(value)) { const error = new Error(`--${name} must be a number`); error.code = "OPTION_INVALID"; throw error; }
   return value;
 }
 function jsonOption(options, name) {

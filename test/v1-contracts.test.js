@@ -22,6 +22,8 @@ test("all V1 entity fixtures satisfy their semantic contracts", () => {
     base("template", "template-hero", { name: "Hero", slots: {}, renderers: { html: "hero", pptx: "hero" } }),
     base("asset", "hero", { type: "image", file: "hero.png", sha256: digest }),
     base("candidate", "candidate-001", { target_id: "page-001", target_kind: "page_spec", state: "generated", patch: [] }),
+    base("candidate_feedback", "feedback-001", { candidate_id: "candidate-001", target_id: "page-001", decision: "reject", actor: "user", eval_category: "semantic_accuracy", root_cause: "information_relationship", root_cause_fingerprint: "roles", raw_feedback: "Roles are wrong" }),
+    base("powerpoint_observation", "powerpoint-001", { candidate_id: "candidate-001", target_id: "page-001", status: "viewed", evidence: { app: "Microsoft PowerPoint" } }),
     base("approval", "approval-001", { subject_id: "candidate-001", subject_hash: digest, decision: "accepted" }),
     base("version", "version-001", { state: "draft", snapshot_hash: digest, component_hashes: {} }),
     base("build", "build-001", { version_id: "version-001", state: "queued", targets: ["html", "pptx"], attempts: [] }),
@@ -29,7 +31,7 @@ test("all V1 entity fixtures satisfy their semantic contracts", () => {
     base("handoff", "handoff-001", { build_id: "build-001", review_id: "review-001", state: "preparing", files: [] })
   ];
   for (const fixture of fixtures) assert.deepEqual(validateV1Entity(fixture, fixture.kind), []);
-  const [project, source, outline, page, theme, template, asset, candidate, approval, version, build, review, handoff] = fixtures;
+  const [project, source, outline, page, theme, template, asset, candidate, feedback, observation, approval, version, build, review, handoff] = fixtures;
   assert.deepEqual(validateV1Bundle({ project, sources: [source], outline, pages: [page], theme, assets: [asset], templates: [template], candidates: [candidate], approvals: [approval], versions: [version], builds: [build], reviews: [review], handoffs: [handoff] }), []);
 });
 
@@ -46,6 +48,8 @@ test("semantic validation rejects cross-entity references that do not exist", ()
 test("state machines allow declared paths and reject shortcuts", () => {
   assert.equal(canTransition("candidate", "generated", "validating"), true);
   assert.equal(canTransition("candidate", "generated", "accepted"), false);
+  assert.equal(canTransition("candidate", "awaiting_powerpoint_observation", "awaiting_user_decision"), true);
+  assert.equal(canTransition("candidate", "awaiting_powerpoint_observation", "accepted"), false);
   assert.deepEqual(transition("version", { id: "version-001", state: "draft" }, "approval_pending"), { id: "version-001", state: "approval_pending" });
   assert.throws(() => transition("version", { state: "draft" }, "frozen"), /invalid version transition/);
   assert.equal(canTransition("build", "succeeded", "rendering"), false);

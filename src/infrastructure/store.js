@@ -4,7 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import { validateV1Entity } from "../contracts/v1.js";
 import { canTransition } from "../core/state-machines.js";
 
-const APPEND_ONLY_KINDS = new Set(["approval"]);
+const APPEND_ONLY_KINDS = new Set(["approval", "candidate_feedback", "powerpoint_observation"]);
 const RUNNING_BUILD_STATES = ["preparing", "rendering", "validating"];
 
 export class InfrastructureStore {

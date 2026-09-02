@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/powerpoint-observation.schema.json",
+  "title": "V1 PowerPoint Observation",
+  "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["candidate_id", "target_id", "status", "evidence"], "properties": { "kind": { "const": "powerpoint_observation" } } }]
+}
