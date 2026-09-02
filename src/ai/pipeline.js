@@ -38,15 +38,40 @@ export class CandidatePipeline {
     const errors = validateV1Entity(candidate, "candidate");
     if (errors.length) throw new Error(`candidate contract failed:\n${errors.map((error) => `- ${error}`).join("\n")}`);
     candidate = transition("candidate", candidate, "ready_for_review");
-    this.audit({ type: "ai.candidate.ready", candidate_id: candidate.id, patch_paths: candidate.patch.map(({ path }) => path) });
+    candidate = transition("candidate", candidate, "awaiting_powerpoint_observation");
+    this.audit({ type: "ai.candidate.awaiting_powerpoint", candidate_id: candidate.id, patch_paths: candidate.patch.map(({ path }) => path) });
     return this.store ? this.store.saveEntity(this.projectId, candidate) : candidate;
   }
 
-  decide(candidateId, decision) {
+  observeInPowerPoint(candidateId, evidence = {}) {
     if (!this.store) throw new Error("candidate decisions require a persistence store");
     const candidate = this.store.getEntity(this.projectId, "candidate", candidateId);
     if (!candidate) throw new Error(`unknown candidate: ${candidateId}`);
-    const next = transition("candidate", candidate, decision === "accept" ? "accepted" : "rejected");
+    if (candidate.state !== "awaiting_powerpoint_observation") throw new Error(`invalid PowerPoint observation state: ${candidate.state}`);
+    if (evidence.application !== "Microsoft PowerPoint" || typeof evidence.artifact !== "string" || !Array.isArray(evidence.pages) || evidence.pages.length === 0) throw new Error("PowerPoint observation requires application, artifact, and pages evidence");
+    const observation = this.store.saveEntity(this.projectId, createV1Entity("powerpoint_observation", `powerpoint-${crypto.randomUUID()}`, {
+      candidate_id: candidate.id, target_id: candidate.target_id, status: "viewed", evidence
+    }));
+    const next = transition("candidate", candidate, "awaiting_user_decision");
+    return { observation, candidate: this.store.saveEntity(this.projectId, stripRevision(next)) };
+  }
+
+  decide(candidateId, { decision, rawFeedback, evalCategory, rootCause, rootCauseFingerprint }) {
+    if (!this.store) throw new Error("candidate decisions require a persistence store");
+    const candidate = this.store.getEntity(this.projectId, "candidate", candidateId);
+    if (!candidate) throw new Error(`unknown candidate: ${candidateId}`);
+    if (candidate.state !== "awaiting_user_decision") throw new Error(`invalid candidate decision state: ${candidate.state}`);
+    if (!["accept", "continue_iteration", "reject"].includes(decision)) throw new Error(`invalid candidate decision: ${decision}`);
+    if (typeof rawFeedback !== "string" || rawFeedback.trim() === "") throw new Error("raw user feedback is required");
+    const cause = rootCause ?? "process"; const category = evalCategory ?? "user_acceptance"; const fingerprint = rootCauseFingerprint ?? cause;
+    const previous = this.store.listEntities(this.projectId, "candidate_feedback").filter((item) => item.target_id === candidate.target_id && item.decision === "reject" && item.actor === "user" && item.root_cause_fingerprint === fingerprint).length;
+    const forceReconstruction = decision === "reject" && previous >= 1;
+    this.store.saveEntity(this.projectId, createV1Entity("candidate_feedback", `feedback-${crypto.randomUUID()}`, {
+      candidate_id: candidate.id, target_id: candidate.target_id, decision, actor: "user", eval_category: category, root_cause: cause,
+      root_cause_fingerprint: fingerprint, raw_feedback: rawFeedback, force_reconstruction: forceReconstruction
+    }));
+    const state = decision === "accept" ? "accepted" : decision === "continue_iteration" ? "continued" : forceReconstruction ? "reconstruction_required" : "rejected";
+    const next = transition("candidate", candidate, state);
     return this.store.saveEntity(this.projectId, stripRevision(next));
   }
 

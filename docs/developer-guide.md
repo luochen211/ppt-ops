@@ -8,7 +8,7 @@ JSON contracts and project files are portable truth. SQLite stores rebuildable i
 
 ## Application and local API
 
-`src/application/service.js` owns candidate proposal/diff/acceptance, Version freeze, Build creation/retry, Review run/record, and Handoff creation. Commands use stable JSON success/error envelopes. The loopback-only API in `src/infrastructure/local-api.js` exposes project and task evidence without becoming a Web product interface.
+`src/application/service.js` owns candidate proposal, PowerPoint observation, explicit accept/continue/reject decisions, feedback and attempt inspection, forced semantic reconstruction, Version freeze, Build creation/retry, Review run/record, and Handoff creation. Candidate feedback keeps `eval_category` separate from `root_cause`; a second user rejection with the same root-cause fingerprint forces reconstruction. Automated QA rejection is evidence-bearing but never counts as user feedback. Commands use stable JSON success/error envelopes. The loopback-only API in `src/infrastructure/local-api.js` exposes project and task evidence without becoming a Web product interface.
 
 ## Templates and renderers
 

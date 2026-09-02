@@ -1,3 +1,7 @@
 # Revise Mode
 
-Load the target page, necessary adjacent pages, feedback, and current Theme. Propose a Candidate against the current base revision, show the local diff, and apply only after acceptance. Exit with changed target artifacts and proof that unrelated approved pages are unchanged.
+Load the target page, necessary adjacent pages, latest accepted state, feedback, and current Theme. Propose a Candidate against the current base revision and preserve its parent attempt and design hypothesis. Render the Candidate, inspect it in real Microsoft PowerPoint, then record exactly one explicit decision: accept, continue iteration, or reject. “Continue”, “let me look”, and weak approval are not acceptance.
+
+For feedback, record both the evaluation category (what was judged) and root cause (why it failed). Automated QA evidence, rendered evidence, PowerPoint observation, and user acceptance stay separate. If the same root-cause fingerprint receives a second user rejection, stop local styling changes and reconstruct the page task, three-second message, semantic roles, information relationship, and visual mapping before generating the next Candidate.
+
+Apply only an explicitly accepted Candidate. Exit with changed target artifacts, complete attempt lineage, and proof that unrelated approved pages are unchanged.

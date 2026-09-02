@@ -112,6 +112,8 @@ Source Intake 支持 Markdown、DOCX 和 PPTX，导入时检查文件签名、Op
 
 AI 只能生成经过任务级字段白名单、结构校验和目标校验的 Candidate。原始 Source 文本默认不出站，只有调用方明确授权的选中片段才进入载荷；审计记录只保存字段路径、计数和哈希。Candidate 必须由用户接受且 Draft 基线未变化后才能应用。边界见 [ADR 0004](docs/adr/0004-ai-candidate-boundary.md)。
 
+Candidate 修订采用持久化闭环：生成后先记录真实 Microsoft PowerPoint 观察，再由用户明确选择接受、继续迭代或否定。每轮反馈分别保存评价维度与失败根因；同一根因第二次被用户否定时，系统强制回到页面任务、三秒信息、语义角色和信息关系重构。自动 QA、PowerPoint 观察和用户决定不能互相冒充。设计见 [ADR 0006](docs/adr/0006-rejection-driven-semantic-reconstruction.md)。
+
 Layout 层提供 hero、statement、comparison、sequence、process、hierarchy、data、cycle 八类模板。Theme 按“基础 → 项目 → 单页”合并；超容量会明确失败，HTML 与原生 PPTX 分别消费同一确定性 Layout Plan。PDF/PNG 仅作为带来源 Build 的派生产物。边界见 [ADR 0005](docs/adr/0005-layout-and-renderers.md)。
 
 ## 验收边界与已知限制

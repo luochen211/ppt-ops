@@ -1,11 +1,13 @@
 export const CONTRACT_VERSION = "1.0";
+export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
+export const ROOT_CAUSES = Object.freeze(["content_truth", "page_task", "information_relationship", "visual_grammar", "powerpoint_implementation", "process"]);
 
 export function createV1Entity(kind, id, fields = {}) { return { contract_version: CONTRACT_VERSION, kind, id, ...fields }; }
 export function pageSpecId(page) { return `page-${String(page).padStart(3, "0")}`; }
 
 export const ENTITY_KINDS = Object.freeze([
   "project", "source", "outline", "page_spec", "theme", "template", "asset",
-  "candidate", "approval", "version", "build", "review", "handoff"
+  "candidate", "candidate_feedback", "powerpoint_observation", "approval", "version", "build", "review", "handoff"
 ]);
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
@@ -79,7 +81,24 @@ const validators = {
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
   asset(value, errors) { requireText(value, "file", errors); requireText(value, "type", errors); requireHash(value, errors); },
-  candidate(value, errors) { requireId(value, "target_id", errors); requireText(value, "target_kind", errors); requireEnum(value, "state", ["generated", "validating", "ready_for_review", "accepted", "rejected", "applied_to_draft"], errors); },
+  candidate(value, errors) {
+    requireId(value, "target_id", errors); requireText(value, "target_kind", errors);
+    requireEnum(value, "state", ["generated", "validating", "ready_for_review", "awaiting_powerpoint_observation", "awaiting_user_decision", "accepted", "continued", "rejected", "reconstruction_required", "applied_to_draft"], errors);
+  },
+  candidate_feedback(value, errors) {
+    requireId(value, "candidate_id", errors); requireId(value, "target_id", errors);
+    requireEnum(value, "decision", ["accept", "continue_iteration", "reject"], errors);
+    requireEnum(value, "eval_category", EVAL_CATEGORIES, errors);
+    requireEnum(value, "root_cause", ROOT_CAUSES, errors);
+    requireEnum(value, "actor", ["user", "automated_qa"], errors);
+    requireText(value, "root_cause_fingerprint", errors);
+    requireText(value, "raw_feedback", errors);
+  },
+  powerpoint_observation(value, errors) {
+    requireId(value, "candidate_id", errors); requireId(value, "target_id", errors);
+    requireEnum(value, "status", ["viewed", "not_viewed"], errors);
+    if (!isObject(value.evidence)) errors.push("evidence must be an object");
+  },
   approval(value, errors) { requireId(value, "subject_id", errors); requireHashField(value, "subject_hash", errors); requireEnum(value, "decision", ["accepted", "rejected"], errors); },
   version(value, errors) { requireEnum(value, "state", ["draft", "approval_pending", "approved", "changes_requested", "frozen"], errors); requireHashField(value, "snapshot_hash", errors); },
   build(value, errors) { requireId(value, "version_id", errors); requireEnum(value, "state", ["queued", "preparing", "rendering", "validating", "succeeded", "failed", "cancelled"], errors); requireEnumList(value.targets, "targets", ["html", "pptx", "pdf", "png"], errors); },

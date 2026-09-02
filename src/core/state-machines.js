@@ -1,8 +1,10 @@
 export const STATE_MACHINES = Object.freeze({
   candidate: {
     generated: ["validating"], validating: ["ready_for_review", "rejected"],
-    ready_for_review: ["accepted", "rejected"], accepted: ["applied_to_draft"],
-    rejected: [], applied_to_draft: []
+    ready_for_review: ["awaiting_powerpoint_observation"],
+    awaiting_powerpoint_observation: ["awaiting_user_decision", "rejected"],
+    awaiting_user_decision: ["accepted", "continued", "rejected", "reconstruction_required"],
+    accepted: ["applied_to_draft"], continued: [], rejected: [], reconstruction_required: [], applied_to_draft: []
   },
   version: {
     draft: ["approval_pending"], approval_pending: ["approved", "changes_requested"],
