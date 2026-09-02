@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0",
+  "project_id": "ai-delivery-first-order",
+  "observed_at": "2026-09-02T07:43:57Z",
+  "decision": "conditionally_passed",
+  "source": {
+    "html_file": "ppt/index.html",
+    "html_sha256": "770a3c7f90212c912d134c4358733344a028d5a8f0a9faf4bd45fa1ad1806570",
+    "viewport": "1600x900",
+    "browser": "Google Chrome 152.0.7977.76",
+    "render_mode": "static"
+  },
+  "automated_checks": [
+    {
+      "id": "visual-design-traceability",
+      "status": "passed",
+      "command": "node scripts/check-project-visual-design.js projects/ai-delivery-first-order",
+      "evidence": {
+        "pages": 22,
+        "decisions": 22,
+        "motifs": 4,
+        "templates": 19,
+        "html_layouts": 22,
+        "findings": []
+      }
+    },
+    {
+      "id": "html-geometry",
+      "status": "partial_pass",
+      "command": "inspectHtmlPresentation({ htmlFile: 'projects/ai-delivery-first-order/ppt/index.html' })",
+      "evidence": {
+        "pages": 22,
+        "annotated_pages": 1,
+        "annotated_page_numbers": [6],
+        "findings": []
+      },
+      "note": "No collision was found in the declared geometry contract, but only page 6 has strict element annotations."
+    },
+    {
+      "id": "html-tests",
+      "status": "passed",
+      "command": "node --test test/html-qa.test.js test/html.test.js",
+      "evidence": {
+        "passed": 11,
+        "failed": 0
+      }
+    },
+    {
+      "id": "slide-and-navigation-contract",
+      "status": "failed",
+      "evidence": {
+        "dom_slide_count": 22,
+        "numbered_pages": 22,
+        "keyboard_navigation": true,
+        "wheel_navigation": true,
+        "touch_navigation": true,
+        "escape_overview": true,
+        "fullscreen_control": false
+      },
+      "note": "The deck has no requestFullscreen or webkitRequestFullscreen implementation and no visible fullscreen control."
+    },
+    {
+      "id": "offline-static-fallback",
+      "status": "passed_with_advisory",
+      "evidence": {
+        "sample_page": 2,
+        "pixel_difference": 0,
+        "external_dependencies": [
+          "Google Fonts",
+          "Motion ESM from jsDelivr"
+        ]
+      },
+      "note": "Static content remained visually stable in the sampled offline render, while web fonts and animated transitions still depend on external URLs."
+    }
+  ],
+  "rendered_review": {
+    "status": "passed_with_findings",
+    "visited_pages": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+    "contact_sheet": {
+      "file": "review/redesign-20260902/contact-sheet.jpg",
+      "sha256": "f9df855f79f9c82c22e88e21382a572d9ce73e48ac8d4027688965493f01f8ce"
+    },
+    "representative_pages": [
+      {"page": 1, "file": "review/redesign-20260902/pages/page-01.png", "sha256": "9cab2877f984dedf13442cd535d613d3c692e4a96ce0872f708fe442df9dc8d2"},
+      {"page": 3, "file": "review/redesign-20260902/pages/page-03.png", "sha256": "6ca00a95d3fe3af89b5f85d3d8bf4917e3613614ffdfe3a6e59efba2b02e3d5f"},
+      {"page": 5, "file": "review/redesign-20260902/pages/page-05.png", "sha256": "c35dcfb0e7c42ba6e4ea772d3334294c5a5d8f0f635d320c5c1939575cb1cd8f"},
+      {"page": 6, "file": "review/redesign-20260902/pages/page-06.png", "sha256": "6d35d33a5676e24a6c683923f808bd0468e6b7cb16dc9052eb265387b963c549"},
+      {"page": 10, "file": "review/redesign-20260902/pages/page-10.png", "sha256": "4724e85d60529d8bc42c924e985ae2f535aae2dc7868cc8c258fa7636ca968eb"},
+      {"page": 12, "file": "review/redesign-20260902/pages/page-12.png", "sha256": "2e94806f23c839abd2865ec6ddf0c5cab4349d31c630c3ab745be5116d3761ff"},
+      {"page": 14, "file": "review/redesign-20260902/pages/page-14.png", "sha256": "44a50e897a52c35b8ddf56d280b2a584ed28edb908a225c81fe78aa232bd5cd4"},
+      {"page": 17, "file": "review/redesign-20260902/pages/page-17.png", "sha256": "c86aabe68ed1f7e92d3fc65dff9db5fe02ff4f0708230664fa9cae0dc9d90ffc"},
+      {"page": 21, "file": "review/redesign-20260902/pages/page-21.png", "sha256": "9370577ac3fbff7835ad26eafe04d371190581447342fd0307bd4a9757e36402"},
+      {"page": 22, "file": "review/redesign-20260902/pages/page-22.png", "sha256": "db0e7a87534291bbc8eaf1fa6d5f682d2487404849fa49a9fc259cdb33d0495c"}
+    ],
+    "strengths": [
+      "The redesign now reads as one coherent editorial presentation rather than a set of content cards.",
+      "The light and dark sequence creates a deliberate chapter rhythm without repeating one layout three times in succession.",
+      "The route, completion record, failure chain, delivery map, gates, responsibility boundary, evidence stack, ladder, and flywheel visibly match their declared semantic relations.",
+      "Every page has a clear three-second headline, stable margins, page numbering, and a protected bottom navigation area.",
+      "The four-part narrative remains faithful to the approved outline and does not restore the superseded six-chapter structure."
+    ],
+    "findings": [
+      {
+        "severity": "high",
+        "scope": "deck",
+        "category": "presentation_control",
+        "finding": "Fullscreen is missing even though the artifact is intended for live presentation.",
+        "recommended_action": "Add a visible fullscreen control and an F-key shortcut with standard and WebKit fullscreen fallbacks."
+      },
+      {
+        "severity": "medium",
+        "scope": "pages 11, 14, 17, 21",
+        "category": "projector_readability",
+        "finding": "Several explanatory labels use 0.78vw to 0.92vw type with 0.65 to 0.72 opacity. They are legible on a laptop but fragile at the back of a classroom or on a low-contrast projector.",
+        "recommended_action": "Raise functional copy to at least max(14px, 0.9vw), increase opacity, and shorten the flywheel and evidence captions before enlarging them."
+      },
+      {
+        "severity": "medium",
+        "scope": "pages 1-5, 7-22",
+        "category": "automated_review_coverage",
+        "finding": "Only page 6 exposes a strict page-addressable geometry contract, so automated collision evidence does not cover the rest of the deck.",
+        "recommended_action": "Add stable data-qa roles to structural nodes and real connectors on the remaining semantic diagram pages, prioritizing pages 3, 5, 10, 11, 12, 14, 15, 17, 20, and 21."
+      },
+      {
+        "severity": "low",
+        "scope": "deck",
+        "category": "portability",
+        "finding": "Web fonts and animated transitions are loaded from external URLs.",
+        "recommended_action": "Keep the current static fallback, and package local fonts and motion code if fully offline delivery is a requirement."
+      }
+    ]
+  },
+  "acceptance": [
+    {"id": "automated_traceability", "status": "passed", "evidence": "review-report.json"},
+    {"id": "rendered_visual_observation", "status": "passed_with_findings", "evidence": "contact-sheet.jpg"},
+    {"id": "user_visual_acceptance", "status": "pending", "evidence": null},
+    {"id": "real_powerpoint_acceptance", "status": "not_applicable_html_only", "evidence": null},
+    {"id": "business_acceptance", "status": "pending", "evidence": null}
+  ]
+}
