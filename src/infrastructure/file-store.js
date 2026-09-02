@@ -40,6 +40,10 @@ export class ProjectFileStore {
     return this.writeImmutable(path.join(".pptops", "builds", buildId, target, name), contents);
   }
 
+  async writeManifest(kind, id, value) {
+    return this.writeImmutable(path.join(".pptops", `${kind}s`, id, "manifest.json"), `${stableJson(value)}\n`);
+  }
+
   async describe(relativePath) {
     const file = resolveProjectPath(this.root, relativePath);
     const contents = await fs.readFile(file);
