@@ -141,10 +141,10 @@ PPT-Ops 应采用“单一 Agent 入口 + 按需 Mode + 确定性本地引擎 + 
 
 ### 路径解析优先级
 
-1. `PPT_OPS_ROOT` 环境变量；
-2. 仓库根 `.ppt-ops-data` marker；
-3. 仓库默认 `projects/`；
-4. 命令显式 `--root` 只覆盖当前执行，不改变永久配置。
+1. 命令显式 `--root`，只覆盖当前执行，不改变永久配置；
+2. `PPT_OPS_ROOT` 环境变量；
+3. 仓库根 `.ppt-ops-data` marker；
+4. 仓库默认 `projects/`。
 
 必须拒绝绝对路径逃逸、`..`、系统层/用户层重叠和项目根外写入。
 
