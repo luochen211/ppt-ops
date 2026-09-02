@@ -12,6 +12,8 @@ V1.0 真源文档：
 - [career-ops 项目理解与 PPT-Ops 参考设计](docs/career-ops-reference-for-ppt-ops.md)
 - [career-ops 启发的 Codex Agent 目标设计](docs/career-ops-inspired-agent-design.md)
 - [Codex Agent 交付 DAG](docs/delivery-agent-dag.md)
+- [Visual Asset Pipeline 需求](docs/visual-asset-pipeline-requirements.md)
+- [Visual Asset Pipeline 交付 DAG](docs/visual-asset-pipeline-dag.md)
 - [安装、升级、备份、恢复与排障](docs/operations.md)
 - [开发者指南](docs/developer-guide.md)
 - [V1 RC 验收记录](docs/acceptance/v1-release-candidate.md)
@@ -51,6 +53,11 @@ node src/cli.js build examples/demo-project --format all
 node src/cli.js review examples/demo-project
 node src/cli.js handoff examples/demo-project
 node src/cli.js deliver examples/demo-project
+node src/cli.js visual-asset-prepare path/to/my-deck --brief '{"role":"character",...}'
+node src/cli.js visual-asset-ingest path/to/my-deck --brief-id visual-brief-... --file path/to/generated.png --provider imagegen --model available-capability
+node src/cli.js visual-asset-observe path/to/my-deck --generation visual-generation-... --actor agent --verdict pass --checks '{...}'
+node src/cli.js visual-asset-decide path/to/my-deck --generation visual-generation-... --decision accept --raw-feedback "Use this visual"
+node src/cli.js visual-asset-register path/to/my-deck --generation visual-generation-... --asset-id team-scene --page-id page-001 --slot-role hero --alt "Team routes a blocked task"
 ```
 
 `init` 会创建一套可直接校验和构建的 V1 实体契约，并拒绝覆盖非空目录。`migrate` 将 Foundation 项目只读迁移到新的目标目录，不修改输入。`deliver` 按 `project.json` 中配置的 HTML/PPTX 输出执行构建、自动检查和交付打包；它不会把自动检查表述为视觉验收或真实 PowerPoint 验收。现有 Foundation 项目仍可读取和构建。
@@ -95,6 +102,7 @@ src/migrations/               Foundation 到 V1 的只读迁移器
 src/infrastructure/           SQLite 元数据、持久队列、文件存储与本地 API
 src/sources/                  Markdown、DOCX、PPTX 安全导入与定位
 src/ai/                       Provider-neutral 候选管线与隐私边界
+src/visual-assets/            图像 Brief、提示词、生成证据、检查与注册门禁
 src/layout/                   8 类语义模板、容量检查与 Layout Plan
 src/adapters/html.js          自包含 HTML renderer
 src/adapters/pptx.js          原生 PPTX renderer
@@ -111,6 +119,8 @@ V1 实体统一携带 `contract_version`、`kind` 和稳定 `id`。Foundation �
 Source Intake 支持 Markdown、DOCX 和 PPTX，导入时检查文件签名、Open XML 包结构、ZIP 路径与展开资源上限，并按 SHA-256 去重。提取结果保留行、段落或幻灯片文本定位；人工修正创建新提取修订，不改写原文件。边界见 [ADR 0003](docs/adr/0003-source-intake.md)。
 
 AI 只能生成经过任务级字段白名单、结构校验和目标校验的 Candidate。原始 Source 文本默认不出站，只有调用方明确授权的选中片段才进入载荷；审计记录只保存字段路径、计数和哈希。Candidate 必须由用户接受且 Draft 基线未变化后才能应用。边界见 [ADR 0004](docs/adr/0004-ai-candidate-boundary.md)。
+
+Visual Asset Pipeline 将页面 `visual_job` 编译成结构化图像提示词，并支持 fresh 与 reference edit。每次生成保存在 `.pptops/visual-assets/` 的不可变证据中；只有机器检查通过、视觉观察通过且用户明确接受的结果，才会注册到 `assets.json` 和页面 `asset_slots`。HTML 与 PPTX 使用同一 `asset_id`，PPTX 中的标题、正文和标准形状仍保持原生可编辑。Live ImageGen 和 Microsoft PowerPoint 验收必须另行记录，不能由 fake provider、结构测试或 HTML 预览替代。
 
 Candidate 修订采用持久化闭环：生成后先记录真实 Microsoft PowerPoint 观察，再由用户明确选择接受、继续迭代或否定。每轮反馈分别保存评价维度与失败根因；同一根因第二次被用户否定时，系统强制回到页面任务、三秒信息、语义角色和信息关系重构。自动 QA、PowerPoint 观察和用户决定不能互相冒充。设计见 [ADR 0006](docs/adr/0006-rejection-driven-semantic-reconstruction.md)。
 

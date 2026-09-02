@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/visual-asset-generation.schema.json",
+  "title": "V1 Visual Asset Generation",
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["brief_id", "prompt_sha256", "mode", "state", "provider", "model", "created_at"],
+      "properties": {
+        "kind": { "const": "visual_asset_generation" },
+        "mode": { "enum": ["fresh", "reference_edit"] },
+        "state": { "enum": ["provider_failed", "validation_failed", "awaiting_visual_observation"] },
+        "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 
 const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
+const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
 Usage:
@@ -38,6 +39,11 @@ Usage:
   pptops candidate-feedback-show <project-dir> --candidate <id>
   pptops candidate-attempts <project-dir> --target-kind <kind> --target-id <id>
   pptops candidate-compare <project-dir> --left-candidate <id> --right-candidate <id>
+  pptops visual-asset-prepare <project-dir> --brief <json>
+  pptops visual-asset-ingest <project-dir> --brief-id <id> --file <generated-raster> --provider <id> --model <id> [--mime <mime>]
+  pptops visual-asset-observe <project-dir> --generation <id> --actor <agent|human> --verdict <pass|fail> --checks <json> [--notes <text>]
+  pptops visual-asset-decide <project-dir> --generation <id> --decision <accept|continue_iteration|reject> --raw-feedback <text>
+  pptops visual-asset-register <project-dir> --generation <id> --asset-id <id> --page-id <id> --slot-role <id> --alt <text> [--fit <contain|cover>]
   pptops version-freeze <project-dir>
   pptops build-create <project-dir> --version <id> --targets <html,pptx>
   pptops build-retry <project-dir> --build <id>
@@ -91,6 +97,8 @@ try {
     console.log(JSON.stringify(await (command === "update-preview" ? previewUpdate(input) : applyUpdate(input)), null, 2));
   } else if (APPLICATION_COMMANDS.has(command)) {
     console.log(JSON.stringify({ ok: true, command, data: await runApplicationCommand(command, projectDir, options) }, null, 2));
+  } else if (VISUAL_ASSET_COMMANDS.has(command)) {
+    console.log(JSON.stringify({ ok: true, command, data: await runVisualAssetCommand(command, projectDir, options) }, null, 2));
   } else {
     const project = await readProject(projectDir);
     const errors = validateProject(project);
@@ -175,6 +183,26 @@ async function runApplicationCommand(command, projectDir, options) {
   } finally { service.close(); }
 }
 
+async function runVisualAssetCommand(command, projectDir, options) {
+  const { VisualAssetPipeline } = await import("./visual-assets/pipeline.js");
+  const pipeline = new VisualAssetPipeline(projectDir);
+  if (command === "visual-asset-prepare") return pipeline.prepare(jsonOption(options, "brief"));
+  if (command === "visual-asset-ingest") return pipeline.ingest(required(options, "brief-id"), {
+    sourceFile: required(options, "file"), provider: required(options, "provider"), model: required(options, "model"), mime: options.mime
+  });
+  if (command === "visual-asset-observe") return pipeline.recordVisualObservation(required(options, "generation"), {
+    actor: required(options, "actor"), verdict: required(options, "verdict"), checks: jsonOption(options, "checks"), notes: options.notes ?? ""
+  });
+  if (command === "visual-asset-decide") return pipeline.recordUserDecision(required(options, "generation"), {
+    decision: required(options, "decision"), raw_feedback: required(options, "raw-feedback")
+  });
+  if (command === "visual-asset-register") return pipeline.registerAccepted(required(options, "generation"), {
+    asset_id: required(options, "asset-id"), page_id: required(options, "page-id"), slot_role: required(options, "slot-role"),
+    alt: required(options, "alt"), fit: options.fit ?? "contain"
+  });
+  throw new Error(`unknown visual asset command: ${command}`);
+}
+
 async function buildFormats(project, formats) {
   const directory = outputDir(project);
   await fs.mkdir(directory, { recursive: true });
@@ -222,7 +250,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
