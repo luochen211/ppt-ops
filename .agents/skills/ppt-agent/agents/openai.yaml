@@ -1,0 +1,4 @@
+interface:
+  display_name: "PPT Agent"
+  short_description: "在 Codex 中生成、修改并验收可编辑 PPTX"
+  default_prompt: "使用 $ppt-agent 把我的主题或资料生成一份可编辑 PPTX。"

@@ -13,8 +13,8 @@ T2 V1 Contract、状态机与迁移
   |
   +----------+-----------+-----------+-----------+
   v          v           v           v           v
-T3 Web     T4 Source    T5 AI       T6 Layout   T7 Build/
-Workbench  Intake       Pipeline    + Renderers Infra
+T3 Codex   T4 Source    T5 AI       T6 Layout   T7 Build/
+Agent      Intake       Pipeline    + Renderers Infra
   \          |           |           /           /
    +---------+-----------+----------+-----------+
                          |
@@ -60,7 +60,7 @@ T1
 
 ### 文件边界
 
-Contract/Core 包、Schema、migration、fixture 和专项测试。不实现 Web、AI Provider、最终模板或新渲染 UI。
+Contract/Core 包、Schema、migration、fixture 和专项测试。不实现 Agent、AI Provider 或最终模板。
 
 ### 验收
 
@@ -70,7 +70,7 @@ Contract/Core 包、Schema、migration、fixture 和专项测试。不实现 Web
 - 迁移不修改源项目；
 - 新建项目只写 V1 Contract。
 
-## 4. T3：Web Workbench
+## 4. T3：Codex PPT Agent
 
 ### 依赖
 
@@ -78,23 +78,22 @@ T2
 
 ### 交付
 
-- 项目列表、项目创建/导入、Brief 和真源界面；
-- Outline 和 Page Spec 编辑器；
-- 候选对比、接受/拒绝与版本确认界面；
-- HTML 预览、Build 状态和 Review/Handoff 证据界面；
-- 基于 Core API 的前端数据层；
-- 可访问性、错误态和关键用户流程测试。
+- 仓库级 `.agents/skills/ppt-agent` 对话入口；
+- 从主题、Markdown、DOCX、PPTX 到项目的任务路由；
+- Outline、Page Spec、候选确认和局部修改工作流；
+- Build、Review、Handoff 工具调用和分层证据报告；
+- GitHub 工具选型记录、隐私边界和关键提示词场景测试。
 
 ### 文件边界
 
-Web 应用、其专属测试和最小 API client。不复制 Core 规则，不直接读写项目 JSON/SQLite。
+Agent Skill、按需参考资料、Agent 专属测试和最小工具适配。不复制 Core 规则，不绕过 CLI/Application Services 直接改写 SQLite。
 
 ### 验收
 
-- 不修改代码可完成创建项目到发起构建的主流程；
+- 用户只通过 Codex 对话即可完成创建项目到发起构建的主流程；
 - 候选未确认时不得进入已批准版本；
-- 所有长任务有进度、失败和重试入口；
-- 完成核心页面视觉与键盘可访问性验收。
+- 所有长任务有进度、失败和安全重试证据；
+- 交付可编辑 PPTX，并将自动检查、视觉检查和 PowerPoint 实机验收分开报告。
 
 ## 5. T4：Source Intake
 

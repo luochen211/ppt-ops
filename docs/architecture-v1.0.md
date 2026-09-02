@@ -8,7 +8,7 @@
 V1.0 架构必须同时满足：
 
 - 本地项目在离线环境中可编辑、构建、审查和交付；
-- Web、CLI、AI 和渲染器共用同一套 Contract 和 Core；
+- Codex Agent、CLI、AI 和渲染器共用同一套 Contract 和 Core；
 - HTML 和 PPTX 从同一已确认版本独立构建；
 - AI 输出不能绕过候选区、Schema 和用户确认门；
 - 长任务可重试、可观测，不覆盖输入版本；
@@ -21,7 +21,7 @@ V1.0 架构必须同时满足：
 用户 / Agent / 外部工具
           |
           v
-Web Workbench + CLI
+Codex PPT Agent
           |
           v
 Application Services
@@ -52,9 +52,10 @@ Provider Adapters     HTML          PPTX  File Store     SQLite
 V1.0 将当前 Node.js 项目演进为单仓多包，但不在 T1 直接进行目录搬迁：
 
 ```text
+.agents/skills/
+  ppt-agent/                 # Codex 对话工作流与按需参考资料
 apps/
-  workbench/                 # 本地 Web 工作台
-  local-api/                 # 本地 HTTP / event service
+  local-api/                 # 可选本地工具/event service
 packages/
   contracts/                 # Schema、公共类型、迁移和契约测试
   core/                      # 领域规则、状态机和应用服务
@@ -79,13 +80,13 @@ V1.0 的建议基线：
 
 - Runtime：Node.js，与当前 CLI 和渲染链路保持一致；
 - 应用代码：新增核心模块使用 TypeScript，旧 JavaScript 通过渐进迁移接入；
-- Web：React + Vite 类型的本地 SPA，不将服务端渲染作为本地产品前置条件；
+- Agent：仓库级 Codex Skill，通过描述自动触发或由用户显式调用；
 - API：本地 Node HTTP 服务，提供版本化 JSON API 和长任务事件流；
 - Metadata：SQLite，承载索引、状态、任务、确认和证据；
 - Large objects：项目文件系统，承载真源、素材、产物和交付包；
 - Contract validation：JSON Schema + 运行时语义验证；
 - Job execution：SQLite-backed 持久化队列和受控子进程，不依赖纯内存队列；
-- Testing：Node 单测 + API/集成 + 浏览器截图回归 + PPTX 结构与实机验收。
+- Testing：Skill 结构/场景 + Node 单测 + API/集成 + PPTX 渲染、结构与实机验收。
 
 具体库的选择由对应实施 Issue 记录 ADR；T1 只冻结能力和边界，不依赖某个快速变化的库版本。
 
@@ -295,7 +296,7 @@ API 使用版本化路径，不把本地绝对路径暴露为稳定外部标识�
 }
 ```
 
-`sequence` 在单个 job 内单调递增，工作台重连后可从上次 sequence 补读。
+`sequence` 在单个 job 内单调递增，Agent 恢复任务后可从上次 sequence 补读。
 
 ## 14. 安全与隐私
 
@@ -358,7 +359,7 @@ T2 必须提供显式迁移器：
 5. 对迁移结果做 Contract 验证和可重复性测试；
 6. 在编写新项目时只产生 V1 Contract，不维护两套可写模型。
 
-当前 CLI 在迁移期作为兼容适配层，最终与 Web 共用 Application Services。
+当前 CLI 是 Agent 的确定性工具适配层，并与其他适配器共用 Application Services。
 
 ## 18. 架构决策纪律
 

@@ -6,6 +6,8 @@ dist/
 
 # Local research corpus; source materials are intentionally not published.
 references/
+!.agents/skills/**/references/
+!.agents/skills/**/references/**
 
 # Project-generated deliverables.
 examples/*/outputs/
