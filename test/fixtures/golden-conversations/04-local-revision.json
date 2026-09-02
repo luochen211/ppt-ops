@@ -1,0 +1,11 @@
+{
+  "id": "target-page-local-revision",
+  "user_input": "只修改第 1 页标题，其他已确认页面不要动。",
+  "route": ["revise"],
+  "loaded_context": ["shared", "target_pages", "adjacent_pages", "feedback", "theme"],
+  "forbidden_context": ["all_historical_candidates", "unrelated_approved_pages"],
+  "command_trace": ["candidate-propose", "candidate-diff", "candidate-accept"],
+  "project_diff": { "scope": ["page-001"], "forbid": ["page-002", "theme", "sources"] },
+  "outputs": ["candidate-diff.json"],
+  "unresolved_acceptance": ["business"]
+}

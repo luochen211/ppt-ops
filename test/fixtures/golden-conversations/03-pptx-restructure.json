@@ -1,0 +1,11 @@
+{
+  "id": "existing-pptx-restructure",
+  "user_input": "重构这份现有 PPTX 的叙事结构，输出新的可编辑 PPTX。",
+  "route": ["new", "intake", "outline", "design", "build", "review"],
+  "loaded_context": ["shared", "data_contract", "source_intake", "target_files"],
+  "forbidden_context": ["unrelated_projects"],
+  "command_trace": ["init", "import", "candidate-propose", "candidate-diff", "candidate-accept", "version-freeze", "build-create", "review-run"],
+  "project_diff": { "scope": ["new-project", "target-source", "accepted-candidate"], "forbid": ["source-pptx"] },
+  "outputs": ["slides.pptx", "review-report.json"],
+  "unresolved_acceptance": ["visual", "real_powerpoint", "business"]
+}

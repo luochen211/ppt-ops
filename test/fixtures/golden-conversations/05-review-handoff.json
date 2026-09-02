@@ -1,0 +1,11 @@
+{
+  "id": "formal-review-and-handoff",
+  "user_input": "检查最终版本并打包交付，不要把自动检查说成人工验收。",
+  "route": ["review", "handoff"],
+  "loaded_context": ["shared", "build", "review_rules", "visual_quality", "delivery_preferences"],
+  "forbidden_context": ["raw_conversation_history", "other_build_outputs"],
+  "command_trace": ["review-run", "review-record", "handoff-create"],
+  "project_diff": { "scope": ["review", "handoff"], "forbid": ["frozen-version", "source"] },
+  "outputs": ["slides.pptx", "review-report.json", "manifest.json"],
+  "unresolved_acceptance": ["visual", "real_powerpoint", "business"]
+}

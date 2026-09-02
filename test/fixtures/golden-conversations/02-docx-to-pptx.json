@@ -1,0 +1,11 @@
+{
+  "id": "docx-to-pptx",
+  "user_input": "把这份 DOCX 变成一份可编辑 PPTX，保留来源定位。",
+  "route": ["new", "intake", "outline", "design", "build", "review"],
+  "loaded_context": ["shared", "data_contract", "source_intake", "target_files"],
+  "forbidden_context": ["unrelated_projects"],
+  "command_trace": ["init", "import", "version-freeze", "build-create", "review-run"],
+  "project_diff": { "scope": ["new-project", "target-source"], "forbid": ["unrelated-project"] },
+  "outputs": ["slides.pptx", "review-report.json"],
+  "unresolved_acceptance": ["visual", "real_powerpoint", "business"]
+}
