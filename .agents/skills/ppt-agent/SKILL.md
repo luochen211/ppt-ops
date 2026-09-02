@@ -27,6 +27,7 @@ Route names are `discovery`, `new`, `intake`, `outline`, `design`, `prototype`, 
 - Build native editable PPTX with PptxGenJS. HTML is never an intermediate representation for PPTX.
 - Automated validation, rendered visual review, real Microsoft PowerPoint acceptance, and user/business approval are separate claims.
 - Generated characters, scenes, diagrams, and backgrounds follow `references/visual-assets.md`; only an explicitly user-accepted generation may enter `assets.json` and `asset_slots`.
+- The first and final page of every deliverable deck must each use a pipeline-registered ImageGen visual. A one-page deck may use one accepted image for both roles. Do not freeze, formally build, review, hand off, or deliver while either boundary is missing or its evidence is inconsistent.
 
 ## Progressive references
 

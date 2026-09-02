@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node src/cli.js review examples/demo-project"
+    "check": "node --test test/boundary-images.test.js test/integration.test.js"
   },
   "dependencies": {
     "jszip": "^3.10.1",

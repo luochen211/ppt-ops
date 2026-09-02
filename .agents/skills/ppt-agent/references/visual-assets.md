@@ -2,6 +2,8 @@
 
 Use generated raster assets only when a character, scene, conceptual diagram, or background does a page job that native PowerPoint text and shapes cannot do clearly enough. The page `visual_job` and three-second message come first; a style label such as low-poly is never the semantic request.
 
+The first and final page are mandatory exceptions to the optional-use rule: each must contain at least one accepted ImageGen result registered through this pipeline. Determine them from canonical `pages.json` order. A one-page deck may use one accepted generated image for both roles. Static/imported images, screenshots, SVGs, native shapes, and hand-written provenance do not satisfy the boundary.
+
 ## Controlled workflow
 
 1. Create a minimal Visual Asset Brief for one named page and slot. Declare subject count, action, prohibited interpretation, identity boundary, composition, ratio, text policy, transparency, copy-safe space, and avoidance constraints.
@@ -14,11 +16,13 @@ Use generated raster assets only when a character, scene, conceptual diagram, or
 
 Every retry is a new immutable generation. A reference edit records selected reference hashes, parent generation when supplied, change scope, and invariants. Never overwrite a rejected attempt or an accepted project asset.
 
+Before freezing a Version, confirm both boundary assets resolve to their original brief and prompt, passing raster inspection, passing exact-candidate visual observation, explicit user accept decision, and immutable registration. The same check runs again before formal HTML/PPTX build, Review, Handoff, and delivery. If it fails, report the boundary role, page id, and missing evidence, then return to the earliest incomplete generation step; never substitute another asset.
+
 ## Review integration
 
 Review must load this reference even when the selected project currently has no generated assets. It must not silently equate an empty asset registry with a completed image decision.
 
-For each page, classify the selected visual treatment:
+For each page, classify the selected visual treatment. The canonical first and final pages are always `generated-present` requirements; the optional classifications below apply to non-boundary pages:
 
 - `native-sufficient`: editable text, native shapes, or a semantic HTML/PPTX diagram already performs the page's `visual_job` and three-second message clearly;
 - `generated-needed`: a character, scene, conceptual diagram, or background is necessary because native composition is not clear enough, but no accepted registered asset fills the declared slot;
@@ -28,7 +32,7 @@ For each page, classify the selected visual treatment:
 
 For every `generated-present` asset, verify one continuous identity chain: Visual Asset Brief -> compiled prompt hash -> immutable generation and raster inspection -> exact-candidate visual observation -> explicit user acceptance -> registration -> `assets.json` provenance and file hash -> page `asset_slots` selection -> exact rendered Build. Render and inspect the selected page for semantic action, prohibited interpretation, subject count, identity boundary, visible or pseudo-text, logos or watermarks, reference-edit invariants, edge integration, crop, and copy-safe space. A broken, pending, rejected, continued, stale, or hash-mismatched chain cannot pass Review.
 
-Record classification totals and page-addressable findings in the immutable Review. An empty ImageGen inventory is a valid result only when the Review explicitly records why the native treatments are sufficient.
+Record classification totals and page-addressable findings in the immutable Review. An empty ImageGen inventory can never pass a deck-level Review because the first/final boundary requirement would be unmet; a non-boundary page may still be explicitly classified as native-sufficient.
 
 ## Default character and scene language
 

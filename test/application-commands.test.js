@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 import JSZip from "jszip";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
+import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
@@ -179,6 +180,7 @@ test("formal build, review, and handoff commands require a frozen version and ac
   assert.equal(handoff.handoff.state, "verified");
   const manifest = JSON.parse(await fs.readFile(handoff.manifest_file, "utf8"));
   assert.deepEqual(manifest.outputs.map(({ name }) => name), ["review-report.json", "slides.pptx"]);
+  assert.equal(manifest.boundary_images[0].asset_id, "generated-page-001-boundary");
 });
 
 test("CLI application commands return stable success and error envelopes", async (t) => {
@@ -202,6 +204,7 @@ async function fixture(t) {
   t.after(() => fs.rm(parent, { recursive: true, force: true }));
   const project = path.join(parent, "project");
   await initializeProject(project, { title: "Application Commands" });
+  await seedAcceptedBoundaryImages(project);
   return project;
 }
 function runCli(...args) { return execFileAsync(process.execPath, [cli, ...args], { encoding: "utf8" }); }

@@ -11,6 +11,7 @@ import { createHandoff } from "../handoff/index.js";
 import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
+import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -200,6 +201,7 @@ export class ApplicationService {
     await this.refresh();
     const errors = validateProject(this.project);
     if (errors.length) throw new ApplicationError("PROJECT_INVALID", "project cannot be frozen", { errors });
+    await assertBoundaryGeneratedImages(this.project);
     const snapshot = Object.fromEntries(await Promise.all(CONTRACT_FILES.map(async (file) => [file, JSON.parse(await fs.readFile(path.join(this.project.root, file), "utf8"))])));
     const componentHashes = Object.fromEntries(Object.entries(snapshot).map(([file, value]) => [file, hashJson(value)]));
     const snapshotHash = hashJson(snapshot);
@@ -216,6 +218,7 @@ export class ApplicationService {
   async createBuild({ versionId, targets }) {
     const version = this.requireEntity("version", versionId);
     if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
+    await assertBoundaryGeneratedImages(await this.projectFromVersion(versionId));
     const id = nextId("build", this.store.listBuilds(this.projectId));
     this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: {} }));
     return this.runBuild(id);
@@ -230,6 +233,7 @@ export class ApplicationService {
     const build = this.requireBuild(buildId);
     if (build.state !== "succeeded") throw new ApplicationError("BUILD_NOT_SUCCEEDED", "review requires a succeeded build");
     const frozenProject = await this.projectFromVersion(build.version_id);
+    await assertBoundaryGeneratedImages(frozenProject);
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
     const report = await reviewProject(frozenProject, { pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
@@ -255,9 +259,10 @@ export class ApplicationService {
     const review = this.requireEntity("review", reviewId);
     if (review.state !== "accepted" || review.build_id !== buildId) throw new ApplicationError("REVIEW_NOT_ACCEPTED", "handoff requires an accepted review for the selected build");
     const frozenProject = await this.projectFromVersion(this.requireBuild(buildId).version_id);
+    const boundaryImages = await assertBoundaryGeneratedImages(frozenProject);
     const report = await reviewProject(frozenProject);
     const sourceFiles = await this.buildHandoffFiles(buildId, review);
-    const packageResult = await createHandoff(frozenProject, report, { sourceFiles });
+    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
     let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
@@ -285,8 +290,9 @@ export class ApplicationService {
     const claimed = this.store.claimNextBuild();
     if (!claimed || claimed.id !== buildId) throw new ApplicationError("BUILD_NOT_CLAIMED", `build could not be claimed: ${buildId}`);
     try {
-      this.store.transitionBuild(buildId, "rendering");
       const project = await this.projectFromVersion(claimed.version_id);
+      await assertBoundaryGeneratedImages(project);
+      this.store.transitionBuild(buildId, "rendering");
       const artifacts = [];
       for (const target of claimed.targets) {
         if (!["html", "pptx"].includes(target)) throw new ApplicationError("TARGET_UNSUPPORTED", `renderer is unavailable for target: ${target}`);

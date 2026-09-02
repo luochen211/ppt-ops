@@ -6,6 +6,7 @@ import test from "node:test";
 import JSZip from "jszip";
 import { runLargeDeckAcceptance } from "../src/acceptance/large-deck.js";
 import { validatePptx } from "../src/adapters/pptx.js";
+import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 
 test("release candidate migrates, freezes, builds, and reviews a 50+ slide source deck", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-v1-rc-"));
@@ -14,7 +15,7 @@ test("release candidate migrates, freezes, builds, and reviews a 50+ slide sourc
   const project = path.join(root, "accepted-project");
   await fs.writeFile(input, await sourceDeck(52));
 
-  const result = await runLargeDeckAcceptance({ inputFile: input, projectDir: project, render: false });
+  const result = await runLargeDeckAcceptance({ inputFile: input, projectDir: project, render: false, prepareBoundaryImages: seedAcceptedBoundaryImages });
 
   assert.equal(result.input.slide_count, 52);
   assert.equal(result.build.state, "succeeded");

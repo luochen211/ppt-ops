@@ -20,7 +20,5 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node src/cli.js html-qa projects/ai-delivery-first-order/ppt/index.html
-      - run: node src/cli.js build examples/demo-project --format html
-      - run: node src/cli.js build examples/demo-project --format pptx
-      - run: node src/cli.js review examples/demo-project
-      - run: node src/cli.js handoff examples/demo-project
+      - run: node src/cli.js validate examples/demo-project
+      - run: node --test test/boundary-images.test.js test/integration.test.js

@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import { writeMigratedProject } from "../src/migrations/foundation-to-v1.js";
+import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
@@ -68,8 +70,8 @@ async function copyDemo(t) {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-review-"));
   t.after(() => fs.rm(temporary, { recursive: true, force: true }));
   const project = path.join(temporary, "project");
-  await fs.cp(demo, project, { recursive: true });
-  await fs.rm(path.join(project, "outputs"), { recursive: true, force: true });
+  await writeMigratedProject(demo, project);
+  await seedAcceptedBoundaryImages(project);
   return project;
 }
 

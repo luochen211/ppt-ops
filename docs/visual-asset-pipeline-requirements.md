@@ -20,6 +20,8 @@ Turn a page's approved `visual_job` and asset slot into a traceable visual-asset
 
 The primary success measure is not the number of images generated. It is whether a generated visual performs the page's three-second cognitive job while remaining auditable, replaceable, and safe to compose with editable PowerPoint text.
 
+Every deliverable deck has two mandatory ImageGen boundaries: the first page and the final page. Each boundary page must reference at least one Visual Asset Pipeline image whose automated raster validation passed, whose exact candidate received a passing visual observation, and whose user decision is explicit acceptance. A one-page deck uses that page as both boundaries and one accepted generated image satisfies both roles.
+
 ## 2. Intended users
 
 - course teams and speakers who need coherent editorial characters across a deck;
@@ -28,6 +30,16 @@ The primary success measure is not the number of images generated. It is whether
 - reviewers who need to distinguish generated-file checks from visual and business approval.
 
 ## 3. In scope
+
+### 3.0 Mandatory first and final page images
+
+- The first page and final page are determined by the canonical `pages.json` order, not by a filename or display label.
+- Each of those pages must contain at least one `asset_slot` pointing to a registered `generated_image` asset.
+- The registered asset must retain `brief_id`, `generation_id`, `prompt_sha256`, provider/model summary, and `decision_id`, and the corresponding immutable inspection, visual-observation, and user-acceptance records must exist.
+- A stock image, imported screenshot, SVG icon, native PowerPoint shape, HTML decoration, or asset with hand-written provenance cannot satisfy this requirement.
+- The two boundary pages may use different generated images. A one-page deck needs only one accepted generated image because the same page is both the first and final page.
+- Draft intake, outline, and design work may proceed while either image is pending. Version freeze, formal HTML/PPTX build, Review, Handoff, and delivery must fail closed until both boundary requirements pass.
+- Failure must identify `first`, `final`, or both, the affected page id, and the first actionable missing evidence. The system must not silently substitute a generic image or downgrade the rule to a warning.
 
 ### 3.1 Visual asset briefs
 
@@ -129,6 +141,8 @@ Registration must preserve:
 
 The raw prompt and provider metadata stay in the local project evidence area. Delivery manifests may include hashes and provenance summaries without exposing prompts by default.
 
+Registration alone is not sufficient for a boundary page. The freeze/build gate must resolve the registered asset back to the immutable generation, passing inspection, passing visual observation, and explicit user-accept decision. Missing or contradictory evidence invalidates the boundary image.
+
 ### 3.6 Dual rendering
 
 HTML and PPTX renderers must consume the same accepted `asset_id` from `asset_slots`.
@@ -138,6 +152,7 @@ HTML and PPTX renderers must consume the same accepted `asset_id` from `asset_sl
 - `contain` preserves the full subject; `cover` uses a deterministic centered crop.
 - generated text is never used as a substitute for editable PowerPoint text.
 - a build fails when a referenced asset is missing, escapes the project root, or is not accepted when acceptance metadata is present.
+- a formal build fails before either renderer runs when the first or final page lacks a verified accepted generated image.
 
 ## 4. Lifecycle and state
 
@@ -180,6 +195,7 @@ Generated evidence belongs below `.pptops/visual-assets/`. Accepted deliverable 
 - Reference images are sent only when explicitly selected for that generation.
 - Provider identifiers and outbound-field paths are auditable; secrets and authorization headers are never persisted.
 - Existing accepted assets and delivered builds are immutable.
+- Mandatory boundary generation does not authorize fabricated evidence. When the required first/final visual is not accepted, the workflow stays pending instead of creating a substitute.
 
 ## 7. Non-goals for this increment
 
@@ -204,12 +220,17 @@ Generated evidence belongs below `.pptops/visual-assets/`. Accepted deliverable 
 8. PPTX text remains editable and is not baked into the generated image.
 9. The same accepted project version and build configuration produce stable asset selection and placement.
 10. Tests cover fresh generation, reference edit, transparency failure, rejected visual observation, user acceptance, path escape, HTML rendering, PPTX embedding, and non-target page stability.
-11. Existing projects without generated assets continue to validate and build.
-12. Documentation provides one low-poly character example and one reference-edit example without requiring a live paid provider.
+11. Existing projects without generated assets may still be opened, imported, outlined, edited, and validated as drafts, but they cannot freeze a version, build formal HTML/PPTX, enter Review, create a Handoff, or deliver.
+12. A multi-page project fails the formal build gate when either the first or final page lacks a pipeline-registered `generated_image`, and reports the exact page and evidence gap.
+13. A one-page project passes the boundary rule with one accepted generated image on its only page.
+14. A static image or forged asset metadata without matching immutable inspection, visual observation, and user-decision records cannot satisfy the boundary gate.
+15. Documentation provides one low-poly character example and one reference-edit example without requiring a live paid provider.
 
 ## 9. Completion claims
 
 The increment may claim `Visual Asset Pipeline foundation complete` only after all automated acceptance criteria pass on the default branch.
+
+It may claim `mandatory first/final ImageGen gate complete` only after freeze and formal build paths fail closed on missing or contradictory evidence, pass for valid multi-page and one-page projects, and the tests are present on the default branch.
 
 It may claim `live ImageGen integration verified` only after a configured provider produces a real candidate and its request/response evidence is recorded.
 

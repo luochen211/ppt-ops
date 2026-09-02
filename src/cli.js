@@ -10,6 +10,7 @@ import { validateProject } from "./core/validate.js";
 import { createHandoff } from "./handoff/index.js";
 import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
+import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
 const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
@@ -141,10 +142,11 @@ try {
     } else if (command === "deliver") {
       const configured = project.project.outputs.filter((format) => ["html", "pptx"].includes(format));
       if (configured.length === 0) throw new Error("project.outputs must include html or pptx for deliver");
+      const boundaryImages = await assertBoundaryGeneratedImages(project);
       const outputs = await buildFormats(project, configured);
       const report = await reviewProject(project, { htmlQa: true });
       const reportFile = await writeReviewReport(project, report);
-      const handoff = await createHandoff(project, report);
+      const handoff = await createHandoff(project, report, { boundaryImages });
       console.log(JSON.stringify({ command, project: project.project.name, outputs, review: { passed: report.passed, report_file: reportFile }, handoff: { manifest_file: handoff.manifestFile, package_dir: handoff.packageDir } }, null, 2));
       if (!report.passed) process.exitCode = 1;
     } else {
@@ -212,6 +214,7 @@ async function runVisualAssetCommand(command, projectDir, options) {
 }
 
 async function buildFormats(project, formats) {
+  await assertBoundaryGeneratedImages(project);
   const directory = outputDir(project);
   await fs.mkdir(directory, { recursive: true });
   const results = [];
@@ -225,6 +228,7 @@ async function buildFormats(project, formats) {
 }
 
 async function runReview(project) {
+  await assertBoundaryGeneratedImages(project);
   const report = await reviewProject(project, { htmlQa: true });
   const reportFile = await writeReviewReport(project, report);
   console.log(JSON.stringify({ ...report, report_file: reportFile }, null, 2));
@@ -232,9 +236,10 @@ async function runReview(project) {
 }
 
 async function runHandoff(project) {
+  const boundaryImages = await assertBoundaryGeneratedImages(project);
   const report = await reviewProject(project, { htmlQa: true });
   const reportFile = await writeReviewReport(project, report);
-  const handoff = await createHandoff(project, report);
+  const handoff = await createHandoff(project, report, { boundaryImages });
   console.log(JSON.stringify({ ...handoff.manifest, review_report: reportFile, manifest_file: handoff.manifestFile }, null, 2));
   if (!report.passed) process.exitCode = 1;
 }

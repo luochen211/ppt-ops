@@ -5,7 +5,7 @@ import { ApplicationService } from "../application/service.js";
 import { initializeProject } from "../core/init.js";
 import { SourceIntake } from "../sources/intake.js";
 
-export async function runLargeDeckAcceptance({ inputFile, projectDir, render = false }) {
+export async function runLargeDeckAcceptance({ inputFile, projectDir, render = false, prepareBoundaryImages }) {
   const started = performance.now();
   await initializeProject(projectDir, { name: "large-deck-acceptance", title: "Large Deck Acceptance" });
   const service = await ApplicationService.open(projectDir);
@@ -15,6 +15,7 @@ export async function runLargeDeckAcceptance({ inputFile, projectDir, render = f
     const slides = groupSlides(intake.extracted.segments);
     if (slides.length < 50) throw coded("ACCEPTANCE_DECK_TOO_SMALL", `expected at least 50 slides with extractable content, received ${slides.length}`);
     await migratePages(projectDir, intake.source, slides);
+    if (prepareBoundaryImages) await prepareBoundaryImages(projectDir);
     await service.refresh();
     const freezeStarted = performance.now();
     const version = await service.freezeVersion();

@@ -4,16 +4,17 @@
 >
 > GitHub Epic: [#50](https://github.com/luochen211/ppt-ops/issues/50)
 >
-> Planning baseline: 2026-09-02, `origin/main` at `9a6db60`
+> Planning baseline: 2026-09-02, `origin/main` at `c3a42d1`
 
 ## 1. Next goal
 
-Deliver one controlled vertical slice that turns an approved page `visual_job` into a generated visual, preserves its evidence, requires explicit visual and user decisions, registers only an accepted file, and renders the same `asset_id` in self-contained HTML and editable PPTX.
+Make ImageGen an enforceable boundary of every delivered deck: the first and final page must each use a pipeline-registered generated image with intact automated, visual, and user-acceptance evidence before the project can freeze, build, review, hand off, or deliver.
 
 The goal is complete at two different evidence levels:
 
-1. **Foundation complete**: provider-neutral code, deterministic fake-provider tests, immutable local records, registration gates, dual rendering, Agent instructions, merged PR, and green CI.
-2. **Live acceptance complete**: one real ImageGen result goes through that exact path and the built PPTX is inspected in Microsoft PowerPoint.
+1. **Foundation complete**: provider-neutral code, deterministic fake-provider tests, immutable local records, registration gates, dual rendering, Agent instructions, merged PR, and green CI. Completed by #51.
+2. **Boundary enforcement complete**: first/final generated-image evidence is checked fail-closed at every formal lifecycle boundary. Owned by #58.
+3. **Live acceptance complete**: two real ImageGen results are accepted for a multi-page deck's first/final pages, rendered through the exact path, and inspected in Microsoft PowerPoint. Owned by #52.
 
 These levels may not substitute for one another.
 
@@ -21,6 +22,9 @@ These levels may not substitute for one another.
 
 ```text
 #51 Implement the Visual Asset Pipeline vertical slice
+  |
+  v
+#58 Require accepted ImageGen visuals on first and final pages
   |
   v
 #52 Validate a live generated visual in Microsoft PowerPoint
@@ -31,61 +35,51 @@ These levels may not substitute for one another.
 
 | Issue | Queue rule | Deliverable | Completion boundary |
 |---|---|---|---|
-| [#51](https://github.com/luochen211/ppt-ops/issues/51) | Ready when unclaimed | Complete provider-neutral vertical slice | Code, tests, PR, default-branch CI |
-| [#52](https://github.com/luochen211/ppt-ops/issues/52) | Depends on #51 | One live generation and exact-artifact PowerPoint observation | Real provider and Microsoft PowerPoint evidence |
-| [#50](https://github.com/luochen211/ppt-ops/issues/50) | Parent | Epic audit and closeout | #51 and #52 both Done |
+| [#51](https://github.com/luochen211/ppt-ops/issues/51) | Done | Complete provider-neutral vertical slice | Code, tests, PR, default-branch CI |
+| [#58](https://github.com/luochen211/ppt-ops/issues/58) | Depends on #51 | Mandatory first/final generated-image policy and lifecycle gate | Focused/full tests, PR, default-branch CI |
+| [#52](https://github.com/luochen211/ppt-ops/issues/52) | Depends on #58 | Two live boundary generations and exact-artifact PowerPoint observation | Real provider and Microsoft PowerPoint evidence |
+| [#50](https://github.com/luochen211/ppt-ops/issues/50) | Parent | Epic audit and closeout | #51, #58, and #52 all Done |
 
 ## 3. Why the implementation is one vertical node
 
-The prompt contract, attempt evidence, registration gate, `assets.json`, `asset_slots`, and both renderers form one transaction boundary. Splitting them among concurrent workers would give several nodes ownership of the same schemas, CLI, fixtures, and renderer contracts. Issue #51 therefore owns the coherent vertical slice; live provider and PowerPoint truth stay in #52 because they are separate external acceptance evidence.
+The provider-neutral visual pipeline is already merged under #51. Issue #58 now owns the smallest coherent enforcement boundary: evidence resolver, lifecycle gates, Agent instructions, and regression coverage. Live provider and PowerPoint truth remain in #52 because a green deterministic test cannot establish that external acceptance evidence.
 
-## 4. Issue #51 implementation plan
+## 4. Issue #58 implementation plan
 
-### A. Contract and prompt compiler
+### A. Boundary evidence resolver
 
-- Add explicit entities for visual briefs, generations, observations, and decisions.
-- Validate role, generation mode, semantic action, subject count, ratio, text policy, transparency, selected references, edit scope, and invariants.
-- Compile the stable 12-section English prompt in the order defined by the requirements.
-- Add the restrained faceted low-poly editorial preset derived from the archived working pattern.
+- Resolve first/final pages from canonical page order; deduplicate a one-page deck while retaining both semantic roles.
+- Require a selected `generated_image` asset in a boundary page slot.
+- Verify the accepted asset bytes and provenance against the immutable generation manifest, inspection, visual observation, user decision, and registration records.
+- Return role, page id, and first actionable evidence gap for every failure.
 
-### B. Attempt and evidence lifecycle
+### B. Fail-closed lifecycle wiring
 
-- Introduce a provider interface whose request contains the prompt, dimensions/ratio, and only explicitly selected references.
-- Store every attempt below `.pptops/visual-assets/<generation-id>/` without overwriting earlier attempts.
-- Record prompt hash, provider/model summary, selected reference hashes, output hash, and deterministic inspection.
-- Verify project-root containment, PNG/JPEG/WebP signature, MIME, size, dimensions, ratio, and PNG alpha-channel facts.
-- Keep semantic action, subject count, visible text, logo, style, edit invariants, and copy-safe space pending until a visual observation records them.
+- Keep intake, outline, design, edits, and draft validation available while images are pending.
+- Block version freeze, formal HTML/PPTX build, Review, Handoff, and delivery before renderer or artifact mutation.
+- Re-evaluate evidence at every formal boundary so deleted or contradictory evidence cannot inherit an earlier pass.
+- Do not add a warning mode, legacy formal-build bypass, or static-image substitution.
 
-### C. Decisions and registration
+### C. Agent workflow
 
-- Permit user acceptance only after required deterministic checks and a passing visual observation.
-- Keep Agent observation and user decision in separate append-only records.
-- Register only accepted generations into `assets/`, `assets.json`, and one selected page slot.
-- Reject stale page selection, path escape, duplicate asset id, and destination overwrite without partial project mutation.
+- Make first/final ImageGen work explicit during design.
+- Prevent build/review/handoff routes from claiming readiness until both exact candidates pass observation and explicit user acceptance.
+- Keep real ImageGen and Microsoft PowerPoint evidence in #52 rather than simulating it in #58.
 
-### D. Dual rendering
+### D. Verification
 
-- Continue embedding the accepted asset in self-contained HTML.
-- Add native PptxGenJS image objects for the same `asset_id`.
-- Implement deterministic centered `contain` and `cover`; keep page text and standard shapes native.
-- Fail builds for unresolved or unsafe referenced assets.
-
-### E. Agent route and verification
-
-- Teach `$ppt-agent` when to request a character, scene, diagram, or background, how to call an available ImageGen tool, how to ingest its output, and which acceptance claims remain pending.
-- Add prompt, lifecycle, path, alpha, registration, HTML, PPTX, and backward-compatibility tests.
+- Cover both missing, one missing, static asset, forged provenance, valid multi-page, valid one-page, and contradictory/deleted evidence.
+- Assert both HTML and PPTX resolve the same verified boundary asset identity.
 - Run focused tests, the full suite, project review, and `git diff --check`.
 
 ## 5. Conflict and file ownership
 
-Issue #51 may change:
+Issue #58 may change:
 
-- `src/visual-assets/**`;
-- visual-asset contract/schema files;
-- visual-asset CLI routing;
-- `src/adapters/pptx.js` and the minimum shared project/path helpers;
+- the boundary policy below `src/visual-assets/**`;
+- minimum lifecycle and CLI wiring needed to enforce it;
 - `.agents/skills/ppt-agent/**`;
-- focused tests, examples, and visual-asset documentation.
+- focused tests and Visual Asset Pipeline documentation.
 
 It must preserve:
 
@@ -107,20 +101,24 @@ It must preserve:
 | Duplicate asset id or destination | Atomic failure; existing bytes and JSON unchanged |
 | HTML build | Accepted asset is embedded by selected asset id |
 | PPTX build | Same asset is embedded as an image object; text remains native |
-| Legacy project without generated assets | Validation and both builds remain valid |
+| Legacy or new project without generated assets | Draft validation remains valid; freeze/build/review/handoff/deliver fail closed |
+| Multi-page, first accepted only | Final page id and evidence gap reported |
+| Multi-page, first and final accepted | Freeze and both renderers proceed |
+| One-page, one accepted image | The one page satisfies both boundary roles |
+| Forged or contradictory evidence | Formal lifecycle gate fails before output mutation |
 
 ## 7. Live acceptance node #52
 
-After #51 is merged:
+After #58 is merged:
 
-1. derive a brief from a real page task;
-2. compile and inspect the prompt before provider use;
+1. derive separate briefs for the first and final pages of a real multi-page deck;
+2. compile and inspect both prompts before provider use;
 3. call an available ImageGen capability with only approved fields/references;
-4. ingest the untouched result and verify deterministic evidence;
-5. visually inspect subject count, semantic action, contamination, composition, and edit invariants;
-6. request an explicit user decision;
-7. register only the accepted result;
-8. build HTML and PPTX from the same asset hash;
+4. ingest both untouched results and verify deterministic evidence;
+5. visually inspect subject count, semantic action, contamination, composition, and edit invariants for each;
+6. request an explicit user decision for each exact candidate;
+7. register only the accepted results to their correct boundary slots;
+8. build HTML and PPTX and verify both formats bind the same two accepted hashes;
 9. open the exact PPTX artifact in Microsoft PowerPoint and bind the observation to its hash.
 
 No fake provider, structural ZIP check, HTML preview, or screenshot alone can close #52.
@@ -129,7 +127,7 @@ No fake provider, structural ZIP check, HTML preview, or screenshot alone can cl
 
 - GitHub Issue state and `Parent:` / `Depends on:` body metadata are authoritative.
 - Before implementation, compute the queue from a fresh normalized snapshot in strict mode and publish one visible claim.
-- One session owns only #51 during implementation. #52 remains Blocked until #51 is merged and closed.
+- One session owns only #58 during implementation. #52 remains Blocked until #58 is merged and closed.
 - Replace the implementation claim with the linked PR; then follow PR CI and post-merge default-branch CI to terminal state.
 - Recompute the queue after claim, PR, merge, closure, dependency change, or failure.
 - Close #50 only after both children satisfy their distinct completion boundaries.
