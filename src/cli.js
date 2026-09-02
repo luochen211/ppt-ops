@@ -11,6 +11,7 @@ import { createHandoff } from "./handoff/index.js";
 import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-diff", "candidate-accept", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
 const HELP = `PPT-Ops 1.0
 
 Usage:
@@ -25,6 +26,15 @@ Usage:
   pptops review <project-dir>
   pptops handoff <project-dir>
   pptops deliver <project-dir>
+  pptops candidate-propose <project-dir> --target-kind <kind> --target-id <id> --patch <json> --base-revision <n>
+  pptops candidate-diff <project-dir> --candidate <id>
+  pptops candidate-accept <project-dir> --candidate <id> --expected-revision <n>
+  pptops version-freeze <project-dir>
+  pptops build-create <project-dir> --version <id> --targets <html,pptx>
+  pptops build-retry <project-dir> --build <id>
+  pptops review-run <project-dir> --build <id>
+  pptops review-record <project-dir> --review <id> --decision <accepted|rejected> --expected-revision <n> [--evidence <json>]
+  pptops handoff-create <project-dir> --build <id> --review <id>
   pptops --version`;
 
 const argv = process.argv.slice(2);
@@ -52,6 +62,8 @@ try {
     if (!options.to) throw new Error("migrate requires --to <v1-project-dir>");
     const result = await writeMigratedProject(projectDir, options.to);
     console.log(JSON.stringify({ command, source: path.resolve(projectDir), destination: result.destination, contract_version: result.contract_version, warnings: result.warnings }, null, 2));
+  } else if (APPLICATION_COMMANDS.has(command)) {
+    console.log(JSON.stringify({ ok: true, command, data: await runApplicationCommand(command, projectDir, options) }, null, 2));
   } else {
     const project = await readProject(projectDir);
     const errors = validateProject(project);
@@ -97,8 +109,28 @@ try {
     }
   }
 } catch (error) {
-  console.error(error.message);
+  console.error(JSON.stringify({ ok: false, error: { code: error.code ?? "COMMAND_FAILED", message: error.message, ...(error.details ? { details: error.details } : {}) } }));
   process.exit(1);
+}
+
+async function runApplicationCommand(command, projectDir, options) {
+  const { ApplicationError, ApplicationService } = await import("./application/service.js");
+  const service = await ApplicationService.open(projectDir);
+  try {
+    if (command === "candidate-propose") return await service.proposeCandidate({
+      targetKind: required(options, "target-kind"), targetId: required(options, "target-id"),
+      patch: jsonOption(options, "patch"), baseRevision: integerOption(options, "base-revision")
+    });
+    if (command === "candidate-diff") return service.diffCandidate(required(options, "candidate"));
+    if (command === "candidate-accept") return await service.acceptCandidate(required(options, "candidate"), integerOption(options, "expected-revision"));
+    if (command === "version-freeze") return await service.freezeVersion();
+    if (command === "build-create") return await service.createBuild({ versionId: required(options, "version"), targets: required(options, "targets").split(",").map((item) => item.trim()).filter(Boolean) });
+    if (command === "build-retry") return await service.retryBuild(required(options, "build"));
+    if (command === "review-run") return await service.runReview(required(options, "build"));
+    if (command === "review-record") return service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });
+    if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"));
+    throw new ApplicationError("COMMAND_UNKNOWN", `unknown application command: ${command}`);
+  } finally { service.close(); }
 }
 
 async function buildFormats(project, formats) {
@@ -148,10 +180,23 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "version", "targets", "build", "review", "decision", "evidence"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
 }
 
 function failValidation(errors) { throw new Error(errors.map((error) => `- ${error}`).join("\n")); }
+function required(options, name) {
+  if (!options[name]) { const error = new Error(`--${name} is required`); error.code = "OPTION_REQUIRED"; throw error; }
+  return options[name];
+}
+function integerOption(options, name) {
+  const value = Number(required(options, name));
+  if (!Number.isInteger(value) || value < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
+  return value;
+}
+function jsonOption(options, name) {
+  try { return JSON.parse(required(options, name)); }
+  catch (cause) { const error = new Error(`--${name} must be valid JSON`); error.code = "OPTION_INVALID"; error.cause = cause; throw error; }
+}
