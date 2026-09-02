@@ -37,6 +37,8 @@ Usage:
   pptops handoff-create <project-dir> --build <id> --review <id>
   pptops doctor [project-dir]
   pptops reindex <project-dir>
+  pptops update-preview <repository-root> --source <update-root> [--data-root <path>]
+  pptops update-apply <repository-root> --source <update-root> [--data-root <path>]
   pptops --version`;
 
 const argv = process.argv.slice(2);
@@ -74,6 +76,10 @@ try {
   } else if (command === "reindex") {
     const { reindexProject } = await import("./doctor/index.js");
     console.log(JSON.stringify(await reindexProject(projectDir), null, 2));
+  } else if (["update-preview", "update-apply"].includes(command)) {
+    const { applyUpdate, previewUpdate } = await import("./update/index.js");
+    const input = { repositoryRoot: projectDir, sourceRoot: required(options, "source"), ...(options["data-root"] ? { dataRoot: options["data-root"] } : {}) };
+    console.log(JSON.stringify(await (command === "update-preview" ? previewUpdate(input) : applyUpdate(input)), null, 2));
   } else if (APPLICATION_COMMANDS.has(command)) {
     console.log(JSON.stringify({ ok: true, command, data: await runApplicationCommand(command, projectDir, options) }, null, 2));
   } else {
@@ -193,7 +199,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "version", "targets", "build", "review", "decision", "evidence"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;

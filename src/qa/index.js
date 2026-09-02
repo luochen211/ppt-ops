@@ -133,7 +133,7 @@ function degradedRendering(reason, renderer) { return { status: "degraded", rend
 function numericSlideSort(left, right) { return Number(left.match(/(\d+)/)?.[1]) - Number(right.match(/(\d+)/)?.[1]); }
 async function exists(file) { if (!file) return false; try { await fs.access(file); return true; } catch { return false; } }
 function defaultCommands() {
-  return { powerpoint: POWERPOINT, libreoffice: "/Applications/LibreOffice.app/Contents/MacOS/soffice", pdftoppm: "/opt/homebrew/bin/pdftoppm", magick: "/opt/homebrew/bin/magick", exec: (file, args) => execFileAsync(file, args) };
+  return { powerpoint: POWERPOINT, libreoffice: "/Applications/LibreOffice.app/Contents/MacOS/soffice", pdftoppm: "/opt/homebrew/bin/pdftoppm", magick: "/opt/homebrew/bin/magick", exec: (file, args) => execFileAsync(file, args, { timeout: 15000, killSignal: "SIGKILL" }) };
 }
 async function withPowerPointLock(operation) {
   const lock = path.join(os.tmpdir(), "ppt-ops-powerpoint-render.lock");
@@ -142,6 +142,8 @@ async function withPowerPointLock(operation) {
     try { await fs.mkdir(lock); break; }
     catch (error) {
       if (error.code !== "EEXIST") throw error;
+      const stats = await fs.stat(lock).catch(() => undefined);
+      if (stats && Date.now() - stats.mtimeMs > 60000) { await fs.rm(lock, { recursive: true, force: true }); continue; }
       if (Date.now() >= deadline) throw new Error("timed out waiting for PowerPoint renderer");
       await new Promise((resolve) => setTimeout(resolve, 100));
     }

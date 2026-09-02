@@ -31,7 +31,7 @@ export async function reviewProject(project, options = {}) {
   const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");
   try {
     await fs.access(pptxFile);
-    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? true });
+    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0" });
     automatedChecks.push({
       id: "pptx-visual-qa",
       kind: "automated",

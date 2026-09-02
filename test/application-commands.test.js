@@ -10,6 +10,7 @@ import { initializeProject } from "../src/core/init.js";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
+process.env.PPT_OPS_RENDER_QA = "0";
 
 test("candidate commands enforce base and object revisions before applying a local patch", async (t) => {
   const project = await fixture(t);

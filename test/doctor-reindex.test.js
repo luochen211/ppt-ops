@@ -12,6 +12,7 @@ import { InfrastructureStore } from "../src/infrastructure/store.js";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
+process.env.PPT_OPS_RENDER_QA = "0";
 
 test("doctor reports required failures separately from optional degraded tools", async (t) => {
   const project = await fixture(t);
