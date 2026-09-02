@@ -133,7 +133,8 @@ function degradedRendering(reason, renderer) { return { status: "degraded", rend
 function numericSlideSort(left, right) { return Number(left.match(/(\d+)/)?.[1]) - Number(right.match(/(\d+)/)?.[1]); }
 async function exists(file) { if (!file) return false; try { await fs.access(file); return true; } catch { return false; } }
 function defaultCommands() {
-  return { powerpoint: POWERPOINT, libreoffice: "/Applications/LibreOffice.app/Contents/MacOS/soffice", pdftoppm: "/opt/homebrew/bin/pdftoppm", magick: "/opt/homebrew/bin/magick", exec: (file, args) => execFileAsync(file, args, { timeout: 15000, killSignal: "SIGKILL" }) };
+  const timeout = Number(process.env.PPT_OPS_RENDER_TIMEOUT_MS ?? 60000);
+  return { powerpoint: POWERPOINT, libreoffice: "/Applications/LibreOffice.app/Contents/MacOS/soffice", pdftoppm: "/opt/homebrew/bin/pdftoppm", magick: "/opt/homebrew/bin/magick", exec: (file, args) => execFileAsync(file, args, { timeout, killSignal: "SIGKILL" }) };
 }
 async function withPowerPointLock(operation) {
   const lock = path.join(os.tmpdir(), "ppt-ops-powerpoint-render.lock");
