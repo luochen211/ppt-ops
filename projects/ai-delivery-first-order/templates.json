@@ -1,1 +1,21 @@
-[]
+[
+  {"contract_version":"1.0","kind":"template","id":"template-hero-cover","name":"Journey hero cover","slots":{"title":"required","subtitle":"optional"},"renderers":{"html":"HERO-COVER"}},
+  {"contract_version":"1.0","kind":"template","id":"template-big-quote","name":"Thesis contrast quote","slots":{"negations":"required","conclusion":"required"},"renderers":{"html":"BIG-QUOTE"}},
+  {"contract_version":"1.0","kind":"template","id":"template-agenda-route","name":"Four-stage route","slots":{"stages":"four"},"renderers":{"html":"AGENDA-4"}},
+  {"contract_version":"1.0","kind":"template","id":"template-act-divider","name":"Module divider","slots":{"act":"required","title":"required","outcome":"required"},"renderers":{"html":"ACT-DIVIDER"}},
+  {"contract_version":"1.0","kind":"template","id":"template-proof-branches","name":"Central proof branches","slots":{"center":"required","branches":"four"},"renderers":{"html":"PROOF-4"}},
+  {"contract_version":"1.0","kind":"template","id":"template-case-flow","name":"Cause to responsibility flow","slots":{"cause":"required","unknowns":"required","result":"required"},"renderers":{"html":"CASE-TIMELINE"}},
+  {"contract_version":"1.0","kind":"template","id":"template-trust-pipeline","name":"Trust evidence pipeline","slots":{"steps":"four"},"renderers":{"html":"TRUST-PIPELINE"}},
+  {"contract_version":"1.0","kind":"template","id":"template-hero-question","name":"Unresolved question hero","slots":{"question":"required","unknowns":"required"},"renderers":{"html":"HERO-QUESTION"}},
+  {"contract_version":"1.0","kind":"template","id":"template-definition-map","name":"Deliverable definition map","slots":{"center":"required","dimensions":"four"},"renderers":{"html":"DEFINITION-MAP"}},
+  {"contract_version":"1.0","kind":"template","id":"template-responsibility-chain","name":"Accumulating responsibility chain","slots":{"steps":"five"},"renderers":{"html":"RESPONSIBILITY-CHAIN"}},
+  {"contract_version":"1.0","kind":"template","id":"template-delivery-gates","name":"Delivery gate road","slots":{"gates":"four"},"renderers":{"html":"DELIVERY-GATES"}},
+  {"contract_version":"1.0","kind":"template","id":"template-ai-vs-human","name":"Connected role comparison","slots":{"left":"required","connection":"required","right":"required"},"renderers":{"html":"AI-VS-HUMAN"}},
+  {"contract_version":"1.0","kind":"template","id":"template-ai-responsibility","name":"Nested responsibility boundary","slots":{"outer":"required","inner":"required","judgments":"required"},"renderers":{"html":"AI-RESPONSIBILITY"}},
+  {"contract_version":"1.0","kind":"template","id":"template-speed-contrast","name":"Direction vector contrast","slots":{"positive":"required","negative":"required"},"renderers":{"html":"SPEED-CONTRAST"}},
+  {"contract_version":"1.0","kind":"template","id":"template-evidence-stack","name":"Progressive evidence stack","slots":{"levels":"six"},"renderers":{"html":"EVIDENCE-STACK"}},
+  {"contract_version":"1.0","kind":"template","id":"template-readiness-five","name":"Ordered readiness questions","slots":{"questions":"five"},"renderers":{"html":"READINESS-5"}},
+  {"contract_version":"1.0","kind":"template","id":"template-first-order-ladder","name":"First-order growth ladder","slots":{"levels":"five"},"renderers":{"html":"FIRST-ORDER-LADDER"}},
+  {"contract_version":"1.0","kind":"template","id":"template-next-order-flywheel","name":"Delivery asset flywheel","slots":{"center":"required","assets":"five","direction":"required"},"renderers":{"html":"NEXT-ORDER-FLYWHEEL"}},
+  {"contract_version":"1.0","kind":"template","id":"template-closing-hero","name":"Evidence closing hero","slots":{"title":"required","statement":"required"},"renderers":{"html":"CLOSING-HERO"}}
+]

@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "project_id": "ai-delivery-first-order",
+  "status": "implemented_pending_user_acceptance",
+  "goal": "把不可见的交付能力，变成可沿路线检查的证据",
+  "visual_thesis": {
+    "name": "从能力到可信交付",
+    "statement": "路线决定往哪里走，边界决定谁负责什么，证据决定是否完成，闭环决定能否持续接单。"
+  },
+  "motifs": [
+    {"id":"route","purpose":"表达顺序、阶段、风险门和成长","allowed":["node","connector","gate","ladder","vector"],"avoid":"把有先后的内容做成等权卡片墙"},
+    {"id":"boundary","purpose":"表达范围、责任和人机所有权","allowed":["containment","scope-map","responsibility-chain","role-contrast"],"avoid":"用颜色分栏代替包含与归属关系"},
+    {"id":"evidence","purpose":"表达信任、完成和验收依据","allowed":["proof-branch","evidence-stack","verification-step"],"avoid":"用徽章、图标或口号冒充可验证事实"},
+    {"id":"loop","purpose":"表达交付资产如何带来下一次机会","allowed":["directed-cycle","return-arrow","flywheel"],"avoid":"只有圆形装饰但没有方向和输入输出"}
+  ],
+  "density_budgets": {
+    "hero": {"primary_visuals":1,"level_one_nodes":3},
+    "structural": {"primary_visuals":1,"level_one_nodes":6},
+    "closing": {"primary_visuals":1,"level_one_nodes":2}
+  },
+  "page_decisions": [
+    {"page":1,"page_id":"page-001","relation":"hero","visual_job":"Use one large title and the template brand language","template_id":"template-hero-cover","motif":"route","reading_path":["brand","title","subtitle"],"rationale":"用起点式封面邀请观众进入完整旅程","avoid":"技术图标拼贴或履历墙"},
+    {"page":2,"page_id":"page-002","relation":"hero","visual_job":"Turn the thesis into one memorable sentence","template_id":"template-big-quote","motif":"evidence","reading_path":["three-negations","deliverable-result"],"rationale":"先排除伪购买理由，再落到可交付结果","avoid":"三张并列卡片削弱中心判断"},
+    {"page":3,"page_id":"page-003","relation":"sequence","visual_job":"Draw one directional route with four alternating stage nodes","template_id":"template-agenda-route","motif":"route","reading_path":["stage-01","stage-02","stage-03","stage-04"],"rationale":"四模块本质是一条连续交付路径","avoid":"四宫格或新增第五模块"},
+    {"page":4,"page_id":"page-004","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"route","reading_path":["act-number","act-title","act-outcome"],"rationale":"给第一段留出认知换气","avoid":"在幕封上提前塞方法细节"},
+    {"page":5,"page_id":"page-005","relation":"hierarchy","visual_job":"Place a completion record at the center of four connected proof branches","template_id":"template-proof-branches","motif":"evidence","reading_path":["completion-record","problem","process","proof","ownership"],"rationale":"毕设只有作为完成证据才产生信任","avoid":"四个无连接卖点卡片"},
+    {"page":6,"page_id":"page-006","relation":"cause_effect","visual_job":"Show OK flowing through three unresolved blanks into one responsibility block","template_id":"template-case-flow","motif":"boundary","reading_path":["ok","undefined-items","responsibility"],"rationale":"把未定义事项如何转移成责任画成因果流","avoid":"只列失败清单，不显示责任归属"},
+    {"page":7,"page_id":"page-007","relation":"process","visual_job":"Show a four-step trust pipeline","template_id":"template-trust-pipeline","motif":"evidence","reading_path":["work","process","evidence","responsibility"],"rationale":"信任来自逐步可验证，而非自我宣称","avoid":"客户头像围绕信任装饰"},
+    {"page":8,"page_id":"page-008","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"route","reading_path":["act-number","act-title","act-outcome"],"rationale":"从信任问题切换到需求定义","avoid":"在幕封上继续讲上一模块案例"},
+    {"page":9,"page_id":"page-009","relation":"hero","visual_job":"Use a large quote with unanswered blanks","template_id":"template-hero-question","motif":"boundary","reading_path":["vague-request","unanswered-blanks"],"rationale":"让观众先感到一句话不是需求","avoid":"直接给出答案，跳过问题张力"},
+    {"page":10,"page_id":"page-010","relation":"hierarchy","visual_job":"Use a four-direction scope map around one deliverable task","template_id":"template-definition-map","motif":"boundary","reading_path":["deliverable-task","goal","scope","boundary","acceptance"],"rationale":"四项共同定义一个可交付任务，并非四个技巧","avoid":"2x2卡片墙或把边界放在中心"},
+    {"page":11,"page_id":"page-011","relation":"process","visual_job":"Show responsibility accumulating through five growing linked nodes","template_id":"template-responsibility-chain","motif":"boundary","reading_path":["clarify","solution","build","verify-deploy","change-risk"],"rationale":"报价随责任链累积，而不是按代码量计算","avoid":"等宽价目表或单一金额大字"},
+    {"page":12,"page_id":"page-012","relation":"process","visual_job":"Draw four physical gate symbols across one delivery road","template_id":"template-delivery-gates","motif":"route","reading_path":["freeze","demo","precheck","handoff"],"rationale":"四次验收门把风险分段关住","avoid":"普通时间线，缺少门的阻断语义"},
+    {"page":13,"page_id":"page-013","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"boundary","reading_path":["act-number","act-title","division-question"],"rationale":"进入全篇责任边界的核心章节","avoid":"机器人插画抢走判断主题"},
+    {"page":14,"page_id":"page-014","relation":"comparison","visual_job":"Connect an AI execution engine to a human judgment compass","template_id":"template-ai-vs-human","motif":"boundary","reading_path":["ai-engine","connection","human-compass"],"rationale":"两者是连接关系，不是竞争关系","avoid":"红蓝对抗擂台或能力评分榜"},
+    {"page":15,"page_id":"page-015","relation":"comparison","visual_job":"Nest AI execution inside the larger human responsibility boundary","template_id":"template-ai-responsibility","motif":"boundary","reading_path":["human-boundary","ai-execution","human-judgments"],"rationale":"包含关系直接说明责任不能外包","avoid":"把人和AI画成等权并列圆"},
+    {"page":16,"page_id":"page-016","relation":"comparison","visual_job":"Use a two-direction vector contrast","template_id":"template-speed-contrast","motif":"route","reading_path":["correct-vector","wrong-vector"],"rationale":"速度只放大既有方向","avoid":"只比较快慢，忽略方向"},
+    {"page":17,"page_id":"page-017","relation":"hierarchy","visual_job":"Show an evidence stack from code to customer","template_id":"template-evidence-stack","motif":"evidence","reading_path":["tests","build","deployment","real-path","customer","handoff"],"rationale":"完成度随证据层级逐步增加","avoid":"六枚勾选徽章或一句已完成"},
+    {"page":18,"page_id":"page-018","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"loop","reading_path":["act-number","act-title","next-order"],"rationale":"把一次性交付转向持续信用","avoid":"在幕封上提前画完整飞轮"},
+    {"page":19,"page_id":"page-019","relation":"sequence","visual_job":"Use five numbered self-check questions","template_id":"template-readiness-five","motif":"boundary","reading_path":["question-01","question-02","question-03","question-04","question-05"],"rationale":"接单前先连续检查五个边界","avoid":"无顺序问答卡片或人格测试风格"},
+    {"page":20,"page_id":"page-020","relation":"sequence","visual_job":"Use a five-level upward ladder","template_id":"template-first-order-ladder","motif":"route","reading_path":["demo","small-problem","paid-order","verified-case","better-opportunity"],"rationale":"第一单是逐级降低风险的路径","avoid":"从零直接跳到大单的火箭图"},
+    {"page":21,"page_id":"page-021","relation":"cycle","visual_job":"Use directional arrows to make the delivery asset flywheel visibly cyclical","template_id":"template-next-order-flywheel","motif":"loop","reading_path":["delivery","reusable-assets","next-opportunity","return"],"rationale":"尾款结束项目，资产继续产生机会","avoid":"无箭头圆环或五张周边卡片"},
+    {"page":22,"page_id":"page-022","relation":"hero","visual_job":"Use one closing sentence with ample negative space","template_id":"template-closing-hero","motif":"evidence","reading_path":["title","closing-sentence","negative-space"],"rationale":"最后留下值得被交付的信用判断","avoid":"新方法清单、二维码或第二个CTA"}
+  ],
+  "acceptance": {
+    "automated": "pending",
+    "rendered_browser_observation": "pending",
+    "user_visual_acceptance": "pending",
+    "powerpoint_acceptance": "not_scheduled_html_only",
+    "business_acceptance": "pending"
+  }
+}
