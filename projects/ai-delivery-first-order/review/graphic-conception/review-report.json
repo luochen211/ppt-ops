@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "project_id": "ai-delivery-first-order",
+  "observed_at": "2026-09-02T07:20:00Z",
+  "source": {
+    "html_file": "ppt/index.html",
+    "html_sha256": "0ee6941da03e8bfc882863474c0a1205f1e8e741b8658d76a1a43dfc3dfccbe2",
+    "design_file": "design-direction.json",
+    "design_sha256": "cedf011751efea057808f47eaf43ef28a311cd5e3ccb86097e14fb51575b3a09"
+  },
+  "automated_traceability": {
+    "status": "passed",
+    "command": "node scripts/check-project-visual-design.js projects/ai-delivery-first-order",
+    "metrics": {"pages":22,"decisions":22,"motifs":4,"templates":19,"html_layouts":22},
+    "findings": []
+  },
+  "browser_render_observation": {
+    "status": "passed",
+    "browser": "Chromium 148.0.7778.96",
+    "viewport": "1600x900",
+    "mode": "static",
+    "visited_pages": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22],
+    "console_errors": [],
+    "page_errors": [],
+    "contact_sheet": {
+      "file": "review/graphic-conception/contact-sheet.jpg",
+      "sha256": "06b6508f9d97a042cb85d23bea0a18f4082064c54b0bde3433cb92f779331f64"
+    },
+    "representative_pages": [
+      {"page":3,"relation":"sequence","motif":"route","file":"review/graphic-conception/pages/page-03-route.png","sha256":"e2f4a1cfad870328b9b957bb575e1662476226caf34bdff86f82e836eaa5be11"},
+      {"page":5,"relation":"hierarchy","motif":"evidence","file":"review/graphic-conception/pages/page-05-evidence-branches.png","sha256":"f8fe9493a58d057f248d814a22f3605a75a4701f6d81c6da3312be84566ee69c"},
+      {"page":6,"relation":"cause_effect","motif":"boundary","file":"review/graphic-conception/pages/page-06-cause-effect.png","sha256":"17c02757a13f9a32203a042ef9e4e3b6ea5ee56043b895d27e82e7f999c5c31a"},
+      {"page":10,"relation":"hierarchy","motif":"boundary","file":"review/graphic-conception/pages/page-10-scope-boundary.png","sha256":"db4ac542c2ac00a98d8be984d34f71bbe85bfcf0aa8a2e08f4b73d3fc0395b3c"},
+      {"page":12,"relation":"process","motif":"route","file":"review/graphic-conception/pages/page-12-delivery-gates.png","sha256":"64115a55fed6ce6244c3f8b23908ceab6deab47ca2c731858233ff61b3738ae0"},
+      {"page":14,"relation":"comparison","motif":"boundary","file":"review/graphic-conception/pages/page-14-role-boundary.png","sha256":"7de8159c7f6af4e5997396cd599c5298a9eae5a8549d80712a8ce59ec73d58e3"},
+      {"page":15,"relation":"comparison","motif":"boundary","file":"review/graphic-conception/pages/page-15-ownership-boundary.png","sha256":"19b8bbf61db2f221d308fcd0d3c354776e1bcd15c127f83ebad3242435095186"},
+      {"page":17,"relation":"hierarchy","motif":"evidence","file":"review/graphic-conception/pages/page-17-evidence-stack.png","sha256":"131f86b646544b9accd28b08f3d6daae404b555535929c2d355f705d47fffed9"},
+      {"page":20,"relation":"sequence","motif":"route","file":"review/graphic-conception/pages/page-20-growth-ladder.png","sha256":"c6cf2ea0fe77eaf1bdbd496acdb0da4c8ad2b3d3cbd2000dd90a7403694953bf"},
+      {"page":21,"relation":"cycle","motif":"loop","file":"review/graphic-conception/pages/page-21-flywheel.png","sha256":"72e9c41699ce3426e54b5a4d86e84d5e65322ff4b2e78d74655b0ba059a9366f"}
+    ],
+    "observations": [
+      "The four-module route reads left to right as one delivery journey.",
+      "Hierarchy pages visibly assign one central owner to surrounding evidence or scope dimensions.",
+      "The failure case, delivery gates, evidence stack, growth ladder, and flywheel use distinct structures that match their declared relations.",
+      "No clipping or unintended missing content was observed in the representative contact sheet."
+    ]
+  },
+  "acceptance": [
+    {"id":"automated_traceability","status":"passed","evidence":"review-report.json"},
+    {"id":"browser_render_observation","status":"passed","evidence":"contact-sheet.jpg"},
+    {"id":"user_visual_acceptance","status":"pending","evidence":null},
+    {"id":"powerpoint_acceptance","status":"not_scheduled_html_only","evidence":null},
+    {"id":"business_acceptance","status":"pending","evidence":null}
+  ]
+}

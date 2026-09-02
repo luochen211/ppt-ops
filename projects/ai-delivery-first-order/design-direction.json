@@ -43,8 +43,8 @@
     {"page":22,"page_id":"page-022","relation":"hero","visual_job":"Use one closing sentence with ample negative space","template_id":"template-closing-hero","motif":"evidence","reading_path":["title","closing-sentence","negative-space"],"rationale":"最后留下值得被交付的信用判断","avoid":"新方法清单、二维码或第二个CTA"}
   ],
   "acceptance": {
-    "automated": "pending",
-    "rendered_browser_observation": "pending",
+    "automated": "passed",
+    "rendered_browser_observation": "passed",
     "user_visual_acceptance": "pending",
     "powerpoint_acceptance": "not_scheduled_html_only",
     "business_acceptance": "pending"
