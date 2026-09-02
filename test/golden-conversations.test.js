@@ -8,6 +8,7 @@ import JSZip from "jszip";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
 import { SourceIntake } from "../src/sources/intake.js";
+import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 
 process.env.PPT_OPS_RENDER_QA = "0";
 const fixturesRoot = new URL("fixtures/golden-conversations/", import.meta.url);
@@ -104,6 +105,7 @@ async function projectFixture(t, name) {
   t.after(() => fs.rm(parent, { recursive: true, force: true }));
   const project = path.join(parent, "project");
   await initializeProject(project, { title: name });
+  await seedAcceptedBoundaryImages(project);
   return project;
 }
 async function docxBuffer(paragraphs) {

@@ -37,7 +37,8 @@ export async function createHandoff(project, reviewReport, options = {}) {
     review: {
       passed: reviewReport.passed,
       required_failure_count: reviewReport.required_failure_count
-    }
+    },
+    ...(options.boundaryImages ? { boundary_images: options.boundaryImages.boundaries.map(({ boundary, roles, page_id, asset_id, generation_id, sha256 }) => ({ boundary, roles, page_id, asset_id, generation_id, sha256 })) } : {})
   };
   const manifestFile = path.join(packageDir, HANDOFF_MANIFEST_FILE);
   await fs.writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, { flag: "wx" });

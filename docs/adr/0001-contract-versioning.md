@@ -1,6 +1,6 @@
 # ADR 0001: V1 contract identity and Foundation migration
 
-- Status: Accepted
+- Status: Accepted; Foundation formal-build consequence superseded by ADR 0002
 - Date: 2026-09-01
 
 ## Decision
@@ -15,5 +15,5 @@ Foundation projects are read-only migration inputs. Migration writes a new desti
 
 - UI, CLI, persistence, AI, and renderers can test the same entity boundary.
 - An accepted candidate and an approved/frozen version remain distinct records.
-- Existing Foundation projects continue to build during the transition.
+- Existing Foundation projects remain readable and migratable. ADR 0002 supersedes the former transition-time formal-build compatibility.
 - Cross-entity semantic checks remain necessary in addition to JSON Schema.

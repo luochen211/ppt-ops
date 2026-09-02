@@ -361,6 +361,8 @@ T2 必须提供显式迁移器：
 
 当前 CLI 是 Agent 的确定性工具适配层，并与其他适配器共用 Application Services。
 
+Foundation 项目只作为只读迁移输入和草稿校验对象，不再允许正式构建。依据 ADR 0002，迁移后的 V1 项目必须先为 canonical `pages.json` 的首页与最后一页登记经自动检查、视觉观察和用户明确接受的 ImageGen 资产，才能冻结 Version、构建、Review、Handoff 或交付；一页项目可由同一资产同时满足首尾边界。
+
 ## 18. 架构决策纪律
 
 以下变更必须有 ADR：

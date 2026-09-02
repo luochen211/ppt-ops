@@ -65,7 +65,7 @@ test("visual-producing and review modes load the controlled visual asset workflo
     fs.readFile(routingUrl, "utf8").then(JSON.parse),
     fs.readFile(visualAssetsUrl, "utf8")
   ]);
-  for (const mode of ["design", "prototype", "revise", "review"]) assert.ok(routing.modes[mode].loads.includes("visual_assets"));
+  for (const mode of ["design", "prototype", "revise", "build", "review", "handoff"]) assert.ok(routing.modes[mode].loads.includes("visual_assets"));
   assert.match(reference, /page `visual_job` and three-second message come first/);
   assert.match(reference, /visual-asset-prepare/);
   assert.match(reference, /visual-asset-ingest/);
@@ -75,7 +75,9 @@ test("visual-producing and review modes load the controlled visual asset workflo
   assert.match(reference, /native-sufficient/);
   assert.match(reference, /generated-needed/);
   assert.match(reference, /generated-present/);
-  assert.match(reference, /empty ImageGen inventory.*valid result only/s);
+  assert.match(reference, /empty ImageGen inventory can never pass/);
+  assert.match(reference, /first and final page are mandatory exceptions/);
+  assert.match(reference, /Before freezing a Version/);
 });
 
 test("review audits ImageGen decisions without generating or accepting assets", async () => {

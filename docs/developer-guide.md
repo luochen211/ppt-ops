@@ -18,6 +18,12 @@ Add semantic templates in `src/layout/catalog.js`, including explicit capacity r
 
 Provider adapters implement the neutral interface consumed by `src/ai/pipeline.js`. They must use HTTPS, a bounded timeout, structured output, retry classification, and sanitized errors. Payload construction is allowlist-based; raw source content is excluded unless the caller explicitly authorizes selected segments. Add payload and non-target-mutation regression tests for every adapter.
 
+## Mandatory boundary visuals
+
+`src/visual-assets/boundary-policy.js` is the fail-closed policy for formal deck boundaries. It uses canonical V1 PageSpec order, not names or filenames. A passing asset must resolve through the Visual Asset Pipeline's immutable brief, prompt, generation, inspection, observation, user decision, registration, and current file hash. Keep draft validation separate: it must still work before images are ready, while Version freeze, Build, Review, Handoff, and delivery must reject missing or contradictory evidence with `BOUNDARY_IMAGE_REQUIRED`.
+
+Tests may use deterministic raster fixtures to exercise the contract, but those records never establish live ImageGen, human aesthetic, Microsoft PowerPoint, or business acceptance. Do not add a Foundation formal-build bypass or accept `type: image` as an equivalent boundary asset.
+
 ## Required checks
 
 ```sh

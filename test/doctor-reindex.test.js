@@ -9,6 +9,7 @@ import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
 import { reindexProject, runDoctor } from "../src/doctor/index.js";
 import { InfrastructureStore } from "../src/infrastructure/store.js";
+import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
@@ -71,5 +72,6 @@ async function fixture(t) {
   t.after(() => fs.rm(parent, { recursive: true, force: true }));
   const project = path.join(parent, "project");
   await initializeProject(project, { title: "Doctor Fixture" });
+  await seedAcceptedBoundaryImages(project);
   return project;
 }

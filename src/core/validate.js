@@ -2,7 +2,7 @@ import { validateV1Bundle } from "../contracts/v1.js";
 
 const RELATIONS = new Set(["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]);
 const STATUSES = new Set(["draft", "prototype", "approved", "built", "reviewed"]);
-const ASSET_TYPES = new Set(["image", "icon", "video", "data"]);
+const ASSET_TYPES = new Set(["image", "generated_image", "icon", "video", "data"]);
 const OUTPUTS = new Set(["html", "pptx", "pdf", "png"]);
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i;

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
@@ -32,6 +33,22 @@ test("build all creates both renderers and deliver creates a complete package", 
   const project = path.join(temporary, "client-deck");
   await runCli("init", project, "--title", "Client Deck");
 
+  await assert.rejects(runCli("build", project, "--format", "all"), (error) => {
+    const response = JSON.parse(error.stderr.trim().split("\n").at(-1));
+    assert.equal(response.error.code, "BOUNDARY_IMAGE_REQUIRED");
+    assert.deepEqual(response.error.details.failures[0].roles, ["first", "final"]);
+    return true;
+  });
+  await assert.rejects(fs.access(path.join(project, "outputs")));
+  for (const command of ["review", "handoff", "deliver"]) {
+    await assert.rejects(runCli(command, project), (error) => {
+      const response = JSON.parse(error.stderr.trim().split("\n").at(-1));
+      assert.equal(response.error.code, "BOUNDARY_IMAGE_REQUIRED");
+      return true;
+    });
+  }
+  await seedAcceptedBoundaryImages(project);
+
   const build = JSON.parse((await runCli("build", project, "--format", "all")).stdout);
   assert.deepEqual(build.outputs.map(({ format }) => format), ["html", "pptx"]);
   await Promise.all(build.outputs.map(({ file }) => fs.access(file)));
@@ -41,6 +58,9 @@ test("build all creates both renderers and deliver creates a complete package", 
   assert.match(delivery.handoff.manifest_file, /package-001\/manifest\.json$/);
   const manifest = JSON.parse(await fs.readFile(delivery.handoff.manifest_file, "utf8"));
   assert.deepEqual(manifest.outputs.map(({ name }) => name), ["review-report.json", "slides.html", "slides.pptx"]);
+  assert.deepEqual(manifest.boundary_images.map(({ boundary, page_id, asset_id }) => ({ boundary, page_id, asset_id })), [
+    { boundary: "first+final", page_id: "page-001", asset_id: "generated-page-001-boundary" }
+  ]);
 });
 
 test("V1 CLI rejects malformed page selections and unknown options", async () => {
@@ -89,6 +109,8 @@ test("migrate writes V1 contracts to a separate destination", async (t) => {
   assert.equal(JSON.parse(await fs.readFile(path.join(destination, "project.json"), "utf8")).kind, "project");
   const validation = JSON.parse((await runCli("validate", destination)).stdout);
   assert.equal(validation.valid, true);
+  await assert.rejects(runCli("review", destination), /BOUNDARY_IMAGE_REQUIRED/);
+  await seedAcceptedBoundaryImages(destination);
   const review = JSON.parse((await runCli("review", destination)).stdout);
   assert.equal(review.schema_version, "1.0");
 });

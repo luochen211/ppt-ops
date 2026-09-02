@@ -52,10 +52,11 @@ If an update fails, retain the updater report and backup. If project contracts o
 | Symptom | First check | Safe action |
 |---|---|---|
 | Project does not open | `doctor /path/to/project` | Fix the first required diagnostic; do not delete `.pptops/`. |
-| Build is rejected | Structured error code and PageSpec ID | Correct the named contract, source reference, or capacity violation; create a new Version. |
+| Build is rejected with `BOUNDARY_IMAGE_REQUIRED` | Boundary role, PageSpec ID, and evidence code | Return to the named page's ImageGen brief/generation/observation/accept/register step; never edit provenance by hand. |
+| Build is rejected for another reason | Structured error code and PageSpec ID | Correct the named contract, source reference, or capacity violation; create a new Version. |
 | PowerPoint evidence is degraded | PowerPoint, `pdftoppm`, timeout, render lock | Close a hung dialog, confirm tools, and retry; increase `PPT_OPS_RENDER_TIMEOUT_MS` only for a known large deck. |
 | Interrupted queue work | Attempt and event history | Reopen the store; recovery retains the failed attempt and requeues safe work. |
-| Handoff is refused | Review state | Record real acceptance or rejection. Never edit the database to bypass the gate. |
+| Handoff is refused | Boundary image evidence and Review state | Restore the exact accepted image evidence or record the required review decision. Never edit the database to bypass either gate. |
 | Update touches project/user data | Preview layer report | Stop. A valid System update must not own those paths. |
 
 Never report `doctor`, CI, structural QA, or automated PowerPoint export as human acceptance.
