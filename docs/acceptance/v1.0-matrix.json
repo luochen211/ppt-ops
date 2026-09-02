@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "release": {
+    "version": "1.0.0",
+    "status": "release_candidate",
+    "ga_tag": "v1.0.0"
+  },
+  "gates": [
+    {
+      "id": "automated_release_candidate",
+      "status": "passed",
+      "evidence": ["docs/acceptance/v1-release-candidate.md"]
+    },
+    {
+      "id": "human_visual_acceptance",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "manual_powerpoint_acceptance",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "chrome_html_acceptance",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "safari_html_acceptance",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "delivery_package_acceptance",
+      "status": "pending",
+      "evidence": []
+    }
+  ],
+  "target_user_trials": [
+    {
+      "participant_id": "target-user-1",
+      "status": "pending",
+      "code_modified": null,
+      "completed_at": null,
+      "evidence": []
+    },
+    {
+      "participant_id": "target-user-2",
+      "status": "pending",
+      "code_modified": null,
+      "completed_at": null,
+      "evidence": []
+    },
+    {
+      "participant_id": "target-user-3",
+      "status": "pending",
+      "code_modified": null,
+      "completed_at": null,
+      "evidence": []
+    }
+  ]
+}

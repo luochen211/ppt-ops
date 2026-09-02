@@ -2,7 +2,7 @@
 
 PPT-Ops 是一个运行在 Codex 中的本地优先 PPT 生成 Agent。用户通过对话提交主题或资料，Agent 调用同一套结构化项目、页面规格和本地工具生成可编辑 PPTX；CLI 是内部执行能力，不是产品界面。
 
-> 当前状态：V1 Agent alpha。仓库级 `$ppt-agent` 已提供 Codex 对话入口；AI 管线、项目版本和真实用户验收仍需继续完成。
+> 当前状态：V1.0 Release Candidate。自动化与真实 54 页项目集成已通过；人工视觉、手动 PowerPoint、Chrome/Safari 产物检查和 3 位目标用户试用仍为 pending，因此尚未发布 GA。
 
 V1.0 真源文档：
 
@@ -12,6 +12,12 @@ V1.0 真源文档：
 - [career-ops 项目理解与 PPT-Ops 参考设计](docs/career-ops-reference-for-ppt-ops.md)
 - [career-ops 启发的 Codex Agent 目标设计](docs/career-ops-inspired-agent-design.md)
 - [Codex Agent 交付 DAG](docs/delivery-agent-dag.md)
+- [安装、升级、备份、恢复与排障](docs/operations.md)
+- [开发者指南](docs/developer-guide.md)
+- [V1 RC 验收记录](docs/acceptance/v1-release-candidate.md)
+- [V1.0 发布矩阵](docs/acceptance/v1.0-matrix.json)
+- [目标用户试用协议](docs/target-user-trials.md)
+- [V1.0.0 发布说明](docs/releases/v1.0.0.md)
 
 在 Codex 中可直接说“使用 `$ppt-agent` 把这些资料生成一份可编辑 PPTX”，也可让 Codex根据技能描述自动进入该工作流。技能入口位于 `.agents/skills/ppt-agent/SKILL.md`。
 
@@ -115,3 +121,7 @@ Layout 层提供 hero、statement、comparison、sequence、process、hierarchy�
 V1.0 不提供 HTML/PPTX 像素级一致保证、HTML 转 PPTX、浏览器协作编辑、在线托管/分享、现有 PPTX 往返编辑或自动补造业务事实。HTML 资源内嵌并支持键盘翻页；PPTX 使用本机可用字体，换机时可能发生字体替换。
 
 CI 在 push 与 pull request 上运行 `npm ci`、全部测试、两种 demo build、`review` 和 `handoff`。CI 成功仍不替代上述人工视觉与真实 PowerPoint 验收。
+
+## GA 发布闸门
+
+`node scripts/check-release-readiness.js` 读取机器可读验收矩阵。当前它应以非零状态退出，因为必要的人工与真实用户证据尚未完成。只有六项发布门和三个独立用户试用全部有证据时，手动 `Release V1.0 GA` workflow 才会运行测试、再次验证矩阵、生成带 SHA-256 的可恢复源码归档并创建 `v1.0.0` Release。不得提前创建 GA tag。
