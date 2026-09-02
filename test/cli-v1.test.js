@@ -52,6 +52,34 @@ test("version reports the stable package version", async () => {
   assert.equal((await runCli("--version")).stdout.trim(), "1.0.0");
 });
 
+test("visual asset CLI prepares, ingests, observes, accepts, and registers one asset", async (t) => {
+  const parent = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-visual-cli-"));
+  const project = path.join(parent, "project");
+  t.after(() => fs.rm(parent, { recursive: true, force: true }));
+  await runCli("init", project, "--title", "Visual CLI");
+  const brief = {
+    role: "character", page_id: "page-001", slot_role: "hero", semantic_goal: "Show a facilitator routing work",
+    three_second_message: "One person actively routes the next step", subject_count: 1,
+    action: "A faceless facilitator points from a blocked card to the next action", aspect_ratio: "1:1",
+    text_policy: "none", transparency_required: true
+  };
+  const result = JSON.parse((await runCli("visual-asset-prepare", project, "--brief", JSON.stringify(brief))).stdout);
+  assert.equal(result.ok, true);
+  assert.match(result.data.prompt.prompt, /Primary request:/);
+  assert.match(result.data.prompt.prompt, /No visible text/);
+  await fs.access(path.join(project, ".pptops", "visual-assets", "prompts", `${result.data.prompt.brief_id}.json`));
+  const generated = path.join(parent, "generated.png");
+  await fs.writeFile(generated, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+X0Y8WQAAAABJRU5ErkJggg==", "base64"));
+  const generation = JSON.parse((await runCli("visual-asset-ingest", project,
+    "--brief-id", result.data.brief.id, "--file", generated, "--provider", "imagegen", "--model", "available-capability", "--mime", "image/png")).stdout).data;
+  const checks = { semantic_action: true, subject_count: true, identity_boundary: true, visible_text_or_logo: true, reference_invariants: true, edge_integration: true, copy_safe_space: true };
+  await runCli("visual-asset-observe", project, "--generation", generation.id, "--actor", "agent", "--verdict", "pass", "--checks", JSON.stringify(checks));
+  await runCli("visual-asset-decide", project, "--generation", generation.id, "--decision", "accept", "--raw-feedback", "Use this visual");
+  await runCli("visual-asset-register", project, "--generation", generation.id, "--asset-id", "facilitator-hero", "--page-id", "page-001", "--slot-role", "hero", "--alt", "Facilitator routes the next step");
+  const assets = JSON.parse(await fs.readFile(path.join(project, "assets.json"), "utf8"));
+  assert.deepEqual(assets.map(({ id }) => id), ["facilitator-hero"]);
+});
+
 test("migrate writes V1 contracts to a separate destination", async (t) => {
   const parent = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-migrate-cli-"));
   const destination = path.join(parent, "migrated");

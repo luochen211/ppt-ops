@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/visual-asset-brief.schema.json",
+  "title": "V1 Visual Asset Brief",
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["role", "mode", "page_id", "slot_role", "semantic_goal", "three_second_message", "subject_count", "action", "aspect_ratio", "text_policy", "transparency_required"],
+      "properties": {
+        "kind": { "const": "visual_asset_brief" },
+        "role": { "enum": ["character", "scene", "diagram", "background"] },
+        "mode": { "enum": ["fresh", "reference_edit"] },
+        "subject_count": { "type": "integer", "minimum": 0 },
+        "text_policy": { "enum": ["none", "exact_only"] },
+        "transparency_required": { "type": "boolean" }
+      }
+    }
+  ]
+}

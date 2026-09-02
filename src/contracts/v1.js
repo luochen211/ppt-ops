@@ -8,7 +8,8 @@ export function pageSpecId(page) { return `page-${String(page).padStart(3, "0")}
 
 export const ENTITY_KINDS = Object.freeze([
   "project", "source", "outline", "page_spec", "theme", "template", "asset",
-  "candidate", "candidate_feedback", "powerpoint_observation", "approval", "version", "build", "review", "handoff"
+  "candidate", "candidate_feedback", "powerpoint_observation", "visual_asset_brief", "visual_asset_generation",
+  "visual_asset_observation", "visual_asset_decision", "approval", "version", "build", "review", "handoff"
 ]);
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
@@ -82,6 +83,35 @@ const validators = {
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
   asset(value, errors) { requireText(value, "file", errors); requireText(value, "type", errors); requireHash(value, errors); },
+  visual_asset_brief(value, errors) {
+    requireEnum(value, "role", ["character", "scene", "diagram", "background"], errors);
+    requireEnum(value, "mode", ["fresh", "reference_edit"], errors);
+    requireId(value, "page_id", errors); requireId(value, "slot_role", errors);
+    for (const field of ["semantic_goal", "three_second_message", "action"]) requireText(value, field, errors);
+    if (!(hasText(value.aspect_ratio) || (Number.isFinite(value.aspect_ratio) && value.aspect_ratio > 0))) errors.push("aspect_ratio must be a positive number or ratio string");
+    requireEnum(value, "text_policy", ["none", "exact_only"], errors);
+    if (!Number.isInteger(value.subject_count) || value.subject_count < 0) errors.push("subject_count must be a non-negative integer");
+  },
+  visual_asset_generation(value, errors) {
+    requireId(value, "brief_id", errors);
+    requireEnum(value, "mode", ["fresh", "reference_edit"], errors);
+    requireEnum(value, "state", ["provider_failed", "validation_failed", "awaiting_visual_observation"], errors);
+    requireHashField(value, "prompt_sha256", errors);
+    requireText(value, "provider", errors); requireText(value, "model", errors);
+  },
+  visual_asset_observation(value, errors) {
+    requireId(value, "generation_id", errors);
+    requireEnum(value, "actor", ["agent", "human"], errors);
+    requireEnum(value, "verdict", ["pass", "fail"], errors);
+    requireHashField(value, "candidate_sha256", errors);
+    if (!isObject(value.checks)) errors.push("checks must be an object");
+  },
+  visual_asset_decision(value, errors) {
+    requireId(value, "generation_id", errors);
+    requireEnum(value, "actor", ["user"], errors);
+    requireEnum(value, "decision", ["accept", "continue_iteration", "reject"], errors);
+    requireText(value, "raw_feedback", errors);
+  },
   candidate(value, errors) {
     requireId(value, "target_id", errors); requireText(value, "target_kind", errors);
     requireEnum(value, "state", ["generated", "validating", "ready_for_review", "awaiting_powerpoint_observation", "awaiting_user_decision", "accepted", "continued", "rejected", "reconstruction_required", "applied_to_draft"], errors);

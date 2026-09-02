@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
+import { resolveProjectPath } from "../core/project.js";
 import { compileProjectLayout } from "../layout/catalog.js";
 
 const EMU_PER_INCH = 914400;
@@ -17,7 +18,7 @@ export async function buildPptx(project, outputFile) {
 
   const pptx = createPresentation(project);
   const plans = compileProjectLayout(project);
-  for (const [index, page] of project.pages.entries()) renderSlide(pptx, page, plans[index]);
+  for (const [index, page] of project.pages.entries()) renderSlide(pptx, page, plans[index], project);
 
   const resolvedOutput = path.resolve(outputFile);
   await fs.mkdir(path.dirname(resolvedOutput), { recursive: true });
@@ -91,7 +92,7 @@ function createPresentation(project) {
   return pptx;
 }
 
-function renderSlide(pptx, page, plan) {
+function renderSlide(pptx, page, plan, project) {
   const theme = plan.theme;
   const slide = pptx.addSlide();
   const { width, height } = theme.dimensions;
@@ -111,9 +112,12 @@ function renderSlide(pptx, page, plan) {
     margin: 0, valign: "mid", objectName: `Slide ${page.page} ${plan.renderer.pptx} title`
   });
 
+  const assets = resolveSlideAssets(page, project);
+  const contentBox = contentGeometry(theme, assets.length > 0);
   const body = bodyLines(page.screen_text);
-  if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont);
-  else renderMessage(slide, pptx, page.three_second_message, theme, colors, bodyFont);
+  if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
+  else renderMessage(slide, pptx, page.three_second_message, theme, colors, bodyFont, contentBox.copy);
+  if (assets.length > 0) renderAssets(slide, assets, contentBox.assets);
 
   addShape(slide, pptx.ShapeType.line, {
     x: margin, y: height - margin - 0.18, w: width - (margin * 2), h: 0,
@@ -126,13 +130,10 @@ function renderSlide(pptx, page, plan) {
   });
 }
 
-function renderBody(slide, pptx, lines, theme, colors, bodyFont) {
-  const { width, height } = theme.dimensions;
-  const margin = theme.spacing.page_margin;
+function renderBody(slide, pptx, lines, theme, colors, bodyFont, bounds) {
   const gap = Math.max(theme.spacing.unit, 0.18);
-  const top = 1.72;
-  const availableWidth = width - (margin * 2);
-  const availableHeight = height - top - margin - 0.58;
+  const availableWidth = bounds.w;
+  const availableHeight = bounds.h;
   const columns = lines.length === 2 ? 2 : 1;
   const cardWidth = (availableWidth - (gap * (columns - 1))) / columns;
   const rows = Math.ceil(lines.length / columns);
@@ -142,8 +143,8 @@ function renderBody(slide, pptx, lines, theme, colors, bodyFont) {
     const column = index % columns;
     const row = Math.floor(index / columns);
     const geometry = {
-      x: margin + (column * (cardWidth + gap)),
-      y: top + (row * (cardHeight + gap)),
+      x: bounds.x + (column * (cardWidth + gap)),
+      y: bounds.y + (row * (cardHeight + gap)),
       w: cardWidth,
       h: cardHeight
     };
@@ -163,19 +164,57 @@ function renderBody(slide, pptx, lines, theme, colors, bodyFont) {
   });
 }
 
-function renderMessage(slide, pptx, message, theme, colors, bodyFont) {
-  const { width } = theme.dimensions;
-  const margin = theme.spacing.page_margin;
+function renderMessage(slide, pptx, message, theme, colors, bodyFont, bounds) {
+  const panelHeight = Math.min(2.35, bounds.h);
   addShape(slide, pptx.ShapeType.roundRect, {
-    x: margin, y: 2.1, w: width - (margin * 2), h: 2.35,
+    x: bounds.x, y: bounds.y + Math.max(0, (bounds.h - panelHeight) / 2), w: bounds.w, h: panelHeight,
     fill: { color: colors.accent, transparency: 88 },
     line: { color: colors.accent, transparency: 45, width: 1.5 },
     objectName: "Message panel"
   });
   addText(slide, message, {
-    x: margin + 0.45, y: 2.35, w: width - (margin * 2) - 0.9, h: 1.85,
+    x: bounds.x + 0.35, y: bounds.y + Math.max(0, (bounds.h - panelHeight) / 2) + 0.25, w: bounds.w - 0.7, h: panelHeight - 0.5,
     fontFace: bodyFont, fontSize: 24, color: colors.text, margin: 0,
     valign: "mid", align: "center", objectName: "Message text"
+  });
+}
+
+function contentGeometry(theme, hasAssets) {
+  const { width, height } = theme.dimensions;
+  const margin = theme.spacing.page_margin;
+  const content = { x: margin, y: 1.72, w: width - (margin * 2), h: height - 1.72 - margin - 0.58 };
+  if (!hasAssets) return { copy: content, assets: null };
+  const gap = Math.max(theme.spacing.unit * 1.5, 0.38);
+  const assetWidth = Math.min(4.55, content.w * 0.39);
+  return {
+    copy: { ...content, w: content.w - assetWidth - gap },
+    assets: { x: content.x + content.w - assetWidth, y: content.y, w: assetWidth, h: content.h }
+  };
+}
+
+function resolveSlideAssets(page, project) {
+  const byId = new Map(project.assets.map((asset) => [asset.id, asset]));
+  return (page.asset_slots ?? []).map((slot) => {
+    const asset = byId.get(slot.asset_id);
+    if (!asset) throw new Error(`unknown PPTX asset: ${slot.asset_id}`);
+    const extension = path.extname(asset.file).toLowerCase();
+    if (!(asset.mime?.startsWith("image/") || [".png", ".jpg", ".jpeg", ".svg"].includes(extension))) throw new Error(`PPTX asset is not a supported image: ${asset.id}`);
+    return { ...slot, asset, path: resolveProjectPath(project.root, asset.file) };
+  });
+}
+
+function renderAssets(slide, assets, bounds) {
+  const gap = 0.22;
+  const itemHeight = (bounds.h - gap * (assets.length - 1)) / assets.length;
+  assets.forEach(({ asset, path: imagePath, fit }, index) => {
+    const geometry = { x: bounds.x, y: bounds.y + index * (itemHeight + gap), w: bounds.w, h: itemHeight };
+    assertGeometry(geometry);
+    slide.addImage({
+      path: imagePath, ...geometry,
+      sizing: { type: fit === "cover" ? "cover" : "contain", w: geometry.w, h: geometry.h },
+      altText: asset.alt ?? asset.id,
+      objectName: `Asset ${asset.id}`
+    });
   });
 }
 

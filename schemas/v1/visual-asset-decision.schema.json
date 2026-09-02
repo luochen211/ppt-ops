@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/visual-asset-decision.schema.json",
+  "title": "V1 Visual Asset Decision",
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["generation_id", "actor", "decision", "raw_feedback", "created_at"],
+      "properties": {
+        "kind": { "const": "visual_asset_decision" },
+        "actor": { "const": "user" },
+        "decision": { "enum": ["accept", "continue_iteration", "reject"] }
+      }
+    }
+  ]
+}
