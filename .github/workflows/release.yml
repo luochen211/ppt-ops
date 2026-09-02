@@ -1,0 +1,46 @@
+name: Release V1.0 GA
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: GA tag; must match the readiness matrix
+        required: true
+        default: v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Verify GA tag and acceptance evidence
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          test "$REQUESTED_TAG" = "v$(node -p 'require("./package.json").version')"
+          node scripts/check-release-readiness.js
+          test "$(git tag --list "$REQUESTED_TAG")" = ""
+      - name: Build recoverable source archive
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          mkdir -p dist
+          git archive --format=tar.gz --prefix="ppt-ops-${REQUESTED_TAG}/" -o "dist/ppt-ops-${REQUESTED_TAG}.tar.gz" HEAD
+          shasum -a 256 "dist/ppt-ops-${REQUESTED_TAG}.tar.gz" > "dist/ppt-ops-${REQUESTED_TAG}.tar.gz.sha256"
+      - name: Create GA release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: gh release create "$REQUESTED_TAG" dist/* --target "$GITHUB_SHA" --title "PPT-Ops ${REQUESTED_TAG}" --notes-file docs/releases/v1.0.0.md
