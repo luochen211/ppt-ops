@@ -49,7 +49,10 @@ async function migratePages(projectDir, source, slides) {
   const pages = slides.map((slide, index) => ({
     contract_version: "1.0", kind: "page_spec", id: `page-${String(index + 1).padStart(3, "0")}`, page: index + 1,
     task: `Preserve the source meaning of slide ${index + 1}`, three_second_message: slide.text.slice(0, 120) || `Slide ${index + 1}`,
-    relation: index === 0 ? "hero" : "sequence", screen_text: { title: slide.text.slice(0, 120) || `Slide ${index + 1}`, body: slide.details.slice(0, 3) },
+    relation: index === 0 ? "hero" : "sequence",
+    screen_text: index === 0 || index === slides.length - 1
+      ? { title: slide.text.slice(0, 120) || `Slide ${index + 1}` }
+      : { title: slide.text.slice(0, 120) || `Slide ${index + 1}`, body: slide.details.slice(0, 3) },
     visual_job: "Render a clear editable source-faithful page", source_refs: [{ source_id: source.id, locator: slide.locator }],
     asset_slots: [], content_status: "draft", renderers: { html: {}, pptx: {} }
   }));

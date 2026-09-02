@@ -77,6 +77,9 @@ test("visual-producing and review modes load the controlled visual asset workflo
   assert.match(reference, /generated-present/);
   assert.match(reference, /empty ImageGen inventory can never pass/);
   assert.match(reference, /first and final page are mandatory exceptions/);
+  assert.match(reference, /image-led, not ordinary title slides/);
+  assert.match(reference, /Visible slide copy is exactly one title/);
+  assert.match(reference, /occupy the majority of the composed page/);
   assert.match(reference, /Before freezing a Version/);
 });
 

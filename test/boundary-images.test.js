@@ -69,6 +69,22 @@ test("one accepted generated image satisfies both boundaries of a one-page deck"
   assert.deepEqual(result.boundaries.map(({ boundary, page_id }) => ({ boundary, page_id })), [{ boundary: "first+final", page_id: "page-001" }]);
 });
 
+test("boundary pages reject every visible text field except one title", async (t) => {
+  const projectRoot = await projectFixture(t, 2);
+  await seedAcceptedBoundaryImages(projectRoot);
+  const pagesFile = path.join(projectRoot, "pages.json");
+  const pages = JSON.parse(await fs.readFile(pagesFile, "utf8"));
+  pages[0].screen_text = { title: "Only title", body: ["Forbidden subtitle copy"] };
+  pages[1].screen_text = { title: "Only title", subtitle: "Forbidden kicker" };
+  await fs.writeFile(pagesFile, `${JSON.stringify(pages, null, 2)}\n`);
+
+  const result = await inspectBoundaryGeneratedImages(await readProject(projectRoot));
+  assert.deepEqual(result.failures.map(({ boundary, code }) => ({ boundary, code })), [
+    { boundary: "first", code: "boundary_text_not_title_only" },
+    { boundary: "final", code: "boundary_text_not_title_only" }
+  ]);
+});
+
 test("deleted or contradictory immutable evidence invalidates an earlier registration", async (t) => {
   const projectRoot = await projectFixture(t, 1);
   const [{ generation, observation }] = await seedAcceptedBoundaryImages(projectRoot);
@@ -131,7 +147,7 @@ async function projectFixture(t, pageCount) {
     const outline = JSON.parse(await fs.readFile(outlineFile, "utf8"));
     for (let page = 2; page <= pageCount; page++) {
       const id = `page-${String(page).padStart(3, "0")}`;
-      pages.push({ ...structuredClone(pages[0]), id, page, task: `Page ${page}`, three_second_message: `Message ${page}`, screen_text: { title: `Page ${page}`, body: [] }, asset_slots: [] });
+      pages.push({ ...structuredClone(pages[0]), id, page, task: `Page ${page}`, three_second_message: `Message ${page}`, screen_text: { title: `Page ${page}` }, asset_slots: [] });
       outline.sections[0].page_ids.push(id);
     }
     await Promise.all([

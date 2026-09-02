@@ -24,13 +24,18 @@ export async function migrateFoundationProject(projectDir) {
     if (!asset.alt) warnings.push({ code: "ASSET_ALT_MISSING", subject_id: asset.id, field: "alt" });
     return entity("asset", asset.id, { type: asset.type, file: asset.file, alt: asset.alt ?? "", ...metadata, provenance: { migrated_from: "foundation" } });
   }));
-  const pages = (legacyPages ?? []).map((page) => {
+  const legacyPageList = legacyPages ?? [];
+  const pages = legacyPageList.map((page, index) => {
     const [sourceFile, locator] = (page.source ?? "").split("#", 2);
     const sourceId = sourceByFile.get(sourceFile);
     if (!sourceId) warnings.push({ code: "PAGE_SOURCE_UNRESOLVED", subject_id: pageId(page.page), field: "source_refs" });
     return entity("page_spec", pageId(page.page), {
       page: page.page, task: page.task, three_second_message: page.three_second_message,
-      relation: page.relation, screen_text: page.screen_text, visual_job: page.visual_job,
+      relation: page.relation,
+      screen_text: index === 0 || index === legacyPageList.length - 1
+        ? { title: page.screen_text.title }
+        : page.screen_text,
+      visual_job: page.visual_job,
       source_refs: sourceId ? [{ source_id: sourceId, locator: locator ? `#${locator}` : "" }] : [],
       asset_slots: page.asset_slots ?? [], content_status: page.status ?? "draft",
       renderers: { html: page.html ?? {}, pptx: page.pptx ?? {} }

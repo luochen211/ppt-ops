@@ -18,7 +18,7 @@ export async function buildPptx(project, outputFile) {
 
   const pptx = createPresentation(project);
   const plans = compileProjectLayout(project);
-  for (const [index, page] of project.pages.entries()) renderSlide(pptx, page, plans[index], project);
+  for (const [index, page] of project.pages.entries()) renderSlide(pptx, page, plans[index], project, index, project.pages.length);
 
   const resolvedOutput = path.resolve(outputFile);
   await fs.mkdir(path.dirname(resolvedOutput), { recursive: true });
@@ -92,7 +92,7 @@ function createPresentation(project) {
   return pptx;
 }
 
-function renderSlide(pptx, page, plan, project) {
+function renderSlide(pptx, page, plan, project, index, count) {
   const theme = plan.theme;
   const slide = pptx.addSlide();
   const { width, height } = theme.dimensions;
@@ -102,6 +102,11 @@ function renderSlide(pptx, page, plan, project) {
   const bodyFont = theme.typography.body_font;
 
   slide.background = { color: colors.background };
+  const assets = resolveSlideAssets(page, project);
+  if (index === 0 || index === count - 1) {
+    renderBoundarySlide(slide, pptx, page, assets, theme, colors, headingFont);
+    return;
+  }
   addShape(slide, pptx.ShapeType.rect, {
     x: margin, y: margin, w: 0.12, h: 0.72,
     fill: { color: colors.accent }, line: { color: colors.accent }, objectName: "Theme accent"
@@ -112,7 +117,6 @@ function renderSlide(pptx, page, plan, project) {
     margin: 0, valign: "mid", objectName: `Slide ${page.page} ${plan.renderer.pptx} title`
   });
 
-  const assets = resolveSlideAssets(page, project);
   const contentBox = contentGeometry(theme, assets.length > 0);
   const body = bodyLines(page.screen_text);
   if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
@@ -127,6 +131,26 @@ function renderSlide(pptx, page, plan, project) {
     x: width - margin - 0.42, y: height - margin - 0.15, w: 0.42, h: 0.2,
     fontFace: bodyFont, fontSize: 9, color: colors.text, transparency: 25,
     margin: 0, align: "right", objectName: `Slide ${page.page} number`
+  });
+}
+
+function renderBoundarySlide(slide, pptx, page, assets, theme, colors, headingFont) {
+  const { width, height } = theme.dimensions;
+  const margin = theme.spacing.page_margin;
+  if (assets.length > 0) {
+    renderAssets(slide, assets, { x: width * 0.36, y: 0.08, w: width * 0.64, h: height - 0.16 });
+  }
+  addShape(slide, pptx.ShapeType.rect, {
+    x: 0, y: height * 0.2, w: width * 0.49, h: height * 0.6,
+    fill: { color: colors.background, transparency: 8 },
+    line: { color: colors.background, transparency: 100, width: 0 },
+    objectName: `Boundary title support ${page.page}`
+  });
+  addText(slide, page.screen_text.title, {
+    x: margin, y: height * 0.25, w: width * 0.43, h: height * 0.5,
+    fontFace: headingFont, fontSize: 34, bold: true, color: colors.text,
+    margin: 0, valign: "mid", breakLine: false, fit: "shrink",
+    objectName: `Boundary slide ${page.page} title`
   });
 }
 

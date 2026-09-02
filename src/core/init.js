@@ -17,7 +17,7 @@ export async function initializeProject(projectDir, options = {}) {
   const source = entity("source", "source-001", { file: "brief.md", bytes: Buffer.byteLength(brief), mime: "text/markdown", sha256: crypto.createHash("sha256").update(brief).digest("hex") });
   const page = entity("page_spec", pageId(1), {
     page: 1, task: "Establish the presentation promise", three_second_message: title, relation: "hero",
-    screen_text: { title, body: ["Replace this starter content with approved source material."] },
+    screen_text: { title },
     visual_job: "Create one clear entry point for the audience", source_refs: [{ source_id: source.id, locator: "" }],
     asset_slots: [], content_status: "draft", renderers: { html: {}, pptx: {} }
   });

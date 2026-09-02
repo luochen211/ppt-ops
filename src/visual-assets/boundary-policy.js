@@ -42,6 +42,13 @@ export async function inspectBoundaryGeneratedImages(project) {
 
 async function inspectBoundary(project, { roles, page }) {
   const boundary = roles.join("+");
+  const screenKeys = Object.keys(page.screen_text ?? {});
+  if (screenKeys.length !== 1 || screenKeys[0] !== "title" || typeof page.screen_text?.title !== "string" || page.screen_text.title.trim() === "") {
+    return {
+      passed: false, boundary, roles, page_id: page.id,
+      failure: failure(roles, page.id, "boundary_text_not_title_only", "keep exactly one visible title and remove subtitle, body, labels, footer copy, and every other boundary-page text field")
+    };
+  }
   const assets = new Map((project.contracts.assets ?? []).map((asset) => [asset.id, asset]));
   const generated = (page.asset_slots ?? []).map((slot) => ({ slot, asset: assets.get(slot.asset_id) }))
     .filter(({ asset }) => asset?.type === "generated_image");

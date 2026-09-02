@@ -36,9 +36,12 @@ test("layout plans are deterministic and cover every template family", () => {
 test("all eight templates render through HTML and native PPTX", async (t) => {
   const project = semanticProject();
   const html = await buildHtml(project);
-  for (const template of TEMPLATE_CATALOG) {
+  for (const [index, template] of TEMPLATE_CATALOG.entries()) {
     assert.match(html, new RegExp(`template-${template.id}`));
-    assert.match(html, new RegExp(`data-html-layout="${template.renderers.html}"`));
+    const htmlLayout = index === 0 || index === TEMPLATE_CATALOG.length - 1
+      ? "boundary-image-dominant"
+      : template.renderers.html;
+    assert.match(html, new RegExp(`data-html-layout="${htmlLayout}"`));
   }
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-layout-"));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));
@@ -47,7 +50,12 @@ test("all eight templates render through HTML and native PPTX", async (t) => {
   assert.equal(result.slideCount, 8);
   const archive = await JSZip.loadAsync(await fs.readFile(output));
   const xml = (await Promise.all(relations.map((_, index) => archive.file(`ppt/slides/slide${index + 1}.xml`).async("string")))).join("\n");
-  for (const plan of compileProjectLayout(project)) assert.match(xml, new RegExp(plan.renderer.pptx));
+  for (const [index, plan] of compileProjectLayout(project).entries()) {
+    const marker = index === 0 || index === relations.length - 1
+      ? `Boundary slide ${index + 1} title`
+      : plan.renderer.pptx;
+    assert.match(xml, new RegExp(marker));
+  }
 });
 
 test("over-capacity content fails both renderers instead of silently shrinking", async (t) => {
