@@ -1,0 +1,11 @@
+{
+  "id": "topic-only-new-deck",
+  "user_input": "做一份面向创业者的 AI 产品发布 PPT，先给我可编辑 PPTX。",
+  "route": ["new", "outline", "design", "build", "review"],
+  "loaded_context": ["shared", "profile", "custom", "current_request"],
+  "forbidden_context": ["historical_project_bodies"],
+  "command_trace": ["init", "version-freeze", "build-create", "review-run"],
+  "project_diff": { "scope": ["new-project"], "forbid": ["unrelated-project"] },
+  "outputs": ["slides.pptx", "review-report.json"],
+  "unresolved_acceptance": ["visual", "real_powerpoint", "business"]
+}
