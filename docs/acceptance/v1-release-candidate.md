@@ -18,7 +18,7 @@ Recorded on 2026-09-02 for Issue #20. This record separates automated evidence f
 | Concurrency | Passed (automated) | `test/infrastructure.test.js` verifies concurrent builds use isolated immutable artifact paths; PowerPoint rendering is serialized with a bounded cross-process lock. |
 | Human visual acceptance | Pending | The montage exists for inspection, but no human acceptance record has been entered. |
 | Manual macOS PowerPoint acceptance | Pending | Copy-object, edit-text, slideshow playback, and font-substitution checks still require a named human record. |
-| Chrome and Safari HTML artifact checks | Pending | HTML is an optional artifact, not a product interface. Browser interaction acceptance has not been recorded. |
+| Chrome and Safari HTML artifact checks | Passed (real applications) | The 54-slide HTML artifact passed navigation and document-fullscreen checks in both browsers; see `v1-browser-acceptance.md`. HTML remains an optional artifact, not a product interface. |
 | Independent target-user trials | Pending | This belongs to Issue #21 and requires three real target users; no automated result may substitute for it. |
 
 ## Reproducible commands
