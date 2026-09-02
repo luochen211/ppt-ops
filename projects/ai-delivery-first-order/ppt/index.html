@@ -533,53 +533,106 @@
   .module-number{font-family:var(--mono);font-size:min(14vw,24vh);font-weight:300;line-height:.76;letter-spacing:-.08em;opacity:.16}
   .module-title{font-size:min(5.3vw,9vh);line-height:1.05;letter-spacing:-.045em;font-weight:900;max-width:13em}
   .module-subtitle{font-size:min(2.35vw,4.2vh);line-height:1.2;font-weight:500;opacity:.72}
-  .chapter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(var(--ink-rgb),.2);margin-top:4vh;flex:1;max-height:56vh}
-  .chapter-card{background:rgba(var(--paper-rgb),.42);padding:3.2vh 2.2vw;display:grid;grid-template-columns:4.5vw 1fr;gap:1.4vw;align-items:start}
-  .chapter-card .n{font-family:var(--mono);font-size:2vw;font-weight:700;opacity:.5}
-  .chapter-card h3{font-size:1.8vw;line-height:1.25;font-weight:900;margin-bottom:1vh}
-  .chapter-card p{font-size:1.02vw;line-height:1.55;opacity:.72}
-  .signal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;flex:1;align-items:center}
-  .signal-item{border-top:2px solid currentColor;padding-top:2vh;min-height:23vh}
-  .signal-item .n{font-family:var(--mono);font-size:1vw;letter-spacing:.18em;opacity:.48}
-  .signal-item h3{font-size:2.1vw;line-height:1.18;margin:4vh 0 1.5vh;font-weight:900}
-  .signal-item p{font-size:1.08vw;line-height:1.55;opacity:.72}
-  .case-layout{display:grid;grid-template-columns:5fr 7fr;gap:6vw;align-items:center;flex:1}
-  .case-ok{font-family:var(--mono);font-size:15vw;font-weight:700;letter-spacing:-.1em;line-height:.72}
-  .case-meta{font-family:var(--mono);font-size:.85vw;letter-spacing:.18em;text-transform:uppercase;margin-top:3vh;opacity:.65}
-  .timeline{display:flex;flex-direction:column;border-left:2px solid currentColor;padding-left:2.4vw;gap:2.4vh}
-  .timeline-item{display:grid;grid-template-columns:6vw 1fr;gap:1.5vw;align-items:baseline}
-  .timeline-item .t{font-family:var(--mono);font-size:.9vw;letter-spacing:.12em;opacity:.5}
-  .timeline-item .c{font-size:1.55vw;line-height:1.32;font-weight:700}
-  .trust-pipeline,.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4vw;align-items:stretch;margin-top:5vh;flex:1;max-height:44vh}
-  .trust-step,.chain-item{border-top:2px solid currentColor;padding:2.2vh 1.2vw 0 0;position:relative}
-  .trust-step:not(:last-child)::after,.chain-item:not(:last-child)::after{content:"→";position:absolute;right:-1.05vw;top:1.6vh;font-family:var(--mono);opacity:.45}
-  .trust-step .n,.chain-item .n{font-family:var(--mono);font-size:1vw;opacity:.5}
-  .trust-step h3,.chain-item h3{font-size:2vw;line-height:1.16;margin:7vh 0 1.2vh;font-weight:900}
-  .trust-step p,.chain-item p{font-size:1vw;line-height:1.55;opacity:.7}
+  .route-map{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:2.2vw;flex:1;align-items:center;margin-top:3vh}
+  .route-map::before{content:"";position:absolute;left:4%;right:4%;top:28%;height:2px;background:currentColor;opacity:.28}
+  .route-map::after{content:"";position:absolute;right:3.4%;top:calc(28% - .48vw);width:1vw;height:1vw;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg);opacity:.42}
+  .route-stage{position:relative;z-index:1;min-height:34vh;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start}
+  .route-node{width:6vw;height:6vw;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;background:var(--paper);font-family:var(--mono);font-size:1.35vw;font-weight:600}
+  .route-stage h3{font-size:1.72vw;line-height:1.24;font-weight:900;max-width:11em}
+  .route-stage p{font-size:1vw;line-height:1.5;opacity:.7;margin-top:.8vh}
+  .route-code{font-family:var(--mono);font-size:.72vw;letter-spacing:.18em;opacity:.48}
+
+  .proof-map{display:grid;grid-template-columns:1fr 1.15fr 1fr;grid-template-rows:1fr 1fr;gap:2vh 3vw;flex:1;align-items:center;margin-top:2vh}
+  .proof-core{grid-column:2;grid-row:1/3;position:relative;display:grid;place-items:center;align-self:stretch}
+  .proof-core::before,.proof-core::after{content:"";position:absolute;width:16vw;height:25vh;border:1px solid currentColor;opacity:.18}
+  .proof-core::before{transform:translate(-1vw,1.5vh)}
+  .proof-core::after{transform:translate(1vw,-1.5vh)}
+  .proof-sheet{position:relative;z-index:2;width:17vw;height:27vh;border:2px solid currentColor;background:rgba(var(--paper-rgb),.5);display:flex;flex-direction:column;justify-content:space-between;padding:2.4vh 1.5vw}
+  .proof-sheet .stamp{width:4.4vw;height:4.4vw;border:1px solid currentColor;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:.82vw;letter-spacing:.08em}
+  .proof-sheet h3{font-size:2.25vw;line-height:1.08;font-weight:900}
+  .proof-sheet p{font-family:var(--mono);font-size:.76vw;letter-spacing:.13em;opacity:.55}
+  .proof-branch{position:relative;border-top:1px solid currentColor;padding-top:1.4vh}
+  .proof-branch::after{content:"";position:absolute;top:-1px;width:3vw;height:1px;background:currentColor;opacity:.42}
+  .proof-branch.left::after{right:-3vw}.proof-branch.right::after{left:-3vw}
+  .proof-branch .n{font-family:var(--mono);font-size:.78vw;letter-spacing:.16em;opacity:.48}
+  .proof-branch h3{font-size:1.7vw;line-height:1.2;font-weight:900;margin:1.4vh 0 .7vh}
+  .proof-branch p{font-size:.96vw;line-height:1.5;opacity:.7}
+
+  .case-flow{position:relative;display:grid;grid-template-columns:3fr 4fr 4fr;gap:4vw;align-items:center;flex:1}
+  .case-flow::before{content:"";position:absolute;left:11%;right:8%;top:50%;height:2px;background:currentColor;opacity:.25}
+  .case-ok-disc{position:relative;z-index:1;width:15vw;height:15vw;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;background:rgba(var(--paper-rgb),.42);font-family:var(--mono);font-size:6.5vw;font-weight:700;letter-spacing:-.1em}
+  .case-gaps{position:relative;z-index:1;display:flex;flex-direction:column;gap:2vh;background:rgba(var(--paper-rgb),.72);padding:2.4vh 1.8vw;border-left:2px solid currentColor}
+  .case-gap{display:grid;grid-template-columns:4vw 1fr;gap:1vw;align-items:center}
+  .case-gap .n{font-family:var(--mono);font-size:.75vw;letter-spacing:.14em;opacity:.5}
+  .case-gap .line{border-bottom:1px dashed currentColor;padding-bottom:.7vh;font-size:1.18vw;font-weight:700}
+  .case-result{position:relative;z-index:1;min-height:34vh;background:var(--ink);color:var(--paper);padding:3vh 2vw;display:flex;flex-direction:column;justify-content:space-between}
+  .case-result .arrow{font-family:var(--mono);font-size:3.5vw;font-weight:300;opacity:.5}
+  .case-result h3{font-size:3.4vw;line-height:1;font-weight:900}
+  .case-result p{font-size:1.05vw;line-height:1.55;opacity:.72}
+  .trust-pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4vw;align-items:stretch;margin-top:5vh;flex:1;max-height:44vh}
+  .trust-step{border-top:2px solid currentColor;padding:2.2vh 1.2vw 0 0;position:relative}
+  .trust-step:not(:last-child)::after{content:"→";position:absolute;right:-1.05vw;top:1.6vh;font-family:var(--mono);opacity:.45}
+  .trust-step .n{font-family:var(--mono);font-size:1vw;opacity:.5}
+  .trust-step h3{font-size:2vw;line-height:1.16;margin:7vh 0 1.2vh;font-weight:900}
+  .trust-step p{font-size:1vw;line-height:1.55;opacity:.7}
   .quote-stage{display:flex;flex:1;flex-direction:column;justify-content:center;max-width:80vw}
   .quote-stage .quote{font-size:min(6.4vw,11vh);font-weight:900;line-height:1.07;letter-spacing:-.045em}
   .quote-stage .prompt{font-family:var(--mono);font-size:1.25vw;letter-spacing:.08em;margin-top:4vh;opacity:.62}
   .blanks{display:flex;gap:1.3vw;margin-top:4.8vh}
   .blank{border-top:1px solid currentColor;padding-top:1vh;min-width:10vw;font-family:var(--mono);font-size:.8vw;letter-spacing:.12em;opacity:.52}
-  .definition-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2.4vh 3vw;flex:1;align-content:center}
-  .definition-card{border-top:2px solid currentColor;padding-top:1.6vh;display:grid;grid-template-columns:3.8vw 1fr;gap:1vw}
-  .definition-card .n{font-family:var(--mono);font-size:1.05vw;opacity:.45}
-  .definition-card h3{font-size:2vw;line-height:1.16;font-weight:900;margin-bottom:.8vh}
-  .definition-card p{font-size:1.05vw;line-height:1.55;opacity:.72}
-  .chain{grid-template-columns:repeat(5,1fr);max-height:39vh}
-  .chain-item h3{font-size:1.65vw;margin-top:5vh}
-  .gate-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.8vw;flex:1;align-items:center}
-  .gate{min-height:35vh;border:1px solid rgba(var(--paper-rgb),.32);padding:2.5vh 1.6vw;display:flex;flex-direction:column;justify-content:space-between}
-  .gate .n{font-family:var(--mono);font-size:3.8vw;font-weight:300;opacity:.28}
-  .gate h3{font-size:1.85vw;line-height:1.2;font-weight:900}
-  .gate p{font-size:1vw;line-height:1.55;opacity:.68}
-  .compare-layout{display:grid;grid-template-columns:1fr 1px 1fr;gap:3vw;flex:1;align-items:center}
-  .compare-divider{height:55vh;background:currentColor;opacity:.25}
-  .compare-panel{min-height:55vh;display:flex;flex-direction:column}
-  .compare-panel .label{font-family:var(--mono);font-size:1vw;letter-spacing:.22em;opacity:.55}
-  .compare-panel h2{font-size:3.6vw;line-height:1.08;font-weight:900;margin:3vh 0 5vh}
-  .compare-panel ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:1.3vh 1.4vw}
-  .compare-panel li{border-top:1px solid currentColor;padding-top:1vh;font-size:1.08vw;line-height:1.4;opacity:.78}
+  .scope-map{position:relative;display:grid;grid-template-columns:1fr 1.1fr 1fr;grid-template-rows:1fr 1.1fr 1fr;gap:1vh 2vw;flex:1;align-items:center;margin-top:2vh}
+  .scope-map::before{content:"";position:absolute;left:16%;right:16%;top:50%;height:1px;background:currentColor;opacity:.24}
+  .scope-map::after{content:"";position:absolute;top:9%;bottom:9%;left:50%;width:1px;background:currentColor;opacity:.24}
+  .scope-core{grid-column:2;grid-row:2;position:relative;z-index:2;width:13vw;height:13vw;border:2px solid currentColor;border-radius:50%;justify-self:center;display:grid;place-items:center;text-align:center;background:rgba(var(--paper-rgb),.72);font-size:1.75vw;line-height:1.15;font-weight:900}
+  .scope-point{position:relative;z-index:2;border-top:2px solid currentColor;padding-top:1vh;background:rgba(var(--paper-rgb),.62)}
+  .scope-point.goal{grid-column:2;grid-row:1}.scope-point.range{grid-column:3;grid-row:2}.scope-point.boundary{grid-column:1;grid-row:2}.scope-point.accept{grid-column:2;grid-row:3}
+  .scope-point .n{font-family:var(--mono);font-size:.75vw;letter-spacing:.16em;opacity:.48}
+  .scope-point h3{font-size:1.65vw;font-weight:900;margin:.7vh 0 .5vh}
+  .scope-point p{font-size:.92vw;line-height:1.42;opacity:.68}
+
+  .responsibility-rail{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:1.4vw;align-items:start;flex:1;margin-top:4vh;padding-top:1vh}
+  .responsibility-rail::before{content:"";position:absolute;left:4%;right:4%;top:4vw;height:2px;background:currentColor;opacity:.24}
+  .responsibility-node{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start}
+  .responsibility-node .bubble-wrap{height:7vw;width:100%;display:flex;align-items:center;justify-content:center}
+  .responsibility-node .bubble{border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;background:rgba(var(--paper-rgb),.72);font-family:var(--mono);font-size:.82vw}
+  .responsibility-node:nth-child(1) .bubble{width:3.4vw;height:3.4vw}.responsibility-node:nth-child(2) .bubble{width:4vw;height:4vw}.responsibility-node:nth-child(3) .bubble{width:4.6vw;height:4.6vw}.responsibility-node:nth-child(4) .bubble{width:5.2vw;height:5.2vw}.responsibility-node:nth-child(5) .bubble{width:5.8vw;height:5.8vw;background:var(--ink);color:var(--paper)}
+  .responsibility-node h3{font-size:1.45vw;line-height:1.2;font-weight:900;margin-top:1.6vh}
+  .responsibility-node p{font-size:.85vw;line-height:1.45;opacity:.68;margin-top:.65vh}
+
+  .gate-road{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:2.2vw;flex:1;align-items:start;margin-top:3vh}
+  .gate-road::before{content:"";position:absolute;left:5%;right:5%;top:8vh;height:3px;background:currentColor;opacity:.24}
+  .gate-point{position:relative;z-index:1}
+  .gate-symbol{width:4.4vw;height:15vh;margin:0 auto 2vh;border-left:3px solid currentColor;border-right:3px solid currentColor;position:relative;background:var(--ink)}
+  .gate-symbol::before{content:"";position:absolute;left:-1vw;right:-1vw;top:42%;height:3px;background:currentColor;transform:rotate(-8deg)}
+  .gate-symbol::after{content:"";position:absolute;left:50%;top:42%;width:.8vw;height:.8vw;border:2px solid currentColor;background:var(--ink);transform:translate(-50%,-38%) rotate(45deg)}
+  .gate-point .n{font-family:var(--mono);font-size:.78vw;letter-spacing:.16em;opacity:.5}
+  .gate-point h3{font-size:1.72vw;line-height:1.2;font-weight:900;margin:1vh 0 .7vh}
+  .gate-point p{font-size:.92vw;line-height:1.48;opacity:.68}
+
+  .division-machine{display:grid;grid-template-columns:5fr 1.8fr 5fr;gap:2vw;flex:1;align-items:center;padding-top:2vh}
+  .machine-panel{display:flex;flex-direction:column;align-items:center;gap:2vh}
+  .machine-visual{position:relative;width:15vw;height:15vw;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center}
+  .machine-visual.ai::before,.machine-visual.ai::after{content:"";position:absolute;border:1px solid currentColor;border-radius:50%;opacity:.35}
+  .machine-visual.ai::before{inset:1.5vw}.machine-visual.ai::after{inset:3vw}
+  .machine-visual.human::before{content:"";position:absolute;left:50%;top:-1.6vw;bottom:-1.6vw;width:1px;background:currentColor;opacity:.35}
+  .machine-visual.human::after{content:"";position:absolute;top:50%;left:-1.6vw;right:-1.6vw;height:1px;background:currentColor;opacity:.35}
+  .machine-core{position:relative;z-index:2;font-family:var(--mono);font-size:3.2vw;font-weight:600;letter-spacing:-.08em}
+  .machine-panel h2{font-size:2.5vw;line-height:1;font-weight:900}
+  .machine-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.75vh 1vw;width:100%}
+  .machine-list li{border-top:1px solid currentColor;padding-top:.55vh;font-size:.86vw;line-height:1.3;opacity:.72}
+  .machine-transfer{display:flex;flex-direction:column;align-items:center;gap:1.4vh;font-family:var(--mono);font-size:.75vw;letter-spacing:.14em;opacity:.58}
+  .machine-transfer .line{width:100%;height:2px;background:currentColor;position:relative}
+  .machine-transfer .line::after{content:"";position:absolute;right:0;top:50%;width:.8vw;height:.8vw;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:translateY(-50%) rotate(45deg)}
+
+  .boundary-map{position:relative;flex:1;min-height:43vh;margin-top:1vh}
+  .boundary-outer{position:absolute;left:50%;top:52%;width:47vw;height:24vw;max-height:43vh;transform:translate(-50%,-50%);border:2px solid currentColor;border-radius:50%}
+  .boundary-outer::before,.boundary-outer::after{content:"";position:absolute;background:currentColor;opacity:.22}
+  .boundary-outer::before{left:50%;top:-5%;bottom:-5%;width:1px}.boundary-outer::after{top:50%;left:-3%;right:-3%;height:1px}
+  .boundary-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:11vw;height:11vw;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .boundary-core strong{font-family:var(--mono);font-size:2.4vw;line-height:1}.boundary-core span{font-size:.82vw;margin-top:.8vh;opacity:.72}
+  .boundary-label{position:absolute;width:14vw;border-top:1px solid currentColor;padding-top:.8vh}
+  .boundary-label .n{font-family:var(--mono);font-size:.7vw;letter-spacing:.15em;opacity:.48}.boundary-label h3{font-size:1.45vw;font-weight:900;margin:.55vh 0}.boundary-label p{font-size:.82vw;line-height:1.4;opacity:.68}
+  .boundary-label.b1{left:4%;top:8%}.boundary-label.b2{right:4%;top:8%}.boundary-label.b3{left:4%;bottom:4%}.boundary-label.b4{right:4%;bottom:4%}
   .vector-layout{display:grid;grid-template-columns:1fr 1fr;gap:3vw;flex:1;align-items:center}
   .vector{min-height:48vh;border-top:2px solid currentColor;padding-top:2vh;display:flex;flex-direction:column;justify-content:space-between}
   .vector .symbol{font-family:var(--mono);font-size:7vw;font-weight:300;line-height:1;opacity:.45}
@@ -605,6 +658,8 @@
   .rung p{font-size:.85vw;line-height:1.45;opacity:.68;margin-top:.8vh}
   .flywheel{position:relative;flex:1;min-height:55vh}
   .fly-ring{position:absolute;left:50%;top:50%;width:34vw;height:34vw;max-width:55vh;max-height:55vh;transform:translate(-50%,-50%);border:1px solid rgba(var(--paper-rgb),.32);border-radius:50%}
+  .fly-arrows{position:absolute;left:50%;top:50%;width:36vw;height:36vw;max-width:58vh;max-height:58vh;transform:translate(-50%,-50%);overflow:visible}
+  .fly-arrows path{fill:none;stroke:currentColor;stroke-width:1.4;opacity:.52;marker-end:url(#fly-arrow-head)}
   .fly-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:15vw;text-align:center;font-size:2vw;font-weight:900;line-height:1.2}
   .fly-node{position:absolute;width:13vw;border-top:1px solid currentColor;padding-top:1vh}
   .fly-node .n{font-family:var(--mono);font-size:.75vw;opacity:.48}.fly-node h3{font-size:1.3vw;font-weight:900;margin-top:.7vh}.fly-node p{font-size:.78vw;line-height:1.42;opacity:.66;margin-top:.5vh}
@@ -616,7 +671,7 @@
   #nav .dot{width:6px;height:6px;background:rgba(255,255,255,.42)}
   body.light-bg #nav{background:rgba(233,248,243,.46)}
   body.light-bg #nav .dot{background:rgba(var(--ink-rgb),.28)}
-  @media (max-width:900px){.chapter-card h3{font-size:2.5vw}.chapter-card p,.signal-item p,.definition-card p{font-size:1.45vw}.question-row h3{font-size:2.2vw}}
+  @media (max-width:900px){.route-stage h3,.proof-branch h3,.scope-point h3{font-size:2.25vw}.route-stage p,.proof-branch p,.scope-point p{font-size:1.35vw}.question-row h3{font-size:2.2vw}}
 </style>
 </head>
 <body>
@@ -685,11 +740,11 @@
   <div class="frame" style="padding-top:4vh">
     <div class="eyebrow" data-anim>唯一大纲</div>
     <h1 class="statement" data-anim style="font-size:4.1vw;margin-top:1.5vh">四段大纲，一条交付主线</h1>
-    <div class="chapter-grid">
-      <div class="chapter-card" data-anim><div class="n">01</div><div><h3>从毕设到第一单</h3><p>让客户相信你</p></div></div>
-      <div class="chapter-card" data-anim><div class="n">02</div><div><h3>从模糊需求到万元项目</h3><p>把事情定义清楚</p></div></div>
-      <div class="chapter-card" data-anim><div class="n">03</div><div><h3>从会用 AI 到能完成交付</h3><p>人和 AI 如何分工</p></div></div>
-      <div class="chapter-card" data-anim><div class="n">04</div><div><h3>从一次交付到持续接单</h3><p>走向第一单和下一单</p></div></div>
+    <div class="route-map">
+      <div class="route-stage" data-anim><div class="route-node">01</div><div><div class="route-code">TRUST</div><h3>从毕设到第一单</h3><p>让客户相信你</p></div></div>
+      <div class="route-stage" data-anim><div class="route-node">02</div><div><div class="route-code">SCOPE</div><h3>从模糊需求到万元项目</h3><p>把事情定义清楚</p></div></div>
+      <div class="route-stage" data-anim><div class="route-node">03</div><div><div class="route-code">DELIVERY</div><h3>从会用 AI 到能完成交付</h3><p>人和 AI 如何分工</p></div></div>
+      <div class="route-stage" data-anim><div class="route-node">04</div><div><div class="route-code">LEVERAGE</div><h3>从一次交付到持续接单</h3><p>走向第一单和下一单</p></div></div>
     </div>
   </div>
   <div class="foot"><div>TRUST → SCOPE → DELIVERY → LEVERAGE</div><div>03 / 22</div></div>
@@ -709,11 +764,12 @@
   <div class="frame" style="padding-top:4vh">
     <div class="eyebrow" data-anim>观点</div>
     <h1 class="statement" data-anim style="font-size:4.25vw;margin-top:1.5vh">毕设不是功能清单，<br>是一份完成记录</h1>
-    <div class="signal-grid">
-      <div class="signal-item" data-anim><div class="n">01 · PROBLEM</div><h3>问题真实</h3><p>不是为了凑页面，而是回答一个具体的人、具体的使用场景。</p></div>
-      <div class="signal-item" data-anim><div class="n">02 · LOOP</div><h3>链路完整</h3><p>从需求、实现、验证到演示，不只展示某个功能片段。</p></div>
-      <div class="signal-item" data-anim><div class="n">03 · PROOF</div><h3>结果可检查</h3><p>代码、运行地址、测试和演示路径，别人能自己复核。</p></div>
-      <div class="signal-item" data-anim><div class="n">04 · OWNER</div><h3>责任说得清</h3><p>你做了什么、没做什么、限制在哪里，不夸大也不躲闪。</p></div>
+    <div class="proof-map">
+      <div class="proof-branch left" data-anim><div class="n">01 · PROBLEM</div><h3>问题真实</h3><p>回答具体的人和使用场景。</p></div>
+      <div class="proof-core" data-anim><div class="proof-sheet"><div class="stamp">可回读</div><h3>完成<br>记录</h3><p>PROBLEM · PROCESS · PROOF · OWNER</p></div></div>
+      <div class="proof-branch right" data-anim><div class="n">02 · PROCESS</div><h3>链路完整</h3><p>需求、实现、验证到演示。</p></div>
+      <div class="proof-branch left" data-anim><div class="n">03 · PROOF</div><h3>结果可检查</h3><p>代码、运行、测试和演示可复核。</p></div>
+      <div class="proof-branch right" data-anim><div class="n">04 · OWNER</div><h3>责任说得清</h3><p>做了什么、限制在哪里。</p></div>
     </div>
   </div>
   <div class="foot"><div>作品不是装饰，是风险证明</div><div>05 / 22</div></div>
@@ -721,14 +777,10 @@
 
 <section class="slide light" data-layout="CASE-TIMELINE" data-animate="directional">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>CASE · SUMMER 2024</div></div>
-  <div class="case-layout">
-    <div data-anim="left"><div class="eyebrow">第一笔真实项目 · 不到两千元</div><div class="case-ok">OK</div><div class="case-meta">回答很快 · 定义为零</div></div>
-    <div class="timeline" data-anim="right">
-      <div class="timeline-item"><div class="t">BEFORE</div><div class="c">需求没问清</div></div>
-      <div class="timeline-item"><div class="t">BEFORE</div><div class="c">演示方式没确认</div></div>
-      <div class="timeline-item"><div class="t">BEFORE</div><div class="c">修改范围没约定</div></div>
-      <div class="timeline-item"><div class="t">AFTER</div><div class="c">所有空白，最后都变成我的责任</div></div>
-    </div>
+  <div class="case-flow">
+    <div data-anim="left"><div class="eyebrow">第一笔真实项目 · 不到两千元</div><div class="case-ok-disc" style="margin-top:3vh">OK</div></div>
+    <div class="case-gaps" data-anim><div class="case-gap"><div class="n">01</div><div class="line">需求没问清</div></div><div class="case-gap"><div class="n">02</div><div class="line">演示方式没确认</div></div><div class="case-gap"><div class="n">03</div><div class="line">修改范围没约定</div></div><div class="eyebrow" style="margin-top:1vh">回答很快 · 定义为零</div></div>
+    <div class="case-result" data-anim="right"><div class="arrow">→</div><div><h3>空白<br>= 我的责任</h3><p style="margin-top:2vh">没有被确认的需求、演示和修改范围，最后都由交付方承担。</p></div></div>
   </div>
   <div class="foot"><div>怕问多了显得不会，往往是失控的开始</div><div>06 / 22</div></div>
 </section>
@@ -773,11 +825,12 @@
   <div class="frame" style="padding-top:3.2vh">
     <div class="eyebrow" data-anim>把一句话变成一张交付地图</div>
     <h1 class="statement" data-anim style="font-size:3.8vw;margin-top:1.4vh">先定义四件事，再开始写代码</h1>
-    <div class="definition-grid">
-      <div class="definition-card" data-anim><div class="n">01</div><div><h3>目标</h3><p>为谁解决什么问题？结果改变了什么？</p></div></div>
-      <div class="definition-card" data-anim><div class="n">02</div><div><h3>范围</h3><p>做哪些功能、接哪些数据、交什么文件？</p></div></div>
-      <div class="definition-card" data-anim><div class="n">03</div><div><h3>边界</h3><p>不做什么、包含几次修改、变更怎样处理？</p></div></div>
-      <div class="definition-card" data-anim><div class="n">04</div><div><h3>验收</h3><p>谁在什么环境、按什么标准确认完成？</p></div></div>
+    <div class="scope-map">
+      <div class="scope-point goal" data-anim><div class="n">01 · GOAL</div><h3>目标</h3><p>为谁解决什么？</p></div>
+      <div class="scope-point boundary" data-anim><div class="n">03 · BOUNDARY</div><h3>边界</h3><p>不做什么，改几次？</p></div>
+      <div class="scope-core" data-anim>可交付<br>任务</div>
+      <div class="scope-point range" data-anim><div class="n">02 · SCOPE</div><h3>范围</h3><p>功能、数据和交付物。</p></div>
+      <div class="scope-point accept" data-anim><div class="n">04 · ACCEPTANCE</div><h3>验收</h3><p>谁在哪里，按什么标准？</p></div>
     </div>
   </div>
   <div class="foot"><div>目标 · 范围 · 边界 · 验收</div><div>10 / 22</div></div>
@@ -788,12 +841,12 @@
   <div class="frame" style="padding-top:4vh">
     <div class="eyebrow" data-anim>报价判断</div>
     <h1 class="statement" data-anim style="font-size:4vw;margin-top:1.5vh">报价不是给代码定价，<br>是给整条责任链定价</h1>
-    <div class="chain">
-      <div class="chain-item" data-anim><div class="n">01</div><h3>需求澄清</h3><p>把模糊描述问成双方认账的任务。</p></div>
-      <div class="chain-item" data-anim><div class="n">02</div><h3>方案取舍</h3><p>选择技术路径，主动承担取舍后果。</p></div>
-      <div class="chain-item" data-anim><div class="n">03</div><h3>开发实现</h3><p>AI 可以提速，但仍要处理集成与异常。</p></div>
-      <div class="chain-item" data-anim><div class="n">04</div><h3>验证部署</h3><p>测试、环境、上线与真实路径都要检查。</p></div>
-      <div class="chain-item" data-anim><div class="n">05</div><h3>变更风险</h3><p>修改、沟通、维护与不可预见成本。</p></div>
+    <div class="responsibility-rail">
+      <div class="responsibility-node" data-anim><div class="bubble-wrap"><div class="bubble">01</div></div><h3>需求澄清</h3><p>把模糊描述问成双方认账的任务。</p></div>
+      <div class="responsibility-node" data-anim><div class="bubble-wrap"><div class="bubble">02</div></div><h3>方案取舍</h3><p>选择技术路径，承担取舍后果。</p></div>
+      <div class="responsibility-node" data-anim><div class="bubble-wrap"><div class="bubble">03</div></div><h3>开发实现</h3><p>AI 提速，人处理集成与异常。</p></div>
+      <div class="responsibility-node" data-anim><div class="bubble-wrap"><div class="bubble">04</div></div><h3>验证部署</h3><p>测试、环境、上线与真实路径。</p></div>
+      <div class="responsibility-node" data-anim><div class="bubble-wrap"><div class="bubble">05</div></div><h3>变更风险</h3><p>修改、沟通、维护与不可预见成本。</p></div>
     </div>
   </div>
   <div class="foot"><div>AI 节省执行时间，不会自动取消责任</div><div>11 / 22</div></div>
@@ -804,11 +857,11 @@
   <div class="frame" style="padding-top:3.6vh">
     <div class="eyebrow" data-anim>万元项目的风险控制</div>
     <h1 class="statement" data-anim style="font-size:3.75vw;margin-top:1.4vh">不是一次写完，<br>而是四次把风险关在门外</h1>
-    <div class="gate-row">
-      <div class="gate" data-anim><div class="n">01</div><div><h3>需求冻结</h3><p>范围、交付物、周期与变更机制确认后再开工。</p></div></div>
-      <div class="gate" data-anim><div class="n">02</div><div><h3>中期演示</h3><p>尽早验证方向，避免到最后才发现理解错了。</p></div></div>
-      <div class="gate" data-anim><div class="n">03</div><div><h3>交付预检</h3><p>自动检查、部署、关键路径和已知限制逐项回读。</p></div></div>
-      <div class="gate" data-anim><div class="n">04</div><div><h3>验收交接</h3><p>按约定标准签收，并交清配置、文档和责任边界。</p></div></div>
+    <div class="gate-road">
+      <div class="gate-point" data-anim><div class="gate-symbol"></div><div class="n">01 · FREEZE</div><h3>需求冻结</h3><p>范围、交付物、周期和变更机制确认后再开工。</p></div>
+      <div class="gate-point" data-anim><div class="gate-symbol"></div><div class="n">02 · DEMO</div><h3>中期演示</h3><p>尽早验证方向，避免最后才发现理解错了。</p></div>
+      <div class="gate-point" data-anim><div class="gate-symbol"></div><div class="n">03 · PRECHECK</div><h3>交付预检</h3><p>检查、部署、关键路径和已知限制逐项回读。</p></div>
+      <div class="gate-point" data-anim><div class="gate-symbol"></div><div class="n">04 · HANDOFF</div><h3>验收交接</h3><p>按标准签收，交清配置、文档和责任边界。</p></div>
     </div>
   </div>
   <div class="foot"><div>每一道门，消化一种返工风险</div><div>12 / 22</div></div>
@@ -825,10 +878,10 @@
 
 <section class="slide dark" data-layout="AI-VS-HUMAN" data-animate="directional">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>DIVISION OF LABOR</div></div>
-  <div class="compare-layout">
-    <div class="compare-panel" data-anim="left"><div class="label">AI · EXECUTION AMPLIFIER</div><h2>放大执行</h2><ul><li>读陌生代码</li><li>拆分任务</li><li>生成基础实现</li><li>查资料与排错</li><li>补测试</li><li>整理文档</li></ul></div>
-    <div class="compare-divider" data-anim="divider"></div>
-    <div class="compare-panel" data-anim="right"><div class="label">HUMAN · RESULT OWNER</div><h2>守住结果</h2><ul><li>需求判断</li><li>方案取舍</li><li>报价与边界</li><li>质量验证</li><li>客户沟通</li><li>承担责任</li></ul></div>
+  <div class="division-machine">
+    <div class="machine-panel" data-anim="left"><div class="eyebrow">AI · EXECUTION AMPLIFIER</div><div class="machine-visual ai"><div class="machine-core">AI</div></div><h2>放大执行</h2><ul class="machine-list"><li>读陌生代码</li><li>拆分任务</li><li>生成基础实现</li><li>查资料与排错</li><li>补测试</li><li>整理文档</li></ul></div>
+    <div class="machine-transfer" data-anim="divider"><div>SPEED</div><div class="line"></div><div>提速</div></div>
+    <div class="machine-panel" data-anim="right"><div class="eyebrow">HUMAN · RESULT OWNER</div><div class="machine-visual human"><div class="machine-core">人</div></div><h2>守住结果</h2><ul class="machine-list"><li>需求判断</li><li>方案取舍</li><li>报价与边界</li><li>质量验证</li><li>客户沟通</li><li>承担责任</li></ul></div>
   </div>
   <div class="foot"><div>工具可以替你执行，不能替你负责</div><div>14 / 22</div></div>
 </section>
@@ -838,11 +891,12 @@
   <div class="frame" style="padding-top:3.4vh">
     <div class="eyebrow" data-anim>人和 AI 如何分工</div>
     <h1 class="statement" data-anim style="font-size:3.8vw;margin-top:1.4vh">AI 可以缩短执行时间，<br>但不能替你承担责任</h1>
-    <div class="signal-grid">
-      <div class="signal-item" data-anim><div class="n">01 · HUMAN</div><h3>需求判断</h3><p>客户真正要解决什么，必须由人先判断。</p></div>
-      <div class="signal-item" data-anim><div class="n">02 · AI</div><h3>执行提速</h3><p>读代码、拆任务、生成、排错、测试与文档。</p></div>
-      <div class="signal-item" data-anim><div class="n">03 · HUMAN</div><h3>质量判断</h3><p>是否稳定、可用，是否符合验收标准，由人验证。</p></div>
-      <div class="signal-item" data-anim><div class="n">04 · HUMAN</div><h3>结果责任</h3><p>沟通、上线、验收和交接，最终由人负责。</p></div>
+    <div class="boundary-map">
+      <div class="boundary-outer"><div class="boundary-core"><strong>AI</strong><span>执行提速</span></div></div>
+      <div class="boundary-label b1" data-anim><div class="n">01 · HUMAN</div><h3>需求判断</h3><p>先判断客户真正要解决什么。</p></div>
+      <div class="boundary-label b2" data-anim><div class="n">02 · HUMAN</div><h3>质量判断</h3><p>验证稳定、可用和验收标准。</p></div>
+      <div class="boundary-label b3" data-anim><div class="n">03 · HUMAN</div><h3>客户沟通</h3><p>把边界、风险和变更说清楚。</p></div>
+      <div class="boundary-label b4" data-anim><div class="n">04 · HUMAN</div><h3>结果责任</h3><p>上线、验收和交接最终由人负责。</p></div>
     </div>
   </div>
   <div class="foot"><div>AI 负责提速，人负责判断与结果</div><div>15 / 22</div></div>
@@ -925,7 +979,9 @@
     <div class="eyebrow" data-anim>从一次交付到持续接单</div>
     <h1 class="statement" data-anim style="font-size:3.45vw;margin-top:1.2vh">一笔尾款结算这次项目，<br>案例、流程和信用带来下一次机会</h1>
     <div class="flywheel">
-      <div class="fly-ring"></div><div class="fly-center" data-anim>交付<br>变资产</div>
+      <div class="fly-ring"></div>
+      <svg class="fly-arrows" viewBox="0 0 100 100" aria-hidden="true"><defs><marker id="fly-arrow-head" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" style="fill:currentColor;stroke:none;opacity:1"></path></marker></defs><path d="M50 8 A42 42 0 0 1 86.4 71"></path><path d="M86.4 71 A42 42 0 0 1 13.6 71"></path><path d="M13.6 71 A42 42 0 0 1 50 8"></path></svg>
+      <div class="fly-center">交付<br>变资产</div>
       <div class="fly-node n1" data-anim><div class="n">01</div><h3>案例页</h3><p>把问题、方案和结果讲清。</p></div>
       <div class="fly-node n2" data-anim><div class="n">02</div><h3>需求清单</h3><p>下一次不再从零提问。</p></div>
       <div class="fly-node n3" data-anim><div class="n">03</div><h3>报价模板</h3><p>功能、周期、修改和付款有边界。</p></div>
