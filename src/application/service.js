@@ -64,8 +64,31 @@ export class ApplicationService {
     candidate = this.store.saveEntity(this.projectId, candidate);
     candidate = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "validating" });
     candidate = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "ready_for_review" });
-    candidate = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "awaiting_powerpoint_observation" });
     return candidate;
+  }
+
+  async renderCandidate(candidateId, expectedRevision) {
+    const candidate = this.requireCurrentCandidate(candidateId, expectedRevision, "ready_for_review");
+    this.assertCandidateBaseCurrent(candidate);
+    if (candidate.target_kind !== "page_spec") throw new ApplicationError("CANDIDATE_PREVIEW_UNSUPPORTED", "PowerPoint candidate previews currently require a page_spec target");
+    const target = this.findTarget(candidate.target_kind, candidate.target_id);
+    const updated = deepMerge(target, candidate.patch);
+    if (updated.id !== target.id || updated.kind !== target.kind) throw new ApplicationError("TARGET_IDENTITY_CHANGED", "candidate cannot change target kind or id");
+    const previewProject = { ...this.project, pages: this.project.pages.map((page) => page.id === updated.id ? deepMerge(page, candidate.patch) : page) };
+    const relative = path.join(".pptops", "candidates", candidate.id, "preview.pptx");
+    const output = resolveProjectPath(this.project.root, relative);
+    try { await fs.access(output); throw new ApplicationError("CANDIDATE_PREVIEW_EXISTS", `candidate preview is immutable: ${candidate.id}`); }
+    catch (error) { if (error instanceof ApplicationError) throw error; if (error.code !== "ENOENT") throw error; }
+    await fs.mkdir(path.dirname(output), { recursive: true });
+    const temporary = `${output}.tmp-${crypto.randomUUID()}.pptx`;
+    try {
+      await buildPptx(previewProject, temporary);
+      const bytes = await fs.readFile(temporary);
+      await fs.rename(temporary, output);
+      const renderEvidence = { artifact: relative, sha256: crypto.createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length, pages: [target.page] };
+      const rendered = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "awaiting_powerpoint_observation", render_evidence: renderEvidence });
+      return { candidate: rendered, render_evidence: renderEvidence };
+    } catch (error) { await fs.rm(temporary, { force: true }); throw error; }
   }
 
   diffCandidate(candidateId) {
@@ -102,7 +125,7 @@ export class ApplicationService {
     this.assertCandidateBaseCurrent(candidate);
     if (!["viewed", "not_viewed"].includes(status)) throw new ApplicationError("POWERPOINT_STATUS_INVALID", "PowerPoint observation status must be viewed or not_viewed");
     if (!isPlainObject(evidence)) throw new ApplicationError("EVIDENCE_INVALID", "PowerPoint observation evidence must be a JSON object");
-    if (status === "viewed") validatePowerPointEvidence(evidence);
+    if (status === "viewed") validatePowerPointEvidence(evidence, candidate.render_evidence);
     const id = nextId("powerpoint-observation", this.store.listEntities(this.projectId, "powerpoint_observation"));
     const observation = this.store.saveEntity(this.projectId, createV1Entity("powerpoint_observation", id, {
       candidate_id: candidate.id, target_id: candidate.target_id, status, evidence, candidate_revision: candidate.revision, base_revision: candidate.base_revision
@@ -386,8 +409,8 @@ function validateReconstruction(value, patch) {
   for (const field of ["page_task", "semantic_roles", "information_relationship", "visual_mapping_hypothesis", "discarded_hypothesis"]) if (!(field in value) || value[field] === null || value[field] === "") throw new ApplicationError("RECONSTRUCTION_REQUIRED", `semantic reconstruction field is required: ${field}`);
   for (const field of ["task", "three_second_message", "relation"]) if (!(field in patch)) throw new ApplicationError("RECONSTRUCTION_PATCH_INCOMPLETE", `semantic reconstruction patch must update ${field}`);
 }
-function validatePowerPointEvidence(evidence) {
+function validatePowerPointEvidence(evidence, rendered) {
+  if (!isPlainObject(rendered)) throw new ApplicationError("CANDIDATE_NOT_RENDERED", "PowerPoint observation requires Candidate render evidence");
   if (evidence.application !== "Microsoft PowerPoint") throw new ApplicationError("POWERPOINT_EVIDENCE_INVALID", "viewed evidence must name Microsoft PowerPoint");
-  if (!hasText(evidence.artifact)) throw new ApplicationError("POWERPOINT_EVIDENCE_INVALID", "viewed evidence must identify the candidate artifact");
-  if (!Array.isArray(evidence.pages) || evidence.pages.length === 0 || evidence.pages.some((page) => !Number.isInteger(page) || page < 1)) throw new ApplicationError("POWERPOINT_EVIDENCE_INVALID", "viewed evidence must contain positive page numbers");
+  if (evidence.artifact !== rendered.artifact || evidence.sha256 !== rendered.sha256 || JSON.stringify(evidence.pages) !== JSON.stringify(rendered.pages)) throw new ApplicationError("POWERPOINT_EVIDENCE_MISMATCH", "PowerPoint observation must reference the rendered Candidate artifact, hash, and pages");
 }

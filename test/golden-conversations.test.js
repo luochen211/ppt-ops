@@ -63,7 +63,8 @@ test("target-page revision changes zero unrelated approved pages", async (t) => 
   const service = await ApplicationService.open(project);
   const candidate = await service.proposeCandidate({ targetKind: "page_spec", targetId: before[0].id, baseRevision: 1, patch: { screen_text: { title: "Locally revised title" } } });
   assert.equal(service.diffCandidate(candidate.id).stale, false);
-  const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: candidate.revision, status: "viewed", evidence: { application: "Microsoft PowerPoint", artifact: "candidate-001.pptx", pages: [1] } });
+  const rendered = await service.renderCandidate(candidate.id, candidate.revision);
+  const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: { application: "Microsoft PowerPoint", artifact: rendered.render_evidence.artifact, sha256: rendered.render_evidence.sha256, pages: rendered.render_evidence.pages } });
   await service.acceptCandidate(candidate.id, observed.candidate.revision);
   service.close();
   const after = JSON.parse(await fs.readFile(pagesFile, "utf8"));
