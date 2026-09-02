@@ -12,10 +12,6 @@ PPT-Ops 是一套面向真实交付的演示文稿工作流。
 
 </div>
 
-![PPT-Ops 真实案例首页](docs/acceptance/v1-chrome-fullscreen.jpeg)
-
-> 上图来自一份 54 页真实案例，展示了 PPT-Ops 生成的浏览器演示版本。
-
 ## 为什么做 PPT-Ops
 
 做好一份演示文稿，不只是把文字放进页面。
@@ -45,11 +41,7 @@ PPT-Ops 把这些容易遗漏的环节整理成一条清晰流程：
 
 ## 真实案例
 
-PPT-Ops 已完成一套 54 页案例的生成与浏览器检查，并分别在 Chrome 和 Safari 中完成整套翻页验证。
-
-![PPT-Ops 真实案例末页](docs/acceptance/v1-safari-final-slide.jpeg)
-
-这套案例验证了从第一页到最后一页的完整展示流程。视觉细节、字体和现场播放效果，仍建议在最终使用的电脑与 PowerPoint 中进行人工确认。
+PPT-Ops 已完成一套 54 页案例的生成与浏览器检查，并分别在 Chrome 和 Safari 中完成整套翻页验证。这套案例验证了从第一页到最后一页的完整展示流程。视觉细节、字体和现场播放效果，仍建议在最终使用的电脑与 PowerPoint 中进行人工确认。
 
 ## 快速开始
 
