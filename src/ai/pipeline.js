@@ -38,9 +38,18 @@ export class CandidatePipeline {
     const errors = validateV1Entity(candidate, "candidate");
     if (errors.length) throw new Error(`candidate contract failed:\n${errors.map((error) => `- ${error}`).join("\n")}`);
     candidate = transition("candidate", candidate, "ready_for_review");
-    candidate = transition("candidate", candidate, "awaiting_powerpoint_observation");
-    this.audit({ type: "ai.candidate.awaiting_powerpoint", candidate_id: candidate.id, patch_paths: candidate.patch.map(({ path }) => path) });
+    this.audit({ type: "ai.candidate.ready", candidate_id: candidate.id, patch_paths: candidate.patch.map(({ path }) => path) });
     return this.store ? this.store.saveEntity(this.projectId, candidate) : candidate;
+  }
+
+  recordRenderEvidence(candidateId, renderEvidence) {
+    if (!this.store) throw new Error("candidate rendering requires a persistence store");
+    const candidate = this.store.getEntity(this.projectId, "candidate", candidateId);
+    if (!candidate) throw new Error(`unknown candidate: ${candidateId}`);
+    if (candidate.state !== "ready_for_review") throw new Error(`invalid candidate render state: ${candidate.state}`);
+    if (!renderEvidence?.artifact || !renderEvidence?.sha256 || !Array.isArray(renderEvidence.pages)) throw new Error("candidate render evidence requires artifact, sha256, and pages");
+    const next = transition("candidate", { ...candidate, render_evidence: structuredClone(renderEvidence) }, "awaiting_powerpoint_observation");
+    return this.store.saveEntity(this.projectId, stripRevision(next));
   }
 
   observeInPowerPoint(candidateId, evidence = {}) {
@@ -48,7 +57,7 @@ export class CandidatePipeline {
     const candidate = this.store.getEntity(this.projectId, "candidate", candidateId);
     if (!candidate) throw new Error(`unknown candidate: ${candidateId}`);
     if (candidate.state !== "awaiting_powerpoint_observation") throw new Error(`invalid PowerPoint observation state: ${candidate.state}`);
-    if (evidence.application !== "Microsoft PowerPoint" || typeof evidence.artifact !== "string" || !Array.isArray(evidence.pages) || evidence.pages.length === 0) throw new Error("PowerPoint observation requires application, artifact, and pages evidence");
+    if (evidence.application !== "Microsoft PowerPoint" || evidence.artifact !== candidate.render_evidence?.artifact || evidence.sha256 !== candidate.render_evidence?.sha256 || JSON.stringify(evidence.pages) !== JSON.stringify(candidate.render_evidence?.pages)) throw new Error("PowerPoint observation must match Candidate render evidence");
     const observation = this.store.saveEntity(this.projectId, createV1Entity("powerpoint_observation", `powerpoint-${crypto.randomUUID()}`, {
       candidate_id: candidate.id, target_id: candidate.target_id, status: "viewed", evidence
     }));

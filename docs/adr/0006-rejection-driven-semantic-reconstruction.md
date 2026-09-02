@@ -23,6 +23,8 @@ generated -> validating -> ready_for_review
 
 A `viewed` PowerPoint observation identifies Microsoft PowerPoint, the inspected candidate artifact, and positive page numbers. Automated rendering evidence cannot satisfy this transition. A user decision is one of `accept`, `continue_iteration`, or `reject`; conversational phrases such as “continue” are never acceptance.
 
+Before PowerPoint observation, `candidate-render` applies the Candidate patch only to an in-memory project snapshot and writes an immutable `.pptops/candidates/<candidate-id>/preview.pptx`. The Draft is not changed. The resulting artifact path, SHA-256 digest, byte count, and target pages become Candidate render evidence. A PowerPoint observation is legal only when its artifact, digest, and pages exactly match that evidence.
+
 Every decision creates an append-only `candidate_feedback` record. `eval_category` identifies the dimension being judged:
 
 - `content_fidelity`

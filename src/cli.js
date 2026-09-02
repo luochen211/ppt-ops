@@ -11,7 +11,7 @@ import { createHandoff } from "./handoff/index.js";
 import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
 const HELP = `PPT-Ops 1.0
 
 Usage:
@@ -28,6 +28,7 @@ Usage:
   pptops deliver <project-dir>
   pptops candidate-propose <project-dir> --target-kind <kind> --target-id <id> --patch <json> --base-revision <n> [--parent-candidate <id>] [--hypothesis <text>]
   pptops candidate-reconstruct-relations <project-dir> --target-kind page_spec --target-id <id> --patch <json> --base-revision <n> --parent-candidate <id> --reconstruction <json>
+  pptops candidate-render <project-dir> --candidate <id> --expected-revision <n>
   pptops candidate-diff <project-dir> --candidate <id>
   pptops candidate-record-powerpoint-observation <project-dir> --candidate <id> --expected-revision <n> --status <viewed|not_viewed> --evidence <json>
   pptops candidate-accept <project-dir> --candidate <id> --expected-revision <n> [--raw-feedback <explicit acceptance>]
@@ -150,6 +151,7 @@ async function runApplicationCommand(command, projectDir, options) {
       parentCandidateId: options["parent-candidate"], hypothesis: options.hypothesis ?? "",
       reconstruction: options.reconstruction ? jsonOption(options, "reconstruction") : undefined
     });
+    if (command === "candidate-render") return await service.renderCandidate(required(options, "candidate"), integerOption(options, "expected-revision"));
     if (command === "candidate-diff") return service.diffCandidate(required(options, "candidate"));
     if (command === "candidate-record-powerpoint-observation") return service.recordPowerPointObservation(required(options, "candidate"), { expectedRevision: integerOption(options, "expected-revision"), status: required(options, "status"), evidence: jsonOption(options, "evidence") });
     if (command === "candidate-accept") return await service.acceptCandidate(required(options, "candidate"), integerOption(options, "expected-revision"), options["raw-feedback"] ?? "Explicit acceptance");

@@ -20,7 +20,7 @@ test("pipeline sends only allowlisted data and keeps private raw text out by def
   assert.doesNotMatch(serialized, /DO NOT SEND|SECRET CHAT|PRIVATE SOURCE/);
   assert.match(serialized, /text_sha256/);
   assert.deepEqual(Object.keys(outgoing.target.snapshot), ["screen_text"]);
-  assert.equal(candidate.state, "awaiting_powerpoint_observation");
+  assert.equal(candidate.state, "ready_for_review");
 });
 
 test("explicit source-text authorization includes only selected segments", async (t) => {
@@ -62,7 +62,9 @@ test("candidate requires acceptance, checks its base, and only changes the targe
   const pipeline = new CandidatePipeline({ provider, store: fixture.store, projectId: "demo" });
   const candidate = await pipeline.generate({ task: "copy_compression", target });
   assert.throws(() => pipeline.apply(candidate.id, target), /only accepted/);
-  pipeline.observeInPowerPoint(candidate.id, { application: "Microsoft PowerPoint", artifact: "candidate.pptx", pages: [1] });
+  const renderEvidence = { artifact: "candidate.pptx", sha256: "a".repeat(64), pages: [1] };
+  pipeline.recordRenderEvidence(candidate.id, renderEvidence);
+  pipeline.observeInPowerPoint(candidate.id, { application: "Microsoft PowerPoint", ...renderEvidence });
   pipeline.decide(candidate.id, { decision: "accept", rawFeedback: "Use this version", evalCategory: "user_acceptance", rootCause: "process" });
   const updated = pipeline.apply(candidate.id, target);
   assert.equal(updated.screen_text.title, "Approved title");

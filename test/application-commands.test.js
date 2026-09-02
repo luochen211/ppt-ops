@@ -18,11 +18,16 @@ test("candidate commands enforce base and object revisions before applying a loc
   t.after(() => service.close());
 
   const candidate = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { screen_text: { title: "Accepted title" } } });
-  assert.equal(candidate.state, "awaiting_powerpoint_observation");
+  assert.equal(candidate.state, "ready_for_review");
   assert.equal(service.diffCandidate(candidate.id).stale, false);
   await assert.rejects(service.acceptCandidate(candidate.id, candidate.revision - 1), { code: "STALE_OBJECT_REVISION" });
   await assert.rejects(service.acceptCandidate(candidate.id, candidate.revision), { code: "ILLEGAL_RESUME_EVENT" });
-  const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: candidate.revision, status: "viewed", evidence: powerpointEvidence() });
+  const rendered = await service.renderCandidate(candidate.id, candidate.revision);
+  await fs.access(path.join(project, rendered.render_evidence.artifact));
+  assert.equal(JSON.parse(await fs.readFile(path.join(project, "pages.json"), "utf8"))[0].screen_text.title, "Application Commands");
+  await assert.rejects(service.renderCandidate(candidate.id, rendered.candidate.revision), { code: "ILLEGAL_RESUME_EVENT" });
+  assert.throws(() => service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: { ...powerpointEvidence(rendered), sha256: "0".repeat(64) } }), { code: "POWERPOINT_EVIDENCE_MISMATCH" });
+  const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(rendered) });
   const accepted = await service.acceptCandidate(candidate.id, observed.candidate.revision);
   assert.equal(accepted.candidate.state, "applied_to_draft");
   assert.equal(accepted.target.screen_text.title, "Accepted title");
@@ -35,10 +40,11 @@ test("a changed target makes an outstanding candidate stale", async (t) => {
   t.after(() => service.close());
   const first = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { task: "First" } });
   const second = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { task: "Second" } });
-  const observed = service.recordPowerPointObservation(first.id, { expectedRevision: first.revision, status: "viewed", evidence: powerpointEvidence() });
+  const firstRendered = await service.renderCandidate(first.id, first.revision); const secondRendered = await service.renderCandidate(second.id, second.revision);
+  const observed = service.recordPowerPointObservation(first.id, { expectedRevision: firstRendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(firstRendered) });
   await service.acceptCandidate(first.id, observed.candidate.revision);
   assert.equal(service.diffCandidate(second.id).stale, true);
-  assert.throws(() => service.recordPowerPointObservation(second.id, { expectedRevision: second.revision, status: "viewed", evidence: { app: "Microsoft PowerPoint" } }), { code: "STALE_BASE_REVISION" });
+  assert.throws(() => service.recordPowerPointObservation(second.id, { expectedRevision: secondRendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(secondRendered) }), { code: "STALE_BASE_REVISION" });
 });
 
 test("repeated rejection forces semantic reconstruction and preserves attempt lineage", async (t) => {
@@ -47,7 +53,8 @@ test("repeated rejection forces semantic reconstruction and preserves attempt li
   t.after(() => service.close());
 
   const reject = async (candidate, feedback) => {
-    const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: candidate.revision, status: "viewed", evidence: powerpointEvidence() });
+    const rendered = await service.renderCandidate(candidate.id, candidate.revision);
+    const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(rendered) });
     return service.decideCandidate(candidate.id, { decision: "reject", expectedRevision: observed.candidate.revision, rawFeedback: feedback, evalCategory: "semantic_accuracy", rootCause: "information_relationship", rootCauseFingerprint: "roles-flattened" });
   };
   const first = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { relation: "process" }, hypothesis: "All roles form one process" });
@@ -77,11 +84,12 @@ test("repeated rejection forces semantic reconstruction and preserves attempt li
 test("continue is not acceptance and stale or illegal resume events are rejected", async (t) => {
   const project = await fixture(t); const service = await ApplicationService.open(project); t.after(() => service.close());
   const candidate = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { task: "Try" } });
-  const notViewed = service.recordPowerPointObservation(candidate.id, { expectedRevision: candidate.revision, status: "not_viewed", evidence: { reason: "PowerPoint unavailable" } });
+  const rendered = await service.renderCandidate(candidate.id, candidate.revision);
+  const notViewed = service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "not_viewed", evidence: { reason: "PowerPoint unavailable" } });
   assert.equal(notViewed.candidate.state, "awaiting_powerpoint_observation");
-  await assert.rejects(service.decideCandidate(candidate.id, { decision: "continue_iteration", expectedRevision: candidate.revision, rawFeedback: "Continue", evalCategory: "visual_hierarchy", rootCause: "process" }), { code: "ILLEGAL_RESUME_EVENT" });
-  const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: candidate.revision, status: "viewed", evidence: powerpointEvidence() });
-  await assert.rejects(service.decideCandidate(candidate.id, { decision: "reject", expectedRevision: candidate.revision, rawFeedback: "No", evalCategory: "visual_hierarchy", rootCause: "visual_grammar" }), { code: "STALE_OBJECT_REVISION" });
+  await assert.rejects(service.decideCandidate(candidate.id, { decision: "continue_iteration", expectedRevision: rendered.candidate.revision, rawFeedback: "Continue", evalCategory: "visual_hierarchy", rootCause: "process" }), { code: "ILLEGAL_RESUME_EVENT" });
+  const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(rendered) });
+  await assert.rejects(service.decideCandidate(candidate.id, { decision: "reject", expectedRevision: rendered.candidate.revision, rawFeedback: "No", evalCategory: "visual_hierarchy", rootCause: "visual_grammar" }), { code: "STALE_OBJECT_REVISION" });
   const continued = await service.decideCandidate(candidate.id, { decision: "continue_iteration", expectedRevision: observed.candidate.revision, rawFeedback: "Keep exploring", evalCategory: "visual_hierarchy", rootCause: "visual_grammar" });
   assert.equal(continued.candidate.state, "continued");
   await assert.rejects(service.acceptCandidate(candidate.id, continued.candidate.revision), { code: "ILLEGAL_RESUME_EVENT" });
@@ -90,13 +98,15 @@ test("continue is not acceptance and stale or illegal resume events are rejected
 test("automated QA rejection remains distinct from PowerPoint and user feedback", async (t) => {
   const project = await fixture(t); const service = await ApplicationService.open(project); t.after(() => service.close());
   const automatic = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { task: "Overflowing candidate" } });
-  assert.throws(() => service.recordPowerPointObservation(automatic.id, { expectedRevision: automatic.revision, status: "viewed", evidence: { application: "PowerPoint" } }), { code: "POWERPOINT_EVIDENCE_INVALID" });
-  const qa = service.rejectCandidateByAutomatedQa(automatic.id, { expectedRevision: automatic.revision, rawFeedback: "Text overflows its box", evalCategory: "powerpoint_fidelity", rootCause: "powerpoint_implementation", rootCauseFingerprint: "overflow", evidence: { check: "text-overflow", page: 1 } });
+  const automaticRendered = await service.renderCandidate(automatic.id, automatic.revision);
+  assert.throws(() => service.recordPowerPointObservation(automatic.id, { expectedRevision: automaticRendered.candidate.revision, status: "viewed", evidence: { application: "PowerPoint" } }), { code: "POWERPOINT_EVIDENCE_INVALID" });
+  const qa = service.rejectCandidateByAutomatedQa(automatic.id, { expectedRevision: automaticRendered.candidate.revision, rawFeedback: "Text overflows its box", evalCategory: "powerpoint_fidelity", rootCause: "powerpoint_implementation", rootCauseFingerprint: "overflow", evidence: { check: "text-overflow", page: 1 } });
   assert.equal(qa.feedback.actor, "automated_qa");
   assert.equal(qa.force_reconstruction, false);
 
   const userCandidate = await service.proposeCandidate({ targetKind: "page_spec", targetId: "page-001", baseRevision: 1, patch: { task: "User candidate" }, parentCandidateId: automatic.id });
-  const observed = service.recordPowerPointObservation(userCandidate.id, { expectedRevision: userCandidate.revision, status: "viewed", evidence: powerpointEvidence() });
+  const userRendered = await service.renderCandidate(userCandidate.id, userCandidate.revision);
+  const observed = service.recordPowerPointObservation(userCandidate.id, { expectedRevision: userRendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(userRendered) });
   const rejected = await service.decideCandidate(userCandidate.id, { decision: "reject", expectedRevision: observed.candidate.revision, rawFeedback: "The overflow remains", evalCategory: "powerpoint_fidelity", rootCause: "powerpoint_implementation", rootCauseFingerprint: "overflow" });
   assert.equal(rejected.force_reconstruction, false);
   assert.equal(rejected.feedback.actor, "user");
@@ -112,7 +122,8 @@ test("five rejection and reconstruction rounds preserve resumable state", async 
       hypothesis: `Attempt ${round}`,
       ...(parent?.state === "reconstruction_required" ? { reconstruction: { page_task: `Task ${round}`, semantic_roles: { input: ["source"], action: ["act"], output: ["result"] }, information_relationship: "input enables action and action produces output", visual_mapping_hypothesis: `Mapping ${round}`, discarded_hypothesis: parent.hypothesis } } : {})
     });
-    const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: candidate.revision, status: "viewed", evidence: { ...powerpointEvidence(), artifact: `candidate-${round}.pptx` } });
+    const rendered = await service.renderCandidate(candidate.id, candidate.revision);
+    const observed = service.recordPowerPointObservation(candidate.id, { expectedRevision: rendered.candidate.revision, status: "viewed", evidence: powerpointEvidence(rendered) });
     const result = await service.decideCandidate(candidate.id, { decision: "reject", expectedRevision: observed.candidate.revision, rawFeedback: `Relationship still wrong ${round}`, evalCategory: "semantic_accuracy", rootCause: "information_relationship", rootCauseFingerprint: "same-semantic-failure" });
     if (result.force_reconstruction) forceCount++;
     parent = result.candidate;
@@ -126,7 +137,8 @@ test("five rejection and reconstruction rounds preserve resumable state", async 
 test("CLI exposes the PowerPoint feedback loop with stable envelopes", async (t) => {
   const project = await fixture(t);
   const proposed = JSON.parse((await runCli("candidate-propose", project, "--target-kind", "page_spec", "--target-id", "page-001", "--patch", JSON.stringify({ task: "CLI candidate" }), "--base-revision", "1")).stdout).data;
-  const observed = JSON.parse((await runCli("candidate-record-powerpoint-observation", project, "--candidate", proposed.id, "--expected-revision", String(proposed.revision), "--status", "viewed", "--evidence", JSON.stringify(powerpointEvidence()))).stdout).data;
+  const rendered = JSON.parse((await runCli("candidate-render", project, "--candidate", proposed.id, "--expected-revision", String(proposed.revision))).stdout).data;
+  const observed = JSON.parse((await runCli("candidate-record-powerpoint-observation", project, "--candidate", proposed.id, "--expected-revision", String(rendered.candidate.revision), "--status", "viewed", "--evidence", JSON.stringify(powerpointEvidence(rendered)))).stdout).data;
   const rejected = JSON.parse((await runCli("candidate-reject", project, "--candidate", proposed.id, "--expected-revision", String(observed.candidate.revision), "--raw-feedback", "The hierarchy is flat", "--eval-category", "visual_hierarchy", "--root-cause", "visual_grammar")).stdout).data;
   assert.equal(rejected.candidate.state, "rejected");
   assert.equal(rejected.feedback.eval_category, "visual_hierarchy");
@@ -183,4 +195,4 @@ async function fixture(t) {
   return project;
 }
 function runCli(...args) { return execFileAsync(process.execPath, [cli, ...args], { encoding: "utf8" }); }
-function powerpointEvidence() { return { application: "Microsoft PowerPoint", artifact: "candidate-001.pptx", pages: [1] }; }
+function powerpointEvidence(rendered) { return { application: "Microsoft PowerPoint", artifact: rendered.render_evidence.artifact, sha256: rendered.render_evidence.sha256, pages: rendered.render_evidence.pages }; }
