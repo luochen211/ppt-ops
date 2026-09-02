@@ -9,6 +9,7 @@ V1.0 真源文档：
 - [产品备案](docs/product-v1.0-blueprint.md)
 - [系统架构](docs/architecture-v1.0.md)
 - [交付 DAG](docs/delivery-v1.0-dag.md)
+- [career-ops 项目理解与 PPT-Ops 参考设计](docs/career-ops-reference-for-ppt-ops.md)
 
 在 Codex 中可直接说“使用 `$ppt-agent` 把这些资料生成一份可编辑 PPTX”，也可让 Codex根据技能描述自动进入该工作流。技能入口位于 `.agents/skills/ppt-agent/SKILL.md`。
 
