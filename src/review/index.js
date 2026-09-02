@@ -2,12 +2,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { outputDir } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
+import { inspectPresentation } from "../qa/index.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
-export async function reviewProject(project) {
+export async function reviewProject(project, options = {}) {
+  const directory = outputDir(project);
   const validationErrors = validateProject(project);
-  const artifacts = await listOutputArtifacts(outputDir(project));
+  const artifacts = await listOutputArtifacts(directory);
   const automatedChecks = [
     {
       id: "project-validation",
@@ -26,6 +28,21 @@ export async function reviewProject(project) {
       evidence: { count: artifacts.length, files: artifacts }
     }
   ];
+  const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");
+  try {
+    await fs.access(pptxFile);
+    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? true });
+    automatedChecks.push({
+      id: "pptx-visual-qa",
+      kind: "automated",
+      required: true,
+      status: qa.status === "failed" ? "failed" : qa.status === "degraded" ? "pending" : "passed",
+      evidence: qa
+    });
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    automatedChecks.push({ id: "pptx-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No PPTX build selected for visual QA." } });
+  }
   const acceptance = [
     pendingAcceptance("visual-acceptance", "visual", "Requires human visual inspection of rendered slides."),
     pendingAcceptance("real-powerpoint-acceptance", "real_powerpoint", "Requires opening and presenting the PPTX in Microsoft PowerPoint.")

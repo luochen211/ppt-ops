@@ -49,7 +49,11 @@ test("formal build, review, and handoff commands require a frozen version and ac
   const { build, artifacts } = await service.createBuild({ versionId: version.id, targets: ["pptx"] });
   assert.equal(build.state, "succeeded");
   assert.equal(artifacts[0].file, `.pptops/builds/${build.id}/pptx/slides.pptx`);
-  const { review } = await service.runReview(build.id);
+  const { review, report } = await service.runReview(build.id);
+  const qa = report.automated_checks.find(({ id }) => id === "pptx-visual-qa");
+  assert.ok(["passed", "pending"].includes(qa.status));
+  assert.ok(qa.evidence.pages.every(({ page }) => Number.isInteger(page) && page > 0));
+  assert.ok(report.acceptance.every(({ status }) => status === "pending"));
   await assert.rejects(service.createHandoff(build.id, review.id), { code: "REVIEW_NOT_ACCEPTED" });
   const accepted = await service.recordReview(review.id, { decision: "accepted", expectedRevision: review.revision, evidence: { reviewer: "test" } });
   const handoff = await service.createHandoff(build.id, accepted.id);

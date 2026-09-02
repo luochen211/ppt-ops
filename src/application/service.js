@@ -118,7 +118,8 @@ export class ApplicationService {
     const build = this.requireBuild(buildId);
     if (build.state !== "succeeded") throw new ApplicationError("BUILD_NOT_SUCCEEDED", "review requires a succeeded build");
     const frozenProject = await this.projectFromVersion(build.version_id);
-    const report = await reviewProject(frozenProject);
+    const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
+    const report = await reviewProject(frozenProject, { pptxFile, evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
     const reportFile = await writeReviewReport(frozenProject, report);
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
     let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: path.relative(this.project.root, reportFile) }));
