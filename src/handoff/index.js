@@ -7,12 +7,12 @@ import { outputDir } from "../core/project.js";
 export const HANDOFF_DIR = "handoff";
 export const HANDOFF_MANIFEST_FILE = "manifest.json";
 
-export async function createHandoff(project, reviewReport) {
+export async function createHandoff(project, reviewReport, options = {}) {
   const outputs = outputDir(project);
   const packageDir = await nextPackageDirectory(outputs);
   await fs.mkdir(packageDir, { recursive: true });
 
-  const sourceFiles = await availableOutputFiles(outputs);
+  const sourceFiles = options.sourceFiles ?? await availableOutputFiles(outputs);
   const packagedOutputs = [];
   for (const source of sourceFiles) {
     const destination = path.join(packageDir, source.name);
