@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
+process.env.PPT_OPS_RENDER_QA = "0";
 
 test("init creates a valid V1 project without overwriting an existing directory", async (t) => {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-init-"));
