@@ -1204,8 +1204,8 @@ addEventListener('touchend',e=>{
 const initialSlide=Math.max(0,Math.min(total-1,Number(new URLSearchParams(location.search).get('slide')||1)-1));
 go(initialSlide);
 </script>
-<!-- ============ Motion One 动效引擎（本地优先,CDN 兜底） ============
-     加载策略:先 ./assets/motion.min.js(本地,离线可用),失败 fallback 到 jsDelivr CDN
+<!-- ============ Motion One 动效引擎（CDN 动态,离线静态兜底） ============
+     单文件模式直接加载 jsDelivr CDN；不可用时保持全部内容可见
      加载完成后挂 window.__playSlide / window.__pipeAdvance,
      导航脚本会在翻页中段调用 __playSlide(idx),键盘/滚轮/触屏会在翻页前调用 __pipeAdvance()
      双双失败时会兜底把所有 [data-anim] 设为可见,不让动效破坏阅读
@@ -1216,15 +1216,11 @@ if(window.__lowPowerMode){
   document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});
   document.querySelectorAll('[data-animate="pipeline"] [data-anim]').forEach(el=>el.style.opacity='1');
 } else try {
-  motion = await import('./assets/motion.min.js');
-} catch(e1) {
-  try {
-    motion = await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm');
-  } catch(e2) {
-    console.warn('[motion] local + CDN both failed, disabling animations', e1, e2);
-    document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});
-    document.querySelectorAll('[data-animate="pipeline"] [data-anim]').forEach(el=>el.style.opacity='1');
-  }
+  motion = await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm');
+} catch(e) {
+  console.warn('[motion] CDN unavailable, disabling animations', e);
+  document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});
+  document.querySelectorAll('[data-animate="pipeline"] [data-anim]').forEach(el=>el.style.opacity='1');
 }
 
 if(motion){
