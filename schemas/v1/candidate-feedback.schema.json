@@ -2,5 +2,48 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ppt-ops.local/schemas/v1/candidate-feedback.schema.json",
   "title": "V1 Candidate Feedback",
-  "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["candidate_id", "target_id", "decision", "actor", "eval_category", "root_cause", "raw_feedback", "root_cause_fingerprint"], "properties": { "kind": { "const": "candidate_feedback" } } }]
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["candidate_id", "target_id", "decision", "actor", "raw_feedback", "findings"],
+      "properties": {
+        "kind": { "const": "candidate_feedback" },
+        "candidate_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "target_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "target_kind": { "type": "string", "minLength": 1 },
+        "decision": { "enum": ["accept", "continue_iteration", "reject"] },
+        "actor": { "enum": ["user", "automated_qa"] },
+        "raw_feedback": { "type": "string", "minLength": 1 },
+        "findings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/finding" } }
+      }
+    }
+  ],
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["eval_category", "root_cause", "root_cause_fingerprint", "severity", "target", "evidence"],
+      "properties": {
+        "eval_category": {
+          "enum": ["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "layout_composition", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]
+        },
+        "root_cause": { "enum": ["content_truth", "page_task", "information_relationship", "visual_grammar", "powerpoint_implementation", "process"] },
+        "root_cause_fingerprint": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["note", "minor", "major", "blocking"] },
+        "target": {
+          "type": "object",
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1 },
+            "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" }
+          },
+          "additionalProperties": false
+        },
+        "evidence": { "type": "object" },
+        "classification_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "corrected_root_cause": { "enum": ["content_truth", "page_task", "information_relationship", "visual_grammar", "powerpoint_implementation", "process"] }
+      },
+      "additionalProperties": false
+    }
+  }
 }

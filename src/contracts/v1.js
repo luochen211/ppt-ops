@@ -1,6 +1,7 @@
 export const CONTRACT_VERSION = "1.0";
-export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
+export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "layout_composition", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
 export const ROOT_CAUSES = Object.freeze(["content_truth", "page_task", "information_relationship", "visual_grammar", "powerpoint_implementation", "process"]);
+export const FINDING_SEVERITIES = Object.freeze(["note", "minor", "major", "blocking"]);
 
 export function createV1Entity(kind, id, fields = {}) { return { contract_version: CONTRACT_VERSION, kind, id, ...fields }; }
 export function pageSpecId(page) { return `page-${String(page).padStart(3, "0")}`; }
@@ -88,11 +89,18 @@ const validators = {
   candidate_feedback(value, errors) {
     requireId(value, "candidate_id", errors); requireId(value, "target_id", errors);
     requireEnum(value, "decision", ["accept", "continue_iteration", "reject"], errors);
-    requireEnum(value, "eval_category", EVAL_CATEGORIES, errors);
-    requireEnum(value, "root_cause", ROOT_CAUSES, errors);
     requireEnum(value, "actor", ["user", "automated_qa"], errors);
-    requireText(value, "root_cause_fingerprint", errors);
     requireText(value, "raw_feedback", errors);
+    const findings = Array.isArray(value.findings) ? value.findings : [];
+    if (findings.length === 0) errors.push("findings must contain at least one atomic finding");
+    for (const [index, finding] of findings.entries()) validateFeedbackFinding(finding, index, errors);
+    const hasAcceptance = findings.some((finding) => finding?.eval_category === "user_acceptance");
+    if (value.decision === "accept" && !hasAcceptance) errors.push("acceptance requires a user_acceptance finding");
+    if (value.decision !== "accept" && hasAcceptance) errors.push("user_acceptance findings are only valid for acceptance decisions");
+    if (value.actor === "automated_qa" && hasAcceptance) errors.push("automated QA cannot record user_acceptance");
+    for (const field of ["eval_category", "root_cause", "root_cause_fingerprint", "classification_confidence", "corrected_root_cause"]) {
+      if (field in value) errors.push(`${field} must be stored inside findings`);
+    }
   },
   powerpoint_observation(value, errors) {
     requireId(value, "candidate_id", errors); requireId(value, "target_id", errors);
@@ -125,6 +133,19 @@ function validateReferences(bundle, errors) {
     for (const ref of page.source_refs ?? []) expect(ref.source_id, "source", `${page.id}.source_refs`);
     for (const slot of page.asset_slots ?? []) expect(slot.asset_id, "asset", `${page.id}.asset_slots`);
   }
+}
+
+function validateFeedbackFinding(finding, index, errors) {
+  const prefix = `findings[${index}]`;
+  if (!isObject(finding)) { errors.push(`${prefix} must be an object`); return; }
+  if (!EVAL_CATEGORIES.includes(finding.eval_category)) errors.push(`${prefix}.eval_category is invalid: ${finding.eval_category}`);
+  if (!ROOT_CAUSES.includes(finding.root_cause)) errors.push(`${prefix}.root_cause is invalid: ${finding.root_cause}`);
+  if (!hasText(finding.root_cause_fingerprint)) errors.push(`${prefix}.root_cause_fingerprint is required`);
+  if (!FINDING_SEVERITIES.includes(finding.severity)) errors.push(`${prefix}.severity is invalid: ${finding.severity}`);
+  if (!isObject(finding.target) || !hasText(finding.target.kind) || !isId(finding.target.id)) errors.push(`${prefix}.target requires a kind and stable lowercase id`);
+  if (!isObject(finding.evidence)) errors.push(`${prefix}.evidence must be an object`);
+  if (finding.classification_confidence !== undefined && (!Number.isFinite(finding.classification_confidence) || finding.classification_confidence < 0 || finding.classification_confidence > 1)) errors.push(`${prefix}.classification_confidence must be between 0 and 1`);
+  if (finding.corrected_root_cause !== undefined && !ROOT_CAUSES.includes(finding.corrected_root_cause)) errors.push(`${prefix}.corrected_root_cause is invalid: ${finding.corrected_root_cause}`);
 }
 
 function requireText(value, field, errors, prefix = "") { if (!hasText(value?.[field])) errors.push(`${prefix}${field} is required`); }

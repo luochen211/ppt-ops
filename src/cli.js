@@ -32,9 +32,9 @@ Usage:
   pptops candidate-diff <project-dir> --candidate <id>
   pptops candidate-record-powerpoint-observation <project-dir> --candidate <id> --expected-revision <n> --status <viewed|not_viewed> --evidence <json>
   pptops candidate-accept <project-dir> --candidate <id> --expected-revision <n> [--raw-feedback <explicit acceptance>]
-  pptops candidate-reject <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --eval-category <category> --root-cause <category> [--root-cause-fingerprint <id>] [--confidence <0..1>]
-  pptops candidate-auto-reject <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --eval-category <category> --root-cause <category> --evidence <json>
-  pptops candidate-continue <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --eval-category <category> --root-cause <category>
+  pptops candidate-reject <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --findings <json-array>
+  pptops candidate-auto-reject <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --findings <json-array>
+  pptops candidate-continue <project-dir> --candidate <id> --expected-revision <n> --raw-feedback <text> --findings <json-array>
   pptops candidate-feedback-show <project-dir> --candidate <id>
   pptops candidate-attempts <project-dir> --target-kind <kind> --target-id <id>
   pptops candidate-compare <project-dir> --left-candidate <id> --right-candidate <id>
@@ -156,13 +156,11 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "candidate-record-powerpoint-observation") return service.recordPowerPointObservation(required(options, "candidate"), { expectedRevision: integerOption(options, "expected-revision"), status: required(options, "status"), evidence: jsonOption(options, "evidence") });
     if (command === "candidate-accept") return await service.acceptCandidate(required(options, "candidate"), integerOption(options, "expected-revision"), options["raw-feedback"] ?? "Explicit acceptance");
     if (command === "candidate-auto-reject") return service.rejectCandidateByAutomatedQa(required(options, "candidate"), {
-      expectedRevision: integerOption(options, "expected-revision"), rawFeedback: required(options, "raw-feedback"), evalCategory: required(options, "eval-category"),
-      rootCause: required(options, "root-cause"), rootCauseFingerprint: options["root-cause-fingerprint"], evidence: jsonOption(options, "evidence")
+      expectedRevision: integerOption(options, "expected-revision"), rawFeedback: required(options, "raw-feedback"), findings: jsonOption(options, "findings")
     });
     if (["candidate-reject", "candidate-continue"].includes(command)) return await service.decideCandidate(required(options, "candidate"), {
       decision: command === "candidate-reject" ? "reject" : "continue_iteration", expectedRevision: integerOption(options, "expected-revision"),
-      rawFeedback: required(options, "raw-feedback"), evalCategory: required(options, "eval-category"), rootCause: required(options, "root-cause"), rootCauseFingerprint: options["root-cause-fingerprint"],
-      confidence: options.confidence === undefined ? undefined : numberOption(options, "confidence"), correctedRootCause: options["corrected-root-cause"]
+      rawFeedback: required(options, "raw-feedback"), findings: jsonOption(options, "findings")
     });
     if (command === "candidate-feedback-show") return service.candidateFeedback(required(options, "candidate"));
     if (command === "candidate-attempts") return service.candidateAttempts({ targetKind: required(options, "target-kind"), targetId: required(options, "target-id") });
@@ -224,7 +222,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "eval-category", "root-cause", "root-cause-fingerprint", "corrected-root-cause", "confidence", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
@@ -238,11 +236,6 @@ function required(options, name) {
 function integerOption(options, name) {
   const value = Number(required(options, name));
   if (!Number.isInteger(value) || value < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
-  return value;
-}
-function numberOption(options, name) {
-  const value = Number(required(options, name));
-  if (!Number.isFinite(value)) { const error = new Error(`--${name} must be a number`); error.code = "OPTION_INVALID"; throw error; }
   return value;
 }
 function jsonOption(options, name) {

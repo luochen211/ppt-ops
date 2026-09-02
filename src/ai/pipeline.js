@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { createV1Entity, validateV1Entity } from "../contracts/v1.js";
+import { normalizeFeedbackFindings, repeatedRootCauseFingerprints } from "../core/feedback.js";
 import { transition } from "../core/state-machines.js";
 
 export const AI_TASKS = Object.freeze({
@@ -65,19 +66,25 @@ export class CandidatePipeline {
     return { observation, candidate: this.store.saveEntity(this.projectId, stripRevision(next)) };
   }
 
-  decide(candidateId, { decision, rawFeedback, evalCategory, rootCause, rootCauseFingerprint }) {
+  decide(candidateId, { decision, rawFeedback, findings }) {
     if (!this.store) throw new Error("candidate decisions require a persistence store");
     const candidate = this.store.getEntity(this.projectId, "candidate", candidateId);
     if (!candidate) throw new Error(`unknown candidate: ${candidateId}`);
     if (candidate.state !== "awaiting_user_decision") throw new Error(`invalid candidate decision state: ${candidate.state}`);
     if (!["accept", "continue_iteration", "reject"].includes(decision)) throw new Error(`invalid candidate decision: ${decision}`);
     if (typeof rawFeedback !== "string" || rawFeedback.trim() === "") throw new Error("raw user feedback is required");
-    const cause = rootCause ?? "process"; const category = evalCategory ?? "user_acceptance"; const fingerprint = rootCauseFingerprint ?? cause;
-    const previous = this.store.listEntities(this.projectId, "candidate_feedback").filter((item) => item.target_id === candidate.target_id && item.decision === "reject" && item.actor === "user" && item.root_cause_fingerprint === fingerprint).length;
-    const forceReconstruction = decision === "reject" && previous >= 1;
+    const normalizedFindings = normalizeFeedbackFindings(findings, {
+      targetKind: candidate.target_kind, targetId: candidate.target_id, decision, actor: "user"
+    });
+    const repeatedFingerprints = decision === "reject"
+      ? repeatedRootCauseFingerprints(this.store.listEntities(this.projectId, "candidate_feedback"), candidate.target_id, normalizedFindings)
+      : [];
+    const forceReconstruction = repeatedFingerprints.length > 0;
     this.store.saveEntity(this.projectId, createV1Entity("candidate_feedback", `feedback-${crypto.randomUUID()}`, {
-      candidate_id: candidate.id, target_id: candidate.target_id, decision, actor: "user", eval_category: category, root_cause: cause,
-      root_cause_fingerprint: fingerprint, raw_feedback: rawFeedback, force_reconstruction: forceReconstruction
+      candidate_id: candidate.id, target_id: candidate.target_id, target_kind: candidate.target_kind, decision, actor: "user",
+      raw_feedback: rawFeedback, findings: normalizedFindings,
+      ...(repeatedFingerprints.length ? { reconstruction_fingerprints: repeatedFingerprints } : {}),
+      force_reconstruction: forceReconstruction
     }));
     const state = decision === "accept" ? "accepted" : decision === "continue_iteration" ? "continued" : forceReconstruction ? "reconstruction_required" : "rejected";
     const next = transition("candidate", candidate, state);

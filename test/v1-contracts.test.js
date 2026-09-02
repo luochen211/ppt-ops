@@ -22,7 +22,13 @@ test("all V1 entity fixtures satisfy their semantic contracts", () => {
     base("template", "template-hero", { name: "Hero", slots: {}, renderers: { html: "hero", pptx: "hero" } }),
     base("asset", "hero", { type: "image", file: "hero.png", sha256: digest }),
     base("candidate", "candidate-001", { target_id: "page-001", target_kind: "page_spec", state: "generated", patch: [] }),
-    base("candidate_feedback", "feedback-001", { candidate_id: "candidate-001", target_id: "page-001", decision: "reject", actor: "user", eval_category: "semantic_accuracy", root_cause: "information_relationship", root_cause_fingerprint: "roles", raw_feedback: "Roles are wrong" }),
+    base("candidate_feedback", "feedback-001", {
+      candidate_id: "candidate-001", target_id: "page-001", decision: "reject", actor: "user", raw_feedback: "Roles are wrong and the layout has no ownership",
+      findings: [
+        { eval_category: "semantic_accuracy", root_cause: "information_relationship", root_cause_fingerprint: "roles", severity: "blocking", target: { kind: "page_spec", id: "page-001" }, evidence: { observation: "Inputs and outputs are peers" } },
+        { eval_category: "layout_composition", root_cause: "information_relationship", root_cause_fingerprint: "floating-copy", severity: "major", target: { kind: "page_spec", id: "page-001" }, evidence: { observation: "Text has no visual owner" } }
+      ]
+    }),
     base("powerpoint_observation", "powerpoint-001", { candidate_id: "candidate-001", target_id: "page-001", status: "viewed", evidence: { app: "Microsoft PowerPoint" } }),
     base("approval", "approval-001", { subject_id: "candidate-001", subject_hash: digest, decision: "accepted" }),
     base("version", "version-001", { state: "draft", snapshot_hash: digest, component_hashes: {} }),
@@ -33,6 +39,25 @@ test("all V1 entity fixtures satisfy their semantic contracts", () => {
   for (const fixture of fixtures) assert.deepEqual(validateV1Entity(fixture, fixture.kind), []);
   const [project, source, outline, page, theme, template, asset, candidate, feedback, observation, approval, version, build, review, handoff] = fixtures;
   assert.deepEqual(validateV1Bundle({ project, sources: [source], outline, pages: [page], theme, assets: [asset], templates: [template], candidates: [candidate], approvals: [approval], versions: [version], builds: [build], reviews: [review], handoffs: [handoff] }), []);
+});
+
+test("candidate feedback rejects legacy single-category fields and malformed findings", () => {
+  const legacy = base("candidate_feedback", "feedback-legacy", {
+    candidate_id: "candidate-001", target_id: "page-001", decision: "reject", actor: "user", raw_feedback: "Wrong",
+    eval_category: "visual_hierarchy", root_cause: "visual_grammar", root_cause_fingerprint: "flat"
+  });
+  const errors = validateV1Entity(legacy, "candidate_feedback");
+  assert.ok(errors.includes("findings must contain at least one atomic finding"));
+  assert.ok(errors.includes("eval_category must be stored inside findings"));
+
+  const malformed = base("candidate_feedback", "feedback-malformed", {
+    candidate_id: "candidate-001", target_id: "page-001", decision: "reject", actor: "user", raw_feedback: "Wrong",
+    findings: [{ eval_category: "layout_composition", root_cause: "information_relationship", severity: "severe", target: { kind: "page_spec", id: "page-001" }, evidence: [] }]
+  });
+  const malformedErrors = validateV1Entity(malformed, "candidate_feedback");
+  assert.ok(malformedErrors.some((error) => error.includes("root_cause_fingerprint is required")));
+  assert.ok(malformedErrors.some((error) => error.includes("severity is invalid")));
+  assert.ok(malformedErrors.some((error) => error.includes("evidence must be an object")));
 });
 
 test("semantic validation rejects cross-entity references that do not exist", () => {

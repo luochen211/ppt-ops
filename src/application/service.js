@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { buildHtml } from "../adapters/html.js";
 import { buildPptx } from "../adapters/pptx.js";
-import { createV1Entity, EVAL_CATEGORIES, ROOT_CAUSES } from "../contracts/v1.js";
+import { createV1Entity } from "../contracts/v1.js";
+import { normalizeFeedbackFindings, repeatedRootCauseFingerprints } from "../core/feedback.js";
 import { readProject, resolveProjectPath } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { createHandoff } from "../handoff/index.js";
@@ -104,7 +105,10 @@ export class ApplicationService {
   }
 
   async acceptCandidate(candidateId, expectedRevision, rawFeedback = "Explicit acceptance") {
-    await this.decideCandidate(candidateId, { decision: "accept", expectedRevision, rawFeedback, evalCategory: "user_acceptance", rootCause: "process" });
+    await this.decideCandidate(candidateId, {
+      decision: "accept", expectedRevision, rawFeedback,
+      findings: [{ eval_category: "user_acceptance", root_cause: "process", root_cause_fingerprint: "explicit-acceptance", severity: "note", evidence: {} }]
+    });
     const candidate = this.requireEntity("candidate", candidateId);
     if (candidate.state !== "accepted") throw new ApplicationError("CANDIDATE_NOT_ACCEPTED", `candidate is not accepted: ${candidate.state}`);
     const target = this.findTarget(candidate.target_kind, candidate.target_id);
@@ -135,43 +139,39 @@ export class ApplicationService {
     return { observation, candidate: next };
   }
 
-  rejectCandidateByAutomatedQa(candidateId, { expectedRevision, rawFeedback, evalCategory, rootCause, rootCauseFingerprint, evidence }) {
+  rejectCandidateByAutomatedQa(candidateId, { expectedRevision, rawFeedback, findings }) {
     const candidate = this.requireCurrentCandidate(candidateId, expectedRevision, "awaiting_powerpoint_observation");
     this.assertCandidateBaseCurrent(candidate);
-    if (!hasText(rawFeedback) || !isPlainObject(evidence)) throw new ApplicationError("QA_EVIDENCE_INVALID", "automated QA rejection requires feedback and evidence");
-    if (!EVAL_CATEGORIES.includes(evalCategory) || evalCategory === "user_acceptance") throw new ApplicationError("EVAL_CATEGORY_INVALID", `invalid automated evaluation category: ${evalCategory}`);
-    if (!ROOT_CAUSES.includes(rootCause)) throw new ApplicationError("ROOT_CAUSE_INVALID", `invalid feedback root cause: ${rootCause}`);
+    if (!hasText(rawFeedback)) throw new ApplicationError("QA_FEEDBACK_REQUIRED", "automated QA rejection requires raw feedback");
+    const normalizedFindings = normalizeFeedbackFindings(findings, {
+      targetKind: candidate.target_kind, targetId: candidate.target_id, decision: "reject", actor: "automated_qa"
+    });
     const id = nextId("feedback", this.store.listEntities(this.projectId, "candidate_feedback"));
     const feedback = this.store.saveEntity(this.projectId, createV1Entity("candidate_feedback", id, {
       candidate_id: candidate.id, target_id: candidate.target_id, target_kind: candidate.target_kind, decision: "reject", actor: "automated_qa",
-      eval_category: evalCategory, root_cause: rootCause, root_cause_fingerprint: rootCauseFingerprint ?? rootCause,
-      raw_feedback: rawFeedback, evidence, force_reconstruction: false, candidate_revision: candidate.revision, base_revision: candidate.base_revision
+      raw_feedback: rawFeedback, findings: normalizedFindings, force_reconstruction: false, candidate_revision: candidate.revision, base_revision: candidate.base_revision
     }));
     const rejected = this.store.saveEntity(this.projectId, { ...stripRevision(candidate), state: "rejected", decision_feedback_id: feedback.id });
     return { candidate: rejected, feedback, force_reconstruction: false };
   }
 
-  async decideCandidate(candidateId, { decision, expectedRevision, rawFeedback, evalCategory, rootCause, rootCauseFingerprint, confidence, correctedRootCause }) {
+  async decideCandidate(candidateId, { decision, expectedRevision, rawFeedback, findings }) {
     const candidate = this.requireCurrentCandidate(candidateId, expectedRevision, "awaiting_user_decision");
     if (!["accept", "continue_iteration", "reject"].includes(decision)) throw new ApplicationError("CANDIDATE_DECISION_INVALID", "candidate decision must be accept, continue_iteration, or reject");
     if (!hasText(rawFeedback)) throw new ApplicationError("FEEDBACK_REQUIRED", "raw user feedback is required");
-    if (!EVAL_CATEGORIES.includes(evalCategory)) throw new ApplicationError("EVAL_CATEGORY_INVALID", `invalid evaluation category: ${evalCategory}`);
-    if (!ROOT_CAUSES.includes(rootCause)) throw new ApplicationError("ROOT_CAUSE_INVALID", `invalid feedback root cause: ${rootCause}`);
-    if (correctedRootCause && !ROOT_CAUSES.includes(correctedRootCause)) throw new ApplicationError("ROOT_CAUSE_INVALID", `invalid corrected root cause: ${correctedRootCause}`);
-    if (confidence !== undefined && (!Number.isFinite(confidence) || confidence < 0 || confidence > 1)) throw new ApplicationError("CONFIDENCE_INVALID", "confidence must be between 0 and 1");
     this.assertCandidateBaseCurrent(candidate);
-    const effectiveCause = correctedRootCause ?? rootCause;
-    const fingerprint = hasText(rootCauseFingerprint) ? rootCauseFingerprint.trim() : effectiveCause;
-    const previousMatches = this.store.listEntities(this.projectId, "candidate_feedback").filter((feedback) =>
-      feedback.target_id === candidate.target_id && feedback.decision === "reject" && feedback.actor === "user" && feedback.root_cause_fingerprint === fingerprint
-    ).length;
-    const forceReconstruction = decision === "reject" && previousMatches >= 1;
+    const normalizedFindings = normalizeFeedbackFindings(findings, {
+      targetKind: candidate.target_kind, targetId: candidate.target_id, decision, actor: "user"
+    });
+    const repeatedFingerprints = decision === "reject"
+      ? repeatedRootCauseFingerprints(this.store.listEntities(this.projectId, "candidate_feedback"), candidate.target_id, normalizedFindings)
+      : [];
+    const forceReconstruction = repeatedFingerprints.length > 0;
     const id = nextId("feedback", this.store.listEntities(this.projectId, "candidate_feedback"));
     const feedback = this.store.saveEntity(this.projectId, createV1Entity("candidate_feedback", id, {
       candidate_id: candidate.id, target_id: candidate.target_id, target_kind: candidate.target_kind, actor: "user",
-      decision, eval_category: evalCategory, root_cause: rootCause, root_cause_fingerprint: fingerprint, raw_feedback: rawFeedback,
-      ...(confidence !== undefined ? { classification_confidence: confidence } : {}),
-      ...(correctedRootCause ? { corrected_root_cause: correctedRootCause } : {}),
+      decision, raw_feedback: rawFeedback, findings: normalizedFindings,
+      ...(repeatedFingerprints.length ? { reconstruction_fingerprints: repeatedFingerprints } : {}),
       force_reconstruction: forceReconstruction, candidate_revision: candidate.revision, base_revision: candidate.base_revision
     }));
     const state = decision === "accept" ? "accepted" : decision === "continue_iteration" ? "continued" : forceReconstruction ? "reconstruction_required" : "rejected";

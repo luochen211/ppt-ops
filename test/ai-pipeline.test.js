@@ -65,7 +65,10 @@ test("candidate requires acceptance, checks its base, and only changes the targe
   const renderEvidence = { artifact: "candidate.pptx", sha256: "a".repeat(64), pages: [1] };
   pipeline.recordRenderEvidence(candidate.id, renderEvidence);
   pipeline.observeInPowerPoint(candidate.id, { application: "Microsoft PowerPoint", ...renderEvidence });
-  pipeline.decide(candidate.id, { decision: "accept", rawFeedback: "Use this version", evalCategory: "user_acceptance", rootCause: "process" });
+  pipeline.decide(candidate.id, {
+    decision: "accept", rawFeedback: "Use this version",
+    findings: [{ eval_category: "user_acceptance", root_cause: "process", root_cause_fingerprint: "explicit-acceptance", severity: "note", evidence: {} }]
+  });
   const updated = pipeline.apply(candidate.id, target);
   assert.equal(updated.screen_text.title, "Approved title");
   assert.deepEqual(other, otherBefore);
