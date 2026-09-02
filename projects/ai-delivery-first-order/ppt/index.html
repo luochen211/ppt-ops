@@ -559,7 +559,10 @@
   .proof-branch p{font-size:.96vw;line-height:1.5;opacity:.7}
 
   .case-flow{position:relative;display:grid;grid-template-columns:3fr 4fr 4fr;gap:4vw;align-items:center;flex:1}
-  .case-flow::before{content:"";position:absolute;left:11%;right:8%;top:50%;height:2px;background:currentColor;opacity:.25}
+  .case-start{position:relative}
+  .case-link{position:absolute;top:50%;height:2px;background:currentColor;opacity:.25;pointer-events:none}
+  .case-start>.case-link{left:15vw;right:-4vw}
+  .case-gaps>.case-link{left:100%;width:4vw}
   .case-ok-disc{position:relative;z-index:1;width:15vw;height:15vw;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;background:rgba(var(--paper-rgb),.42);font-family:var(--mono);font-size:6.5vw;font-weight:700;letter-spacing:-.1em}
   .case-gaps{position:relative;z-index:1;display:flex;flex-direction:column;gap:2vh;background:rgba(var(--paper-rgb),.72);padding:2.4vh 1.8vw;border-left:2px solid currentColor}
   .case-gap{display:grid;grid-template-columns:4vw 1fr;gap:1vw;align-items:center}
@@ -775,12 +778,12 @@
   <div class="foot"><div>作品不是装饰，是风险证明</div><div>05 / 22</div></div>
 </section>
 
-<section class="slide light" data-layout="CASE-TIMELINE" data-animate="directional">
+<section class="slide light" data-layout="CASE-TIMELINE" data-animate="directional" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>CASE · SUMMER 2024</div></div>
   <div class="case-flow">
-    <div data-anim="left"><div class="eyebrow">第一笔真实项目 · 不到两千元</div><div class="case-ok-disc" style="margin-top:3vh">OK</div></div>
-    <div class="case-gaps" data-anim><div class="case-gap"><div class="n">01</div><div class="line">需求没问清</div></div><div class="case-gap"><div class="n">02</div><div class="line">演示方式没确认</div></div><div class="case-gap"><div class="n">03</div><div class="line">修改范围没约定</div></div><div class="eyebrow" style="margin-top:1vh">回答很快 · 定义为零</div></div>
-    <div class="case-result" data-anim="right"><div class="arrow">→</div><div><h3>空白<br>= 我的责任</h3><p style="margin-top:2vh">没有被确认的需求、演示和修改范围，最后都由交付方承担。</p></div></div>
+    <div class="case-start" data-anim="left"><div class="eyebrow">第一笔真实项目 · 不到两千元</div><div class="case-ok-disc" data-qa-id="case-ok" data-qa-role="node" style="margin-top:3vh">OK</div><span class="case-link" data-qa-id="case-link-before-gaps" data-qa-role="connector" aria-hidden="true"></span></div>
+    <div class="case-gaps" data-anim data-qa-id="case-gaps" data-qa-role="node"><div class="case-gap"><div class="n">01</div><div class="line">需求没问清</div></div><div class="case-gap"><div class="n">02</div><div class="line">演示方式没确认</div></div><div class="case-gap"><div class="n">03</div><div class="line">修改范围没约定</div></div><div class="eyebrow" style="margin-top:1vh">回答很快 · 定义为零</div><span class="case-link" data-qa-id="case-link-before-result" data-qa-role="connector" aria-hidden="true"></span></div>
+    <div class="case-result" data-anim="right" data-qa-id="case-result" data-qa-role="node"><div class="arrow">→</div><div><h3>空白<br>= 我的责任</h3><p style="margin-top:2vh">没有被确认的需求、演示和修改范围，最后都由交付方承担。</p></div></div>
   </div>
   <div class="foot"><div>怕问多了显得不会，往往是失控的开始</div><div>06 / 22</div></div>
 </section>

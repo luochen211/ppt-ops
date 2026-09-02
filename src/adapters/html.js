@@ -86,10 +86,10 @@ function renderSlide(page, plan, index, count, assets) {
   const body = screen.body?.length ? `<ul class="body-copy">${screen.body.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
   const figures = page.asset_slots.map((slot) => renderAsset(slot, assets.get(slot.asset_id))).join("");
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
-  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" data-html-layout="${escapeAttribute(plan.renderer.html)}" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
-  <header class="slide-header"><h1 id="slide-title-${page.page}">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
-  <div class="slide-content"><div class="slide-copy">${subtitle}<p class="message">${escapeHtml(page.three_second_message)}</p>${body}</div><div class="assets">${figures}</div></div>
-  <footer class="slide-footer"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
+  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
+  <header class="slide-header" data-qa-id="page-${page.page}-header" data-qa-role="content"><h1 id="slide-title-${page.page}">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
+  <div class="slide-content"><div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message">${escapeHtml(page.three_second_message)}</p>${body}</div><div class="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
+  <footer class="slide-footer" data-qa-id="page-${page.page}-footer" data-qa-role="content"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
 </section>`;
 }
 

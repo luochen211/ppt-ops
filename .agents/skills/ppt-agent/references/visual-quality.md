@@ -16,6 +16,7 @@ This reference adapts production lessons from `guizang-ppt-skill` to PPT-Ops wit
 - Flag emoji used as functional icons, missing source references, clipped or out-of-bounds objects, unintended overlap, excessive density, undeclared fonts, and inconsistent image slots.
 - Confirm that titles do not collapse into one-character lines and that body/caption text remains readable at presentation scale.
 - Confirm page numbers, keyboard navigation, total slide count, asset containment, and fullscreen controls for HTML artifacts.
+- For HTML collision gates, annotate protected nodes/content and real connector elements with stable `data-qa-*` roles. Connector penetration is rejected by default; intentional overlap requires a narrow markup allowlist. CSS pseudo-elements do not count as inspectable semantic connectors.
 - Render representative pages and every page with a structural finding. Code inspection alone is not visual acceptance.
 
 ## Human review prompts

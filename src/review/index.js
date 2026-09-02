@@ -3,6 +3,7 @@ import path from "node:path";
 import { outputDir } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { inspectPresentation } from "../qa/index.js";
+import { inspectHtmlPresentation } from "../qa/html.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -42,6 +43,24 @@ export async function reviewProject(project, options = {}) {
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
     automatedChecks.push({ id: "pptx-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No PPTX build selected for visual QA." } });
+  }
+  if (options.htmlQa) {
+    const htmlFile = options.htmlFile ?? await firstExisting([
+      path.join(directory, "slides.html"),
+      path.join(project.root, "ppt", "index.html")
+    ]);
+    if (htmlFile) {
+      const qa = await inspectHtmlPresentation({ htmlFile, browserPath: options.browserPath, timeoutMs: options.htmlQaTimeoutMs });
+      automatedChecks.push({
+        id: "html-visual-qa",
+        kind: "automated",
+        required: true,
+        status: qa.status === "failed" ? "failed" : qa.status === "degraded" ? "pending" : "passed",
+        evidence: qa
+      });
+    } else {
+      automatedChecks.push({ id: "html-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No HTML build selected for visual QA." } });
+    }
   }
   const acceptance = [
     pendingAcceptance("visual-acceptance", "visual", "Requires human visual inspection of rendered slides."),
@@ -89,6 +108,13 @@ async function listOutputArtifacts(directory) {
     .filter((entry) => entry.isFile() && entry.name !== REVIEW_REPORT_FILE)
     .map((entry) => entry.name)
     .sort();
+}
+
+async function firstExisting(files) {
+  for (const file of files) {
+    try { await fs.access(file); return file; } catch {}
+  }
+  return undefined;
 }
 
 function pendingAcceptance(id, kind, note) {

@@ -20,6 +20,7 @@ Usage:
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops import <project-dir> --file <markdown|docx|pptx>
   pptops validate <project-dir>
+  pptops html-qa <html-file> [--browser <path>] [--timeout <ms>]
   pptops intake <project-dir>
   pptops outline <project-dir>
   pptops prototype <project-dir> [--pages <list>]
@@ -77,6 +78,13 @@ try {
     const result = await runDoctor(projectDir && !projectDir.startsWith("--") ? projectDir : undefined);
     console.log(JSON.stringify(result, null, 2));
     if (!result.ok) process.exitCode = 1;
+  } else if (command === "html-qa") {
+    if (!projectDir || projectDir.startsWith("--")) throw new Error("html-qa requires <html-file>");
+    const options = parseOptions(argv.slice(2));
+    const { inspectHtmlPresentation } = await import("./qa/html.js");
+    const result = await inspectHtmlPresentation({ htmlFile: projectDir, browserPath: options.browser, timeoutMs: options.timeout ? positiveInteger(options.timeout, "timeout") : undefined });
+    console.log(JSON.stringify({ command, ...result }, null, 2));
+    if (result.status !== "passed") process.exitCode = 1;
   } else {
   if (!projectDir || projectDir.startsWith("--")) throw new Error(`${command} requires <project-dir>`);
   const options = parseOptions(argv.slice(2));
@@ -134,7 +142,7 @@ try {
       const configured = project.project.outputs.filter((format) => ["html", "pptx"].includes(format));
       if (configured.length === 0) throw new Error("project.outputs must include html or pptx for deliver");
       const outputs = await buildFormats(project, configured);
-      const report = await reviewProject(project);
+      const report = await reviewProject(project, { htmlQa: true });
       const reportFile = await writeReviewReport(project, report);
       const handoff = await createHandoff(project, report);
       console.log(JSON.stringify({ command, project: project.project.name, outputs, review: { passed: report.passed, report_file: reportFile }, handoff: { manifest_file: handoff.manifestFile, package_dir: handoff.packageDir } }, null, 2));
@@ -217,14 +225,14 @@ async function buildFormats(project, formats) {
 }
 
 async function runReview(project) {
-  const report = await reviewProject(project);
+  const report = await reviewProject(project, { htmlQa: true });
   const reportFile = await writeReviewReport(project, report);
   console.log(JSON.stringify({ ...report, report_file: reportFile }, null, 2));
   if (!report.passed) process.exitCode = 1;
 }
 
 async function runHandoff(project) {
-  const report = await reviewProject(project);
+  const report = await reviewProject(project, { htmlQa: true });
   const reportFile = await writeReviewReport(project, report);
   const handoff = await createHandoff(project, report);
   console.log(JSON.stringify({ ...handoff.manifest, review_report: reportFile, manifest_file: handoff.manifestFile }, null, 2));
@@ -250,7 +258,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
@@ -265,6 +273,11 @@ function integerOption(options, name) {
   const value = Number(required(options, name));
   if (!Number.isInteger(value) || value < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
   return value;
+}
+function positiveInteger(value, name) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
+  return parsed;
 }
 function jsonOption(options, name) {
   try { return JSON.parse(required(options, name)); }
