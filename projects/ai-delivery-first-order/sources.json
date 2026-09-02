@@ -1,0 +1,11 @@
+[
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-001",
+    "file": "brief.md",
+    "bytes": 2434,
+    "mime": "text/markdown",
+    "sha256": "d7fe588aab05f69d60406324e837f07a09f544c781e9d2c774d07111c4e0a56d"
+  }
+]

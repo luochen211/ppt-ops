@@ -1,0 +1,24 @@
+{
+  "contract_version": "1.0",
+  "kind": "theme",
+  "id": "theme-default",
+  "tokens": {
+    "dimensions": {
+      "width": 13.333,
+      "height": 7.5
+    },
+    "typography": {
+      "heading_font": "Noto Sans SC",
+      "body_font": "Noto Sans SC"
+    },
+    "colors": {
+      "background": "#E9F8F3",
+      "text": "#005E53",
+      "accent": "#22B89B"
+    },
+    "spacing": {
+      "unit": 0.25,
+      "page_margin": 0.6
+    }
+  }
+}

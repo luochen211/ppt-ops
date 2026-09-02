@@ -1,0 +1,53 @@
+{
+  "contract_version": "1.0",
+  "kind": "outline",
+  "id": "outline-main",
+  "sections": [
+    {
+      "id": "section-trust",
+      "title": "从毕设到第一单：让客户相信你",
+      "page_ids": [
+        "page-001",
+        "page-002",
+        "page-003",
+        "page-004",
+        "page-005",
+        "page-006",
+        "page-007"
+      ]
+    },
+    {
+      "id": "section-scope",
+      "title": "从模糊需求到万元项目：把事情定义清楚",
+      "page_ids": [
+        "page-008",
+        "page-009",
+        "page-010",
+        "page-011",
+        "page-012"
+      ]
+    },
+    {
+      "id": "section-ai",
+      "title": "从会用 AI 到能完成交付：人和 AI 如何分工",
+      "page_ids": [
+        "page-013",
+        "page-014",
+        "page-015",
+        "page-016",
+        "page-017"
+      ]
+    },
+    {
+      "id": "section-next-order",
+      "title": "从一次交付到持续接单：走向第一单和下一单",
+      "page_ids": [
+        "page-018",
+        "page-019",
+        "page-020",
+        "page-021",
+        "page-022"
+      ]
+    }
+  ]
+}

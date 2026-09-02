@@ -1,0 +1,16 @@
+{
+  "contract_version": "1.0",
+  "kind": "project",
+  "id": "ai-delivery-first-order",
+  "title": "从毕业设计到持续接单",
+  "format": "16:9",
+  "outputs": [
+    "html"
+  ],
+  "source_ids": [
+    "source-001"
+  ],
+  "outline_id": "outline-main",
+  "theme_id": "theme-default",
+  "asset_ids": []
+}
