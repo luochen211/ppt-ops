@@ -5,3 +5,5 @@ Load the target page, necessary adjacent pages, latest accepted state, feedback,
 For feedback, record both the evaluation category (what was judged) and root cause (why it failed). Automated QA evidence, rendered evidence, PowerPoint observation, and user acceptance stay separate. If the same root-cause fingerprint receives a second user rejection, stop local styling changes and reconstruct the page task, three-second message, semantic roles, information relationship, and visual mapping before generating the next Candidate.
 
 Apply only an explicitly accepted Candidate. Exit with changed target artifacts, complete attempt lineage, and proof that unrelated approved pages are unchanged.
+
+When the requested change targets a generated character or scene, also load `visual-assets.md`. Use `reference_edit` with only the selected references, record the exact change scope and invariants, and keep each generated attempt immutable. Candidate acceptance and visual-asset acceptance remain separate decisions.

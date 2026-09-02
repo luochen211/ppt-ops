@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/visual-asset-observation.schema.json",
+  "title": "V1 Visual Asset Observation",
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["generation_id", "actor", "verdict", "candidate_file", "candidate_sha256", "checks", "created_at"],
+      "properties": {
+        "kind": { "const": "visual_asset_observation" },
+        "actor": { "enum": ["agent", "human"] },
+        "verdict": { "enum": ["pass", "fail"] },
+        "checks": { "type": "object" },
+        "candidate_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  ]
+}

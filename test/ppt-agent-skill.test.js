@@ -9,6 +9,7 @@ const toolingUrl = new URL("references/tooling.md", skillRoot);
 const routingUrl = new URL("references/routing-contract.json", skillRoot);
 const dataContractUrl = new URL("references/data-contract.md", skillRoot);
 const visualQualityUrl = new URL("references/visual-quality.md", skillRoot);
+const visualAssetsUrl = new URL("references/visual-assets.md", skillRoot);
 const expectedModes = ["discovery", "new", "intake", "outline", "design", "prototype", "revise", "build", "review", "handoff", "archive", "doctor"];
 
 test("repository exposes one conversation-native PPT agent router", async () => {
@@ -57,6 +58,20 @@ test("design, prototype, and review progressively load the guizang-informed visu
   assert.match(reference, /copy an object, edit text, play the deck, and confirm fonts/);
   assert.match(reference, /never a substitute for a named human decision/);
   assert.match(reference, /do not copy WebGL.*web-only machinery into PPTX/);
+});
+
+test("visual-producing modes load the controlled visual asset workflow", async () => {
+  const [routing, reference] = await Promise.all([
+    fs.readFile(routingUrl, "utf8").then(JSON.parse),
+    fs.readFile(visualAssetsUrl, "utf8")
+  ]);
+  for (const mode of ["design", "prototype", "revise"]) assert.ok(routing.modes[mode].loads.includes("visual_assets"));
+  assert.match(reference, /page `visual_job` and three-second message come first/);
+  assert.match(reference, /visual-asset-prepare/);
+  assert.match(reference, /visual-asset-ingest/);
+  assert.match(reference, /only after an explicit accept/i);
+  assert.match(reference, /restrained faceted low-poly editorial illustration/);
+  assert.match(reference, /Microsoft PowerPoint acceptance/);
 });
 
 test("routing starts multi-stage work from the earliest unmet prerequisite", async () => {
