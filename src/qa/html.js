@@ -5,6 +5,9 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_TIMEOUT_MS = 15000;
+const PROFILE_CLEANUP_MAX_ATTEMPTS = 25;
+const PROFILE_CLEANUP_RETRY_DELAY_MS = 200;
+const PROFILE_CLEANUP_RETRYABLE_CODES = new Set(["EBUSY", "EMFILE", "ENFILE", "ENOTEMPTY", "EPERM"]);
 const ROLES = new Set(["connector", "content", "decorative", "node"]);
 const ROLE_PAIRS = new Set(["connector:content", "connector:node", "content:content", "node:node"]);
 
@@ -106,7 +109,28 @@ export async function inspectHtmlPresentation({ htmlFile, browserPath, timeoutMs
     }
   } finally {
     await terminateProcess(processHandle);
-    await fs.rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    await removeBrowserProfile(profile);
+  }
+}
+
+/**
+ * Chromium can leave a child process briefly holding files below its profile
+ * after the parent process exits. Retry the whole recursive removal for a
+ * bounded period so a transient ENOTEMPTY/EBUSY race cannot turn a successful
+ * HTML QA result into a failed command.
+ *
+ * @param {string} profile
+ * @param {{rm?: typeof fs.rm, wait?: (ms: number) => Promise<void>}} [options]
+ */
+export async function removeBrowserProfile(profile, { rm = fs.rm, wait = delay } = {}) {
+  for (let attempt = 1; attempt <= PROFILE_CLEANUP_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      await rm(profile, { recursive: true, force: true, maxRetries: 0 });
+      return;
+    } catch (error) {
+      if (!PROFILE_CLEANUP_RETRYABLE_CODES.has(error?.code) || attempt === PROFILE_CLEANUP_MAX_ATTEMPTS) throw error;
+      await wait(PROFILE_CLEANUP_RETRY_DELAY_MS);
+    }
   }
 }
 

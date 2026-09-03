@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { analyzeHtmlGeometry, inspectHtmlPresentation } from "../src/qa/html.js";
+import { analyzeHtmlGeometry, inspectHtmlPresentation, removeBrowserProfile } from "../src/qa/html.js";
 
 const page = (elements, extra = {}) => ({ page: 6, policy: "advisory", rect: { x: 0, y: 0, width: 1600, height: 900 }, elements, ...extra });
 const element = (id, role, rect, extra = {}) => ({ id, explicitId: true, role, rect, allowAll: false, allowWith: [], ancestors: [], ...extra });
@@ -62,6 +62,25 @@ test("HTML QA reports an unannotated advisory deck as degraded, never passed", (
   const result = analyzeHtmlGeometry([page([])]);
   assert.equal(result.status, "degraded");
   assert.match(result.reason, /No data-qa geometry annotations/);
+});
+
+test("browser profile cleanup retries transient Chromium directory races", async () => {
+  let attempts = 0;
+  const waits = [];
+  await removeBrowserProfile("/tmp/pptops-html-qa-profile", {
+    rm: async (_profile, options) => {
+      attempts += 1;
+      assert.deepEqual(options, { recursive: true, force: true, maxRetries: 0 });
+      if (attempts < 3) {
+        const error = new Error("profile is still busy");
+        error.code = "ENOTEMPTY";
+        throw error;
+      }
+    },
+    wait: async (milliseconds) => waits.push(milliseconds),
+  });
+  assert.equal(attempts, 3);
+  assert.deepEqual(waits, [200, 200]);
 });
 
 test("headless HTML QA emits page-addressable evidence for a rendered collision", async (t) => {
