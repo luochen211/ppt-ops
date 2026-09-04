@@ -64,6 +64,20 @@ test("HTML QA reports an unannotated advisory deck as degraded, never passed", (
   assert.match(result.reason, /No data-qa geometry annotations/);
 });
 
+test("HTML QA rejects text that exceeds its own box or a clipping ancestor", () => {
+  const result = analyzeHtmlGeometry([page([], {
+    textElements: [
+      { id: "own-overflow", rect: { x: 20, y: 20, width: 200, height: 40 }, scrollWidth: 200, scrollHeight: 80, clientWidth: 200, clientHeight: 40, ownClipping: true, clippingAncestors: [] },
+      { id: "ancestor-clipped", rect: { x: 20, y: 120, width: 200, height: 60 }, scrollWidth: 200, scrollHeight: 60, clientWidth: 200, clientHeight: 60, clippingAncestors: [{ id: "frame", rect: { x: 0, y: 0, width: 400, height: 150 } }] }
+    ]
+  })]);
+  assert.equal(result.status, "failed");
+  assert.deepEqual(result.findings.map(({ check, evidence }) => [check, evidence.reason]), [
+    ["html-text-overflow", "text-content-exceeds-own-box"],
+    ["html-text-clipping", "text-crosses-clipping-ancestor"]
+  ]);
+});
+
 test("headless HTML QA emits page-addressable evidence for a rendered collision", async (t) => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-html-qa-test-"));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));

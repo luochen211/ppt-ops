@@ -31,6 +31,31 @@ export function analyzeHtmlGeometry(pages, options = {}) {
         }));
       }
     }
+    for (const text of page.textElements ?? []) {
+      if (text.allowClipping) continue;
+      if (text.ownClipping && (text.scrollWidth > text.clientWidth + tolerance || text.scrollHeight > text.clientHeight + tolerance)) {
+        findings.push(finding(page.page, "html-text-overflow", "error", {
+          element: text.id,
+          rect: text.rect,
+          scroll_width: text.scrollWidth,
+          scroll_height: text.scrollHeight,
+          client_width: text.clientWidth,
+          client_height: text.clientHeight,
+          reason: "text-content-exceeds-own-box"
+        }));
+      }
+      for (const clip of text.clippingAncestors ?? []) {
+        if (isOutside(text.rect, clip.rect, tolerance)) {
+          findings.push(finding(page.page, "html-text-clipping", "error", {
+            element: text.id,
+            clip_ancestor: clip.id,
+            text_rect: text.rect,
+            clip_rect: clip.rect,
+            reason: "text-crosses-clipping-ancestor"
+          }));
+        }
+      }
+    }
     for (const element of page.elements ?? []) for (const target of element.allowWith ?? []) {
       if (!ids.has(target)) findings.push(finding(page.page, "html-qa-contract", "error", { element: element.id, target, reason: "allowlist-target-not-found" }));
     }
@@ -68,7 +93,7 @@ export function analyzeHtmlGeometry(pages, options = {}) {
     page_count: pages.length,
     annotated_page_count: annotatedPageCount,
     findings,
-    pages: pages.map((page) => ({ page: page.page, annotated_element_count: page.elements?.length ?? 0, finding_count: findings.filter((item) => item.page === page.page).length }))
+    pages: pages.map((page) => ({ page: page.page, annotated_element_count: page.elements?.length ?? 0, text_element_count: page.textElements?.length ?? 0, finding_count: findings.filter((item) => item.page === page.page).length }))
   };
 }
 
@@ -185,9 +210,54 @@ async function terminateProcess(processHandle) {
 }
 
 async function collectGeometry(client) {
-  const expression = `(()=>[...document.querySelectorAll('.slide')].map((slide,index)=>{const sr=slide.getBoundingClientRect();const annotated=[...slide.querySelectorAll('[data-qa-role]')];const ids=new Map(annotated.map((element,i)=>[element,element.dataset.qaId||('page-'+(slide.dataset.page||index+1)+'-element-'+(i+1))]));return {page:Number(slide.dataset.page)||index+1,policy:slide.dataset.qaPolicy||'advisory',rect:{x:0,y:0,width:sr.width,height:sr.height},elements:annotated.filter(element=>getComputedStyle(element).display!=='none').map(element=>{const r=element.getBoundingClientRect();return {id:ids.get(element),explicitId:Boolean(element.dataset.qaId),role:element.dataset.qaRole,rect:{x:r.left-sr.left,y:r.top-sr.top,width:r.width,height:r.height},allowAll:element.dataset.qaOverlap==='allow',allowWith:(element.dataset.qaAllowOverlapWith||'').split(/\\s+/).filter(Boolean),ancestors:annotated.filter(parent=>parent!==element&&parent.contains(element)).map(parent=>ids.get(parent))}})}}))()`;
+  const expression = `(()=>{
+    const slides = [...document.querySelectorAll('.slide')];
+    return slides.map((slide, index) => {
+      const sr = slide.getBoundingClientRect();
+      const visible = (element) => {
+        const style = getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      };
+      const annotated = [...slide.querySelectorAll('[data-qa-role]')];
+      const ids = new Map(annotated.map((element, i) => [element, element.dataset.qaId || ('page-' + (slide.dataset.page || index + 1) + '-element-' + (i + 1))]));
+      const idOf = (element) => element.dataset.qaId || element.id || ('page-' + (slide.dataset.page || index + 1) + '-text-' + ([...slide.querySelectorAll('*')].indexOf(element) + 1));
+      const relative = (element) => {
+        const r = element.getBoundingClientRect();
+        return { x: r.left - sr.left, y: r.top - sr.top, width: r.width, height: r.height };
+      };
+      const clippingAncestors = (element) => {
+        const result = [];
+        for (let parent = element.parentElement; parent && parent !== slide; parent = parent.parentElement) {
+          const style = getComputedStyle(parent);
+          if (['hidden', 'clip'].includes(style.overflow) || ['hidden', 'clip'].includes(style.overflowX) || ['hidden', 'clip'].includes(style.overflowY)) {
+            result.push({ id: idOf(parent), rect: relative(parent) });
+          }
+        }
+        return result;
+      };
+      return {
+        page: Number(slide.dataset.page) || index + 1,
+        policy: slide.dataset.qaPolicy || 'advisory',
+        rect: { x: 0, y: 0, width: sr.width, height: sr.height },
+        elements: annotated.filter(visible).map((element) => ({
+          id: ids.get(element), explicitId: Boolean(element.dataset.qaId), role: element.dataset.qaRole,
+          rect: relative(element), allowAll: element.dataset.qaOverlap === 'allow',
+          allowWith: (element.dataset.qaAllowOverlapWith || '').split(/\\s+/).filter(Boolean),
+          ancestors: annotated.filter((parent) => parent !== element && parent.contains(element)).map((parent) => ids.get(parent))
+        })),
+        textElements: [...slide.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,dt,dd,th,td,button,a,label,figcaption,span')]
+          .filter((element) => visible(element) && element.textContent.trim())
+          .map((element) => ({
+            id: idOf(element), rect: relative(element), scrollWidth: element.scrollWidth, scrollHeight: element.scrollHeight,
+            clientWidth: element.clientWidth, clientHeight: element.clientHeight,
+            ownClipping: ['hidden', 'clip'].includes(getComputedStyle(element).overflow) || ['hidden', 'clip'].includes(getComputedStyle(element).overflowX) || ['hidden', 'clip'].includes(getComputedStyle(element).overflowY),
+            allowClipping: element.dataset.qaAllowClipping === 'true', clippingAncestors: clippingAncestors(element)
+          }))
+      };
+    });
+  })()`;
   const result = await client.send("Runtime.evaluate", { expression, returnByValue: true });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text ?? "HTML geometry collection failed");
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.description ?? result.exceptionDetails.text ?? "HTML geometry collection failed");
   return result.result.value;
 }
 
@@ -222,6 +292,7 @@ class CdpClient {
 function isAllowedPair(a, b) { return a.allowWith?.includes(b.id) || b.allowWith?.includes(a.id); }
 function isAllowedContainment(a, b) { return a.role !== "connector" && b.role !== "connector" && (a.ancestors?.includes(b.id) || b.ancestors?.includes(a.id)); }
 function isOutOfBounds(rect, page, tolerance) { return rect.x < -tolerance || rect.y < -tolerance || rect.x + rect.width > page.width + tolerance || rect.y + rect.height > page.height + tolerance; }
+function isOutside(rect, boundary, tolerance) { return rect.x < boundary.x - tolerance || rect.y < boundary.y - tolerance || rect.x + rect.width > boundary.x + boundary.width + tolerance || rect.y + rect.height > boundary.y + boundary.height + tolerance; }
 function intersectRects(a, b) {
   const x = Math.max(a.x, b.x); const y = Math.max(a.y, b.y);
   return { x, y, width: Math.max(0, Math.min(a.x + a.width, b.x + b.width) - x), height: Math.max(0, Math.min(a.y + a.height, b.y + b.height) - y) };
