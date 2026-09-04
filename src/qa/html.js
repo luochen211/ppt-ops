@@ -216,7 +216,9 @@ async function collectGeometry(client) {
       const sr = slide.getBoundingClientRect();
       const visible = (element) => {
         const style = getComputedStyle(element);
-        return style.display !== 'none' && style.visibility !== 'hidden';
+        // Static decks hide inactive slides with visibility:hidden. Their layout
+        // still needs to be checked, so only display:none excludes an element.
+        return style.display !== 'none';
       };
       const annotated = [...slide.querySelectorAll('[data-qa-role]')];
       const ids = new Map(annotated.map((element, i) => [element, element.dataset.qaId || ('page-' + (slide.dataset.page || index + 1) + '-element-' + (i + 1))]));
