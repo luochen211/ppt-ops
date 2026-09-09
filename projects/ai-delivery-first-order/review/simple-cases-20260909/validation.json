@@ -1,0 +1,15 @@
+{
+  "tests": {
+    "passed": 124,
+    "failed": 0
+  },
+  "html_qa": "passed",
+  "graphic_conception": "passed",
+  "browser_pages": 22,
+  "case_pages": 7,
+  "image_assets": 5,
+  "screenshots": "original-project-images",
+  "committed_html_sha256": "4f2c3b10a8dfccc99c978febcd2cc9860e762836d67cbe29b4328b07f12618b9",
+  "visual_observation": "Seven case pages inspected; large screenshots visible; user acceptance pending.",
+  "scope": "Existing HTML revision authorized by user. No PPTX export or unrelated boundary redesign."
+}

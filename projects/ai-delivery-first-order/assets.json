@@ -19,5 +19,100 @@
       "model": "unspecified",
       "decision_id": "visual-decision-b794c173-0b55-4bb9-b930-c5fecab9a568"
     }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-orders",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-orders.jpg",
+    "mime": "image/jpeg",
+    "sha256": "3834ad152e3ed54a71e83166a8bcb735615e44d636b7e9a4faea7b2ca3d3a323",
+    "bytes": 44768,
+    "width": 960,
+    "height": 653,
+    "alt": "物流系统托书列表，历史演示数据",
+    "provenance": {
+      "kind": "project_screenshot",
+      "repository": "luochen211/best-group-logistics-system",
+      "source_path": "docs/delivery/BEST GROUP_一期物流系统项目案例展示.docx#word/media/image2.jpg",
+      "note": "原始截图字节保留；页面局部放大仅由 CSS 完成。历史界面不代表当前生产状态。"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-detail",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-detail.jpg",
+    "mime": "image/jpeg",
+    "sha256": "9d7988c828dd94f96144cc606e868c6d621e36e00412411f86dd28d58479ee00",
+    "bytes": 34963,
+    "width": 960,
+    "height": 653,
+    "alt": "物流系统订单详情，历史演示数据",
+    "provenance": {
+      "kind": "project_screenshot",
+      "repository": "luochen211/best-group-logistics-system",
+      "source_path": "docs/delivery/BEST GROUP_一期物流系统项目案例展示.docx#word/media/image3.jpg",
+      "note": "原始截图字节保留；页面局部放大仅由 CSS 完成。历史界面不代表当前生产状态。"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-request",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-request.png",
+    "mime": "image/png",
+    "sha256": "dd7220e66a6cecb8ce57a7ca40c12b58c83e0e90169310ef5f375099dc614f8c",
+    "bytes": 176605,
+    "width": 1600,
+    "height": 1114,
+    "alt": "物流系统新建费用申请，本地测试页面",
+    "provenance": {
+      "kind": "project_screenshot",
+      "repository": "luochen211/best-group-logistics-system",
+      "source_path": "docs/qa/assets/finance-ui-2026-07-30/01-new-request.png",
+      "note": "原始截图字节保留；页面局部放大仅由 CSS 完成。历史界面不代表当前生产状态。"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-options",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-options.png",
+    "mime": "image/png",
+    "sha256": "2a4fcef8ef2f93ff22d1f25dc486806dff24d2af987eb7e398bd6d0d9b9a591b",
+    "bytes": 164287,
+    "width": 2414,
+    "height": 1280,
+    "alt": "客户反馈截图：运输方式下拉只有三项",
+    "provenance": {
+      "kind": "project_screenshot",
+      "repository": "luochen211/best-group-logistics-system",
+      "source_path": "docs/修改意见/assets/业务操作验收反馈-2026-08-09/03-托书运输方式.png",
+      "note": "原始截图字节保留；页面局部放大仅由 CSS 完成。历史界面不代表当前生产状态。"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-save",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-save.png",
+    "mime": "image/png",
+    "sha256": "550e067eb10ccd35a1181e0e74f076879910a45115c57e4c0e659eebc6228166",
+    "bytes": 131601,
+    "width": 2414,
+    "height": 1280,
+    "alt": "客户反馈截图：提单保存按钮",
+    "provenance": {
+      "kind": "project_screenshot",
+      "repository": "luochen211/best-group-logistics-system",
+      "source_path": "docs/修改意见/assets/业务操作验收反馈-2026-08-09/04-提单保存.png",
+      "note": "原始截图字节保留；页面局部放大仅由 CSS 完成。历史界面不代表当前生产状态。"
+    }
   }
 ]

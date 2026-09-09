@@ -1,0 +1,32 @@
+{
+  "changed_pages": [
+    5,
+    9,
+    11,
+    15,
+    16,
+    17,
+    21
+  ],
+  "preserved_pages": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    10,
+    12,
+    13,
+    14,
+    18,
+    19,
+    20,
+    22
+  ],
+  "before_sha256": "d0bbc09da553dbfcc88627774b23fa1ae53393d407007534f8a2dedb2accf843",
+  "after_sha256": "efdb369b35eac8192e29cab18c1d54de3ee0a62d0185e1c6a41861a0ce9a7cf7",
+  "existing_user_css_preserved": true,
+  "user_visual_acceptance": "pending"
+}
