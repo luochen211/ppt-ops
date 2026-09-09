@@ -9,7 +9,7 @@ const project = path.resolve("projects/ai-delivery-first-order");
 test("AI delivery graphic conception is traceable across project artifacts", async () => {
   const result = await inspectGraphicConception(project);
   assert.equal(result.status, "passed");
-  assert.deepEqual(result.metrics, { pages: 22, decisions: 22, motifs: 4, templates: 13, html_layouts: 22 });
+  assert.deepEqual(result.metrics, { pages: 22, decisions: 22, motifs: 4, templates: 14, html_layouts: 22 });
   assert.deepEqual(result.findings, []);
 });
 

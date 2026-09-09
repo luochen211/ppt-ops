@@ -166,5 +166,18 @@
     "renderers": {
       "html": "PROJECT-CASE"
     }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-computer-use-video",
+    "name": "Computer Use demonstration video slot",
+    "slots": {
+      "title": "required",
+      "video": "reserved"
+    },
+    "renderers": {
+      "html": "COMPUTER-USE-VIDEO"
+    }
   }
 ]

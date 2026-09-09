@@ -285,7 +285,7 @@
       "page": 15,
       "page_id": "page-015",
       "relation": "process",
-      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
       "template_id": "template-project-case",
       "motif": "evidence",
       "reading_path": [
@@ -293,29 +293,29 @@
         "project-screenshot",
         "simple-action"
       ],
-      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
-      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
+      "rationale": "按分享者明确要求，AI 承担开发和操作测试；人确认需求并作判断",
+      "avoid": "要求人逐步点击测试、讲代码细节或用占位视频冒充已演示"
     },
     {
       "page": 16,
       "page_id": "page-016",
-      "relation": "process",
-      "visual_job": "Show large real project screenshots with concise plain-language actions",
-      "template_id": "template-project-case",
+      "relation": "hero",
+      "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
+      "template_id": "template-computer-use-video",
       "motif": "evidence",
       "reading_path": [
         "title",
-        "project-screenshot",
-        "simple-action"
+        "reserved-video",
+        "speaker-experience"
       ],
-      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
-      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
+      "rationale": "按分享者明确要求，AI 承担开发和操作测试；人确认需求并作判断",
+      "avoid": "要求人逐步点击测试、讲代码细节或用占位视频冒充已演示"
     },
     {
       "page": 17,
       "page_id": "page-017",
       "relation": "process",
-      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
       "template_id": "template-project-case",
       "motif": "evidence",
       "reading_path": [
@@ -323,8 +323,8 @@
         "project-screenshot",
         "simple-action"
       ],
-      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
-      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
+      "rationale": "按分享者明确要求，AI 承担开发和操作测试；人确认需求并作判断",
+      "avoid": "要求人逐步点击测试、讲代码细节或用占位视频冒充已演示"
     },
     {
       "page": 18,

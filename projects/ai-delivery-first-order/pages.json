@@ -275,7 +275,7 @@
     "id": "page-010",
     "page": 10,
     "task": "Turn vague language into a delivery map",
-    "three_second_message": "先定义目标、范围、边界、验收",
+    "three_second_message": "把一句话，变成一张交付地图",
     "relation": "hierarchy",
     "screen_text": {
       "title": "把一句话，变成一张交付地图",
@@ -283,18 +283,18 @@
         "目标：为谁解决什么",
         "范围：做哪些功能与数据",
         "边界：不做什么、改几次",
-        "验收：谁在什么环境检查"
+        "验收：什么结果才算满足需求"
       ]
     },
     "visual_job": "Use a four-direction scope map around one deliverable task",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#模块二方法"
+        "source_id": "source-simple-cases",
+        "locator": "#第-10-页"
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -375,23 +375,24 @@
     "id": "page-013",
     "page": 13,
     "task": "Open module three",
-    "three_second_message": "人和 AI 如何分工",
+    "three_second_message": "从会用 AI 到能完成交付",
     "relation": "hero",
     "screen_text": {
       "title": "从会用 AI 到能完成交付",
       "body": [
-        "人和 AI 如何分工"
+        "开发、测试交给 AI",
+        "需求、判断交给人"
       ]
     },
     "visual_job": "Create a strong module divider",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#唯一大纲 3"
+        "source_id": "source-simple-cases",
+        "locator": "#第-13-页"
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -402,20 +403,20 @@
     "id": "page-014",
     "page": 14,
     "task": "Separate execution from responsibility",
-    "three_second_message": "AI 提速，人承担判断",
+    "three_second_message": "执行交给 AI，需求和判断由人负责",
     "relation": "comparison",
     "screen_text": {
-      "title": "AI 负责放大执行，人负责守住结果",
+      "title": "执行交给 AI，需求和判断由人负责",
       "body": [
-        "AI：读代码、拆任务、生成、排错、测试、文档",
-        "人：需求、取舍、报价、边界、验证、沟通、责任"
+        "AI：开发实现、修复问题、手机端操作、多角色切换、自动测试、整理交付",
+        "人：需求确认、业务判断、范围取舍、验收标准、客户沟通、最终决策"
       ]
     },
     "visual_job": "Connect an AI execution engine to a human judgment compass",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#人机分工"
+        "source_id": "source-simple-cases",
+        "locator": "#第-14-页"
       }
     ],
     "asset_slots": [
@@ -425,7 +426,7 @@
         "fit": "contain"
       }
     ],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -435,18 +436,18 @@
     "kind": "page_spec",
     "id": "page-015",
     "page": 15,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "给 AI 一个小任务：补齐下拉选项",
+    "task": "展示 AI 执行与人类需求判断的分工",
+    "three_second_message": "开发和测试，都交给 AI",
     "relation": "process",
     "screen_text": {
-      "title": "给 AI 一个小任务：补齐下拉选项",
+      "title": "开发和测试，都交给 AI",
       "body": [
-        "后台四项页面三项",
-        "补齐运输方式",
-        "能看到能选中能保存"
+        "开发实现",
+        "发现问题，继续修复",
+        "直接操作界面"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
@@ -456,7 +457,7 @@
     "asset_slots": [
       {
         "role": "project-screenshot",
-        "asset_id": "logistics-options",
+        "asset_id": "logistics-orders",
         "fit": "contain"
       }
     ],
@@ -470,34 +471,41 @@
     "kind": "page_spec",
     "id": "page-016",
     "page": 16,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "点了保存，用户得知道结果",
-    "relation": "process",
+    "task": "展示 AI 执行与人类需求判断的分工",
+    "three_second_message": "手机端、多角色，Computer Use 来测",
+    "relation": "hero",
     "screen_text": {
-      "title": "点了保存，用户得知道结果",
+      "title": "手机端、多角色，Computer Use 来测",
       "body": [
-        "点保存没有提示",
-        "显示失败原因",
-        "用户知道下一步"
+        "视频展示位",
+        "手机端操作",
+        "多角色切换",
+        "连续测试",
+        "我还没跟上，AI 已经测完了"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-16-页"
       }
     ],
-    "asset_slots": [
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-save",
-        "fit": "contain"
-      }
-    ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "video_slot": {
+          "id": "computer-use-video",
+          "status": "awaiting-user-video",
+          "source": null,
+          "topics": [
+            "手机端操作",
+            "多角色切换",
+            "连续测试"
+          ]
+        }
+      }
     }
   },
   {
@@ -505,18 +513,18 @@
     "kind": "page_spec",
     "id": "page-017",
     "page": 17,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "验收，按用户的顺序点一遍",
+    "task": "展示 AI 执行与人类需求判断的分工",
+    "three_second_message": "人来判断：这次到底做不做",
     "relation": "process",
     "screen_text": {
-      "title": "验收，按用户的顺序点一遍",
+      "title": "人来判断：这次到底做不做",
       "body": [
-        "填进去",
-        "保存下来",
-        "再打开看"
+        "为什么要加",
+        "这次做多少",
+        "什么算做好"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
@@ -526,7 +534,7 @@
     "asset_slots": [
       {
         "role": "project-screenshot",
-        "asset_id": "logistics-detail",
+        "asset_id": "logistics-request",
         "fit": "contain"
       }
     ],

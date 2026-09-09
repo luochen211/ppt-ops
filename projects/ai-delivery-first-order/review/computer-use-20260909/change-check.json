@@ -1,0 +1,30 @@
+{
+  "changed_pages": [
+    10,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "unchanged_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "video_asset": "not supplied; placeholder only",
+  "published_html_sha256": "1727f125571008b6466a2d2c8f2658b78b73adee7881b05049ae0156548d835f"
+}
