@@ -42,7 +42,8 @@
         "properties": {
           "role": { "type": "string", "minLength": 1 },
           "asset_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
-          "fit": { "type": "string", "enum": ["cover", "contain"] }
+          "fit": { "type": "string", "enum": ["cover", "contain"] },
+          "evidence_purpose": { "type": "string", "minLength": 1, "description": "Optional page-specific purpose when the same screenshot supports a different claim on this page." }
         },
         "additionalProperties": false
       }

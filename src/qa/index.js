@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import JSZip from "jszip";
+import { analyzeScreenshotEvidence } from "./screenshot-evidence.js";
+
 import { densityGuidanceFor, visibleCharacterCount } from "../contracts/delivery.js";
 
 const execFileAsync = promisify(execFile);
@@ -16,6 +18,7 @@ export async function inspectPresentation({ project, pptxFile, evidenceDir, rend
     status: structural.findings.some(({ severity }) => severity === "error") ? "failed" : rendering.status === "rendered" ? "passed" : "degraded",
     findings: structural.findings,
     pages: structural.pages,
+    screenshot_evidence: structural.screenshot_evidence,
     rendering
   };
 }
@@ -25,10 +28,12 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
   const slideNames = Object.keys(archive.files).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name)).sort(numericSlideSort);
   const pages = [];
   const findings = [];
+  const assetPlacements = [];
   for (const [index, name] of slideNames.entries()) {
     const page = index + 1;
     const xml = await archive.file(name).async("string");
     const shapes = parseShapes(xml);
+    assetPlacements.push(...shapes.filter(({ assetId }) => assetId).map(({ assetId, x, y, width, height }) => ({ page, asset_id: assetId, x, y, width, height })));
     const declaredFonts = [...xml.matchAll(/typeface="([^"]+)"/g)].map((match) => match[1]);
     const pageFindings = [
       ...checkBounds(shapes, page),
@@ -43,7 +48,13 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
     findings.push(...pageFindings);
     pages.push({ page, checks: ["out-of-bounds", "unintended-overlap", "font-substitution", "density"], finding_count: pageFindings.length });
   }
-  return { pages, findings };
+  const screenshotEvidence = analyzeScreenshotEvidence(project, assetPlacements, options);
+  findings.push(...screenshotEvidence.findings);
+  for (const page of pages) {
+    page.checks.push("screenshot-evidence");
+    page.finding_count = findings.filter((item) => item.page === page.page).length;
+  }
+  return { pages, findings, screenshot_evidence: screenshotEvidence };
 }
 
 export async function renderPresentation({ pptxFile, evidenceDir, commands = defaultCommands() }) {
@@ -96,9 +107,17 @@ export async function renderPresentation({ pptxFile, evidenceDir, commands = def
 
 function parseShapes(xml) {
   const shapes = [];
-  const pattern = /<p:(?:sp|pic|graphicFrame)\b[\s\S]*?<a:off x="(\d+)" y="(\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/>[\s\S]*?<\/p:(?:sp|pic|graphicFrame)>/g;
+  const pattern = /<p:(sp|pic|graphicFrame)\b[\s\S]*?<\/p:\1>/g;
   for (const match of xml.matchAll(pattern)) {
-    shapes.push({ x: Number(match[1]), y: Number(match[2]), width: Number(match[3]), height: Number(match[4]), hasText: /<a:t>/.test(match[0]), decorative: /<p:cNvPr[^>]+(?:name="(?:Background|Decorative)|descr="decorative")/i.test(match[0]) });
+    const block = match[0];
+    const geometry = block.match(/<a:off x="(\d+)" y="(\d+)"\/>\s*<a:ext cx="(\d+)" cy="(\d+)"\/>/);
+    if (!geometry) continue;
+    const objectName = block.match(/<p:cNvPr[^>]+\bname="([^"]+)"/)?.[1];
+    shapes.push({
+      x: Number(geometry[1]), y: Number(geometry[2]), width: Number(geometry[3]), height: Number(geometry[4]),
+      hasText: /<a:t>/.test(block), decorative: /<p:cNvPr[^>]+(?:name="(?:Background|Decorative)|descr="decorative")/i.test(block),
+      assetId: objectName?.startsWith("Asset ") ? objectName.slice(6) : undefined
+    });
   }
   return shapes;
 }

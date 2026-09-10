@@ -19,6 +19,24 @@ test("structural QA emits page-addressable checks for a representative PPTX", as
   assert.ok(result.findings.every(({ page, check, severity }) => Number.isInteger(page) && check && severity));
 });
 
+test("structural QA maps generated PPTX image objects to screenshot evidence", async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-screenshot-qa-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const project = await readProject("examples/demo-project");
+  project.assets[0].screenshot_evidence = {
+    content_role: "contextual",
+    evidence_purpose: "Show the workflow mark in context",
+    focal_region: { x: 0, y: 0, width: 1, height: 1 }
+  };
+  const pptx = path.join(directory, "slides.pptx");
+  await buildPptx(project, pptx);
+  const result = await inspectPptxStructure(pptx, project);
+  assert.equal(result.screenshot_evidence.screenshot_usage_count, 1);
+  assert.equal(result.screenshot_evidence.human_readability_assessed, false);
+  assert.equal(result.findings.some(({ check }) => check === "screenshot-placement-unresolved"), false);
+  assert.ok(result.pages[0].checks.includes("screenshot-evidence"));
+});
+
 test("rendering degrades explicitly when no local renderer exists", async (t) => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-render-"));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));
@@ -29,4 +47,34 @@ test("rendering degrades explicitly when no local renderer exists", async (t) =>
   });
   assert.deepEqual({ status: result.status, page_images: result.page_images }, { status: "degraded", page_images: [] });
   assert.match(result.reason, /unavailable/);
+});
+
+
+test("migration and V1 normalization preserve screenshot semantics and duplicate-byte identity", async (t) => {
+  const { writeMigratedProject } = await import("../src/migrations/foundation-to-v1.js");
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-screenshot-migration-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const source = path.join(directory, "source");
+  await fs.cp(path.resolve("examples/demo-project"), source, { recursive: true });
+  const assets = JSON.parse(await fs.readFile(path.join(source, "assets.json"), "utf8"));
+  assets[0].screenshot_evidence = {
+    content_role: "contextual", evidence_purpose: "Show the same workflow",
+    focal_region: { x: 0, y: 0, width: 1, height: 1 }
+  };
+  assets.push({ ...assets[0], id: "same-bytes" });
+  const pages = JSON.parse(await fs.readFile(path.join(source, "pages.json"), "utf8"));
+  pages[1].asset_slots = [{ asset_id: "same-bytes", role: "evidence" }];
+  await fs.writeFile(path.join(source, "assets.json"), JSON.stringify(assets));
+  await fs.writeFile(path.join(source, "pages.json"), JSON.stringify(pages));
+  const destination = path.join(directory, "v1");
+  await writeMigratedProject(source, destination);
+  const project = await readProject(destination);
+  assert.deepEqual(project.assets[0].screenshot_evidence, assets[0].screenshot_evidence);
+  assert.match(project.assets[0].sha256, /^[a-f0-9]{64}$/);
+  assert.equal(project.assets[0].sha256, project.assets[1].sha256);
+  const { analyzeScreenshotEvidence } = await import("../src/qa/screenshot-evidence.js");
+  const result = analyzeScreenshotEvidence(project);
+  const repeated = result.findings.find(({ check }) => check === "screenshot-evidence-repetition");
+  assert.equal(repeated.asset_id, "same-bytes");
+  assert.deepEqual(repeated.evidence.repeated_from_pages, [1]);
 });

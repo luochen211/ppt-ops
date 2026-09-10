@@ -14,6 +14,8 @@ JSON contracts and project files are portable truth. SQLite stores rebuildable i
 
 Add semantic templates in `src/layout/catalog.js`, including explicit capacity rules and renderer mappings. Both HTML and PPTX must consume the same PageSpec meaning and deterministic Layout Plan. Add fixtures for both renderers and reject over-capacity content rather than silently shrinking it.
 
+Screenshot assets may opt into evidence semantics and presentation-scale composition checks. See [Screenshot evidence QA](screenshot-evidence-qa.md). These automated checks must stay separate from human readability and real PowerPoint acceptance.
+
 ## Delivery semantics
 
 `Project.delivery_mode` is optional for backward compatibility and accepts `live_talk`, `workshop`, `pitch`, `leave_behind`, or `async`. Optional PageSpec delivery metadata includes `estimated_duration_seconds` (a planning estimate, not rehearsal evidence), `speaker_note_intent`, and `audience_interaction`. `speaker_note_intent` describes off-slide support; it is not visible copy. Renderers must never place it or interaction metadata into slide shapes or HTML slide content. Mode-aware review guidance lives in `src/contracts/delivery.js`; legacy projects without a declared mode retain the original density limits.

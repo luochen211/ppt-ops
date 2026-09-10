@@ -3,22 +3,78 @@
   "$id": "https://ppt-ops.local/schemas/v1/page-spec.schema.json",
   "title": "V1 Page Spec",
   "allOf": [
-    { "$ref": "entity.schema.json" },
+    {
+      "$ref": "entity.schema.json"
+    },
     {
       "type": "object",
-      "required": ["page", "task", "three_second_message", "relation", "screen_text", "visual_job", "source_refs", "asset_slots", "content_status", "renderers"],
+      "required": [
+        "page",
+        "task",
+        "three_second_message",
+        "relation",
+        "screen_text",
+        "visual_job",
+        "source_refs",
+        "asset_slots",
+        "content_status",
+        "renderers"
+      ],
       "properties": {
-        "kind": { "const": "page_spec" },
-        "page": { "type": "integer", "minimum": 1 },
-        "estimated_duration_seconds": { "type": "integer", "minimum": 1, "description": "Planning estimate only; not evidence of rehearsed timing." },
-        "speaker_note_intent": { "type": "string", "minLength": 1, "description": "Purpose of off-slide speaker support; never visible slide copy." },
+        "kind": {
+          "const": "page_spec"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "asset_slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "evidence_purpose": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "estimated_duration_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Planning estimate only; not evidence of rehearsed timing."
+        },
+        "speaker_note_intent": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Purpose of off-slide speaker support; never visible slide copy."
+        },
         "audience_interaction": {
           "type": "object",
-          "required": ["kind", "intent"],
+          "required": [
+            "kind",
+            "intent"
+          ],
           "properties": {
-            "kind": { "type": "string", "enum": ["audience_action", "question", "exercise", "demonstration", "feedback"] },
-            "intent": { "type": "string", "minLength": 1 },
-            "expected_response": { "type": "string", "minLength": 1 }
+            "kind": {
+              "type": "string",
+              "enum": [
+                "audience_action",
+                "question",
+                "exercise",
+                "demonstration",
+                "feedback"
+              ]
+            },
+            "intent": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expected_response": {
+              "type": "string",
+              "minLength": 1
+            }
           },
           "additionalProperties": false
         }
