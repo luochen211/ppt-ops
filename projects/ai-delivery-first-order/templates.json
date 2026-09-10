@@ -54,32 +54,6 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-case-flow",
-    "name": "Cause to responsibility flow",
-    "slots": {
-      "cause": "required",
-      "unknowns": "required",
-      "result": "required"
-    },
-    "renderers": {
-      "html": "CASE-TIMELINE"
-    }
-  },
-  {
-    "contract_version": "1.0",
-    "kind": "template",
-    "id": "template-trust-pipeline",
-    "name": "Trust evidence pipeline",
-    "slots": {
-      "steps": "four"
-    },
-    "renderers": {
-      "html": "TRUST-PIPELINE"
-    }
-  },
-  {
-    "contract_version": "1.0",
-    "kind": "template",
     "id": "template-definition-map",
     "name": "Deliverable definition map",
     "slots": {
@@ -88,18 +62,6 @@
     },
     "renderers": {
       "html": "DEFINITION-MAP"
-    }
-  },
-  {
-    "contract_version": "1.0",
-    "kind": "template",
-    "id": "template-delivery-gates",
-    "name": "Delivery gate road",
-    "slots": {
-      "gates": "four"
-    },
-    "renderers": {
-      "html": "DELIVERY-GATES"
     }
   },
   {
@@ -114,30 +76,6 @@
     },
     "renderers": {
       "html": "AI-VS-HUMAN"
-    }
-  },
-  {
-    "contract_version": "1.0",
-    "kind": "template",
-    "id": "template-readiness-five",
-    "name": "Ordered readiness questions",
-    "slots": {
-      "questions": "five"
-    },
-    "renderers": {
-      "html": "READINESS-5"
-    }
-  },
-  {
-    "contract_version": "1.0",
-    "kind": "template",
-    "id": "template-first-order-ladder",
-    "name": "First-order growth ladder",
-    "slots": {
-      "levels": "five"
-    },
-    "renderers": {
-      "html": "FIRST-ORDER-LADDER"
     }
   },
   {

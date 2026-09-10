@@ -145,33 +145,32 @@
     {
       "page": 6,
       "page_id": "page-006",
-      "relation": "cause_effect",
-      "visual_job": "Show OK flowing through three unresolved blanks into one responsibility block",
-      "template_id": "template-case-flow",
-      "motif": "boundary",
+      "relation": "process",
+      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "template_id": "template-project-case",
+      "motif": "evidence",
       "reading_path": [
-        "ok",
-        "undefined-items",
-        "responsibility"
+        "title",
+        "project-screenshot",
+        "simple-action"
       ],
-      "rationale": "把未定义事项如何转移成责任画成因果流",
-      "avoid": "只列失败清单，不显示责任归属"
+      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
+      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
     },
     {
       "page": 7,
       "page_id": "page-007",
       "relation": "process",
-      "visual_job": "Show a four-step trust pipeline",
-      "template_id": "template-trust-pipeline",
+      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "template_id": "template-project-case",
       "motif": "evidence",
       "reading_path": [
-        "work",
-        "process",
-        "evidence",
-        "responsibility"
+        "title",
+        "project-screenshot",
+        "simple-action"
       ],
-      "rationale": "信任来自逐步可验证，而非自我宣称",
-      "avoid": "客户头像围绕信任装饰"
+      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
+      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
     },
     {
       "page": 8,
@@ -239,17 +238,16 @@
       "page": 12,
       "page_id": "page-012",
       "relation": "process",
-      "visual_job": "Draw four physical gate symbols across one delivery road",
-      "template_id": "template-delivery-gates",
-      "motif": "route",
+      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "template_id": "template-project-case",
+      "motif": "evidence",
       "reading_path": [
-        "freeze",
-        "demo",
-        "precheck",
-        "handoff"
+        "title",
+        "project-screenshot",
+        "simple-action"
       ],
-      "rationale": "四次验收门把风险分段关住",
-      "avoid": "普通时间线，缺少门的阻断语义"
+      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
+      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
     },
     {
       "page": 13,
@@ -344,36 +342,32 @@
     {
       "page": 19,
       "page_id": "page-019",
-      "relation": "sequence",
-      "visual_job": "Use five numbered self-check questions",
-      "template_id": "template-readiness-five",
-      "motif": "boundary",
+      "relation": "process",
+      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "template_id": "template-project-case",
+      "motif": "evidence",
       "reading_path": [
-        "question-01",
-        "question-02",
-        "question-03",
-        "question-04",
-        "question-05"
+        "title",
+        "project-screenshot",
+        "simple-action"
       ],
-      "rationale": "接单前先连续检查五个边界",
-      "avoid": "无顺序问答卡片或人格测试风格"
+      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
+      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
     },
     {
       "page": 20,
       "page_id": "page-020",
-      "relation": "sequence",
-      "visual_job": "Use a five-level upward ladder",
-      "template_id": "template-first-order-ladder",
-      "motif": "route",
+      "relation": "process",
+      "visual_job": "Show large real project screenshots with concise plain-language actions",
+      "template_id": "template-project-case",
+      "motif": "evidence",
       "reading_path": [
-        "demo",
-        "small-problem",
-        "paid-order",
-        "verified-case",
-        "better-opportunity"
+        "title",
+        "project-screenshot",
+        "simple-action"
       ],
-      "rationale": "第一单是逐级降低风险的路径",
-      "avoid": "从零直接跳到大单的火箭图"
+      "rationale": "真实截图承担讲解；每页只保留一个容易理解的问题",
+      "avoid": "复杂业务算法、虚构聊天截图、只有文字没有项目页面"
     },
     {
       "page": 21,

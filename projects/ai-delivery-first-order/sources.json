@@ -4,17 +4,17 @@
     "kind": "source",
     "id": "source-001",
     "file": "brief.md",
-    "bytes": 3044,
+    "bytes": 3531,
     "mime": "text/markdown",
-    "sha256": "b71ad433af12f4e55fe830704e39ff5989d2ec30aa90a25c5c7cc8c412c36fd0"
+    "sha256": "dd1eaa9d6bf72486f6273b101b7111b52218eb2c019ca7a50600d4569fe06d00"
   },
   {
     "contract_version": "1.0",
     "kind": "source",
     "id": "source-simple-cases",
     "file": "simple-project-cases.md",
-    "bytes": 3815,
+    "bytes": 4302,
     "mime": "text/markdown",
-    "sha256": "81f38b0cca6e3a5774b6a79213e5fca7549101f8d97d4fb6b7ef1d5771cebeac"
+    "sha256": "7b1362cbd03ea48e38185aa9b966f7e43aa5beea0c4c4c6c4986924acd59fad7"
   }
 ]

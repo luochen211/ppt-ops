@@ -21,7 +21,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -32,10 +32,10 @@
     "id": "page-002",
     "page": 2,
     "task": "State the central thesis",
-    "three_second_message": "客户买的是可交付结果",
+    "three_second_message": "不是你的身份，不是技术栈，也不是几句 AI 指令。",
     "relation": "hero",
     "screen_text": {
-      "title": "客户真正购买的，是一个能被稳定交付的结果",
+      "title": "不是你的身份，不是技术栈，也不是几句 AI 指令。",
       "body": [
         "不是身份",
         "不是技术栈",
@@ -50,7 +50,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -66,10 +66,10 @@
     "screen_text": {
       "title": "四段大纲，一条交付主线",
       "body": [
-        "让客户相信你",
-        "把事情定义清楚",
-        "人和 AI 如何分工",
-        "走向第一单和下一单"
+        "闲鱼拿到物流项目",
+        "人确认业务与范围",
+        "AI 开发和操作测试",
+        "把这单沉淀成作品"
       ]
     },
     "visual_job": "Draw one directional route with four alternating stage nodes",
@@ -80,7 +80,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -91,12 +91,12 @@
     "id": "page-004",
     "page": 4,
     "task": "Open module one",
-    "three_second_message": "让客户相信你",
+    "three_second_message": "从毕设到第一单",
     "relation": "hero",
     "screen_text": {
       "title": "从毕设到第一单",
       "body": [
-        "让客户相信你"
+        "从闲鱼上的物流项目讲起"
       ]
     },
     "visual_job": "Create a strong module divider",
@@ -107,7 +107,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -152,27 +152,35 @@
     "kind": "page_spec",
     "id": "page-006",
     "page": 6,
-    "task": "Tell the first-order failure case",
-    "three_second_message": "一句 OK，把空白变成责任",
-    "relation": "cause_effect",
+    "task": "通过真实项目截图讲解一个简单动作",
+    "three_second_message": "客户看到的，是怎样一套系统",
+    "relation": "process",
     "screen_text": {
-      "title": "2024 年暑假：一句“OK”，把所有空白都变成了我的责任",
+      "title": "客户看到的，是怎样一套系统",
       "body": [
-        "不到两千元",
-        "需求未清",
-        "演示未定",
-        "修改无界"
+        "客户提交订单",
+        "把运输需求录入系统。",
+        "操作员跟进订单",
+        "查订单、补信息、更新进度。",
+        "财务处理费用",
+        "费用申请和账单也在同一套系统里。"
       ]
     },
-    "visual_job": "Show OK flowing through three unresolved blanks into one responsibility block",
+    "visual_job": "Show large real project screenshots with concise plain-language actions",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#已核对事实与边界"
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
       }
     ],
-    "asset_slots": [],
-    "content_status": "approved",
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-orders",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -182,27 +190,35 @@
     "kind": "page_spec",
     "id": "page-007",
     "page": 7,
-    "task": "Give a trust-building method",
-    "three_second_message": "信任来自可验证信用",
+    "task": "通过真实项目截图讲解一个简单动作",
+    "three_second_message": "介绍这单，先讲清一个流程",
     "relation": "process",
     "screen_text": {
-      "title": "客户凭什么相信你？",
+      "title": "介绍这单，先讲清一个流程",
       "body": [
-        "看见作品",
-        "理解过程",
-        "检查证据",
-        "确认责任"
+        "先指给对方看",
+        "订单在哪里填，结果在哪里查。",
+        "再问他的业务",
+        "谁提交、谁处理、谁看费用？",
+        "再确认能做什么",
+        "把对方要的流程和本次范围说清。"
       ]
     },
-    "visual_job": "Show a four-step trust pipeline",
+    "visual_job": "Show large real project screenshots with concise plain-language actions",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#模块一方法"
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
       }
     ],
-    "asset_slots": [],
-    "content_status": "approved",
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-orders",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -213,12 +229,12 @@
     "id": "page-008",
     "page": 8,
     "task": "Open module two",
-    "three_second_message": "把事情定义清楚",
+    "three_second_message": "把物流需求定义清楚",
     "relation": "hero",
     "screen_text": {
-      "title": "从模糊需求到万元项目",
+      "title": "把物流需求定义清楚",
       "body": [
-        "把事情定义清楚"
+        "谁填单，谁处理，什么算做好"
       ]
     },
     "visual_job": "Create a strong module divider",
@@ -229,7 +245,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -275,10 +291,10 @@
     "id": "page-010",
     "page": 10,
     "task": "Turn vague language into a delivery map",
-    "three_second_message": "把一句话，变成一张交付地图",
+    "three_second_message": "先确认四件事，再交给 AI 执行",
     "relation": "hierarchy",
     "screen_text": {
-      "title": "把一句话，变成一张交付地图",
+      "title": "先确认四件事，再交给 AI 执行",
       "body": [
         "目标：为谁解决什么",
         "范围：做哪些功能与数据",
@@ -344,27 +360,35 @@
     "kind": "page_spec",
     "id": "page-012",
     "page": 12,
-    "task": "Define delivery gates",
-    "three_second_message": "关键节点必须可验收",
+    "task": "通过真实项目截图讲解一个简单动作",
+    "three_second_message": "这单怎么交，开工前就说清",
     "relation": "process",
     "screen_text": {
-      "title": "万元项目不是一次写完，而是四次把风险关在门外",
+      "title": "这单怎么交，开工前就说清",
       "body": [
-        "需求冻结",
-        "中期演示",
-        "交付预检",
-        "验收交接"
+        "先确认业务流程",
+        "填单、查单、费用处理，哪些在本次范围？",
+        "中途看结果是否对",
+        "用真实页面沟通，方向偏了及时判断。",
+        "最后按约定验收",
+        "AI 执行测试，人判断是否满足确认的需求。"
       ]
     },
-    "visual_job": "Draw four physical gate symbols across one delivery road",
+    "visual_job": "Show large real project screenshots with concise plain-language actions",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#企业交付节点"
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
       }
     ],
-    "asset_slots": [],
-    "content_status": "approved",
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-orders",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -375,10 +399,10 @@
     "id": "page-013",
     "page": 13,
     "task": "Open module three",
-    "three_second_message": "从会用 AI 到能完成交付",
+    "three_second_message": "从会用 AI到能完成交付",
     "relation": "hero",
     "screen_text": {
-      "title": "从会用 AI 到能完成交付",
+      "title": "从会用 AI到能完成交付",
       "body": [
         "开发、测试交给 AI",
         "需求、判断交给人"
@@ -549,12 +573,12 @@
     "id": "page-018",
     "page": 18,
     "task": "Open module four",
-    "three_second_message": "走向第一单和下一单",
+    "three_second_message": "从一次交付到持续接单",
     "relation": "hero",
     "screen_text": {
       "title": "从一次交付到持续接单",
       "body": [
-        "走向第一单和下一单"
+        "把这单物流项目，变成下次的作品"
       ]
     },
     "visual_job": "Create a strong module divider",
@@ -565,7 +589,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -575,28 +599,35 @@
     "kind": "page_spec",
     "id": "page-019",
     "page": 19,
-    "task": "Give a readiness test",
-    "three_second_message": "先回答五个接单问题",
-    "relation": "sequence",
+    "task": "通过真实项目截图讲解一个简单动作",
+    "three_second_message": "回看这单，关键判断都由人负责",
+    "relation": "process",
     "screen_text": {
-      "title": "接第一单之前，先回答五个问题",
+      "title": "回看这单，关键判断都由人负责",
       "body": [
-        "该不该接？",
-        "需求问清了吗？",
-        "报价有边界吗？",
-        "完成能证明吗？",
-        "能留下信用吗？"
+        "闲鱼拿到机会",
+        "先沟通业务，再确认需求与范围。",
+        "AI 完成执行",
+        "开发、修复、手机端和多角色测试。",
+        "人确认最终结果",
+        "是否满足需求，哪些变更要另谈。"
       ]
     },
-    "visual_job": "Use five numbered self-check questions",
+    "visual_job": "Show large real project screenshots with concise plain-language actions",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#接单五问"
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
       }
     ],
-    "asset_slots": [],
-    "content_status": "approved",
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-orders",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -606,28 +637,35 @@
     "kind": "page_spec",
     "id": "page-020",
     "page": 20,
-    "task": "Show the first-order ladder",
-    "three_second_message": "先完成小而真实的闭环",
-    "relation": "sequence",
+    "task": "通过真实项目截图讲解一个简单动作",
+    "three_second_message": "做完这单，留下下次能用的材料",
+    "relation": "process",
     "screen_text": {
-      "title": "第一单不求大，先求小而真实",
+      "title": "做完这单，留下下次能用的材料",
       "body": [
-        "Demo",
-        "边界小的问题",
-        "付费小单",
-        "可验证案例",
-        "更高质量机会"
+        "留下一段流程",
+        "用填单、查单、费用处理讲清用途。",
+        "留下页面和演示",
+        "让下一位客户看见具体结果。",
+        "留下范围和说明",
+        "新需求重新确认，已有经验继续复用。"
       ]
     },
-    "visual_job": "Use a five-level upward ladder",
+    "visual_job": "Show large real project screenshots with concise plain-language actions",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#第一单路径"
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
       }
     ],
-    "asset_slots": [],
-    "content_status": "approved",
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-orders",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
@@ -683,12 +721,12 @@
     "id": "page-022",
     "page": 22,
     "task": "Close with the durable takeaway",
-    "three_second_message": "从能做出来，到值得被交给你",
+    "three_second_message": "从能做出来，到值得被交给你。",
     "relation": "hero",
     "screen_text": {
-      "title": "从能做出来，到值得被交给你",
+      "title": "从能做出来，到值得被交给你。",
       "body": [
-        "第一单的终点，不是收到钱；是给下一次机会，留下一份能被验证的信用。"
+        "闲鱼拿到机会，人确认需求，AI 完成执行；把这单物流项目，留下来作为下一次的作品。"
       ]
     },
     "visual_job": "Use one closing sentence with ample negative space",
@@ -699,7 +737,7 @@
       }
     ],
     "asset_slots": [],
-    "content_status": "approved",
+    "content_status": "draft",
     "renderers": {
       "html": {}
     }
