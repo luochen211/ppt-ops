@@ -7,6 +7,8 @@ const OUTPUTS = new Set(["html", "pptx", "pdf", "png"]);
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const SCHEMA_VERSIONS = new Set(["0.1", "1.0"]);
+const SCREENSHOT_CONTENT_ROLES = new Set(["contextual", "read_required"]);
+const SCREENSHOT_TREATMENTS = new Set(["crop", "zoom", "callout", "annotation"]);
 
 export function validatePage(page, assetIds = new Set()) {
   const errors = [];
@@ -29,6 +31,7 @@ export function validatePage(page, assetIds = new Set()) {
       if (!slot || !hasText(slot.asset_id)) errors.push(`asset_slots[${index}].asset_id is required`);
       else if (!assetIds.has(slot.asset_id)) errors.push(`asset_slots[${index}].asset_id is unknown: ${slot.asset_id}`);
       if (slot?.fit !== undefined && !["cover", "contain"].includes(slot.fit)) errors.push(`asset_slots[${index}].fit is invalid: ${slot.fit}`);
+      if (slot?.evidence_purpose !== undefined && !hasText(slot.evidence_purpose)) errors.push(`asset_slots[${index}].evidence_purpose must be non-empty`);
     });
   }
   if (!STATUSES.has(page.status)) errors.push(`status is invalid: ${page.status}`);
@@ -90,8 +93,29 @@ function validateAssets(assets, errors) {
     else ids.add(asset.id);
     if (!ASSET_TYPES.has(asset?.type)) errors.push(`assets[${index}].type is invalid: ${asset?.type}`);
     if (!hasText(asset?.file)) errors.push(`assets[${index}].file is required`);
+    if (asset?.screenshot_evidence !== undefined) validateScreenshotEvidence(asset.screenshot_evidence, `assets[${index}].screenshot_evidence`, errors);
   });
   return ids;
+}
+
+function validateScreenshotEvidence(value, field, errors) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) { errors.push(`${field} must be an object`); return; }
+  if (!SCREENSHOT_CONTENT_ROLES.has(value.content_role)) errors.push(`${field}.content_role is invalid: ${value.content_role}`);
+  if (!hasText(value.evidence_purpose)) errors.push(`${field}.evidence_purpose is required`);
+  const region = value.focal_region;
+  if (!region || typeof region !== "object" || Array.isArray(region)) errors.push(`${field}.focal_region must be an object`);
+  else {
+    for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(region[key])) errors.push(`${field}.focal_region.${key} must be a finite number`);
+    if (Number.isFinite(region.x) && (region.x < 0 || region.x > 1)) errors.push(`${field}.focal_region.x must be between 0 and 1`);
+    if (Number.isFinite(region.y) && (region.y < 0 || region.y > 1)) errors.push(`${field}.focal_region.y must be between 0 and 1`);
+    if (Number.isFinite(region.width) && (region.width <= 0 || region.width > 1)) errors.push(`${field}.focal_region.width must be greater than 0 and at most 1`);
+    if (Number.isFinite(region.height) && (region.height <= 0 || region.height > 1)) errors.push(`${field}.focal_region.height must be greater than 0 and at most 1`);
+    if (Number.isFinite(region.x) && Number.isFinite(region.width) && region.x + region.width > 1) errors.push(`${field}.focal_region.x + width must not exceed 1`);
+    if (Number.isFinite(region.y) && Number.isFinite(region.height) && region.y + region.height > 1) errors.push(`${field}.focal_region.y + height must not exceed 1`);
+  }
+  if (value.presentation_treatments !== undefined && (!Array.isArray(value.presentation_treatments) || value.presentation_treatments.some((item) => !SCREENSHOT_TREATMENTS.has(item)))) errors.push(`${field}.presentation_treatments contains an invalid value`);
+  if (value.human_review_required !== undefined && typeof value.human_review_required !== "boolean") errors.push(`${field}.human_review_required must be boolean`);
+  if (value.content_role === "read_required" && (value.presentation_treatments?.length ?? 0) === 0 && value.human_review_required !== true) errors.push(`${field} with read_required content needs a presentation treatment or human_review_required`);
 }
 
 function validateUniqueTextList(value, field, errors, requireItems = false) {

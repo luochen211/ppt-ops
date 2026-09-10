@@ -1,1 +1,46 @@
-{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://ppt-ops.local/schemas/v1/asset.schema.json", "title": "V1 Asset", "allOf": [{ "$ref": "entity.schema.json" }, { "type": "object", "required": ["type", "file", "sha256"], "properties": { "kind": { "const": "asset" }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } }] }
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/asset.schema.json",
+  "title": "V1 Asset",
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["type", "file", "sha256"],
+      "properties": {
+        "kind": { "const": "asset" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "screenshot_evidence": { "$ref": "#/$defs/screenshotEvidence" }
+      }
+    }
+  ],
+  "$defs": {
+    "screenshotEvidence": {
+      "type": "object",
+      "required": ["content_role", "evidence_purpose", "focal_region"],
+      "properties": {
+        "content_role": { "type": "string", "enum": ["contextual", "read_required"] },
+        "evidence_purpose": { "type": "string", "minLength": 1 },
+        "focal_region": { "$ref": "#/$defs/normalizedRegion" },
+        "presentation_treatments": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["crop", "zoom", "callout", "annotation"] }
+        },
+        "human_review_required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "normalizedRegion": {
+      "type": "object",
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

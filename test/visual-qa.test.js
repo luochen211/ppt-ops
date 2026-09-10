@@ -19,6 +19,24 @@ test("structural QA emits page-addressable checks for a representative PPTX", as
   assert.ok(result.findings.every(({ page, check, severity }) => Number.isInteger(page) && check && severity));
 });
 
+test("structural QA maps generated PPTX image objects to screenshot evidence", async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-screenshot-qa-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const project = await readProject("examples/demo-project");
+  project.assets[0].screenshot_evidence = {
+    content_role: "contextual",
+    evidence_purpose: "Show the workflow mark in context",
+    focal_region: { x: 0, y: 0, width: 1, height: 1 }
+  };
+  const pptx = path.join(directory, "slides.pptx");
+  await buildPptx(project, pptx);
+  const result = await inspectPptxStructure(pptx, project);
+  assert.equal(result.screenshot_evidence.screenshot_usage_count, 1);
+  assert.equal(result.screenshot_evidence.human_readability_assessed, false);
+  assert.equal(result.findings.some(({ check }) => check === "screenshot-placement-unresolved"), false);
+  assert.ok(result.pages[0].checks.includes("screenshot-evidence"));
+});
+
 test("rendering degrades explicitly when no local renderer exists", async (t) => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-render-"));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));

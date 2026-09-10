@@ -16,6 +16,8 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const RELATIONS = ["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"];
 const CONTENT_STATES = ["draft", "prototype", "approved", "built", "reviewed"];
+const SCREENSHOT_CONTENT_ROLES = ["contextual", "read_required"];
+const SCREENSHOT_TREATMENTS = ["crop", "zoom", "callout", "annotation"];
 
 export function validateV1Entity(entity, expectedKind) {
   const errors = [];
@@ -79,10 +81,16 @@ const validators = {
     if (!Array.isArray(value.source_refs)) errors.push("source_refs must be an array");
     for (const [index, ref] of (value.source_refs ?? []).entries()) if (!isId(ref?.source_id)) errors.push(`source_refs[${index}].source_id is invalid`);
     if (!Array.isArray(value.asset_slots)) errors.push("asset_slots must be an array");
+    for (const [index, slot] of (value.asset_slots ?? []).entries()) {
+      if (slot?.evidence_purpose !== undefined && !hasText(slot.evidence_purpose)) errors.push(`asset_slots[${index}].evidence_purpose must be non-empty`);
+    }
   },
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
-  asset(value, errors) { requireText(value, "file", errors); requireText(value, "type", errors); requireHash(value, errors); },
+  asset(value, errors) {
+    requireText(value, "file", errors); requireText(value, "type", errors); requireHash(value, errors);
+    if (value.screenshot_evidence !== undefined) validateScreenshotEvidence(value.screenshot_evidence, "screenshot_evidence", errors);
+  },
   visual_asset_brief(value, errors) {
     requireEnum(value, "role", ["character", "scene", "diagram", "background"], errors);
     requireEnum(value, "mode", ["fresh", "reference_edit"], errors);
@@ -176,6 +184,31 @@ function validateFeedbackFinding(finding, index, errors) {
   if (!isObject(finding.evidence)) errors.push(`${prefix}.evidence must be an object`);
   if (finding.classification_confidence !== undefined && (!Number.isFinite(finding.classification_confidence) || finding.classification_confidence < 0 || finding.classification_confidence > 1)) errors.push(`${prefix}.classification_confidence must be between 0 and 1`);
   if (finding.corrected_root_cause !== undefined && !ROOT_CAUSES.includes(finding.corrected_root_cause)) errors.push(`${prefix}.corrected_root_cause is invalid: ${finding.corrected_root_cause}`);
+}
+
+function validateScreenshotEvidence(value, field, errors) {
+  if (!isObject(value)) { errors.push(`${field} must be an object`); return; }
+  if (!SCREENSHOT_CONTENT_ROLES.includes(value.content_role)) errors.push(`${field}.content_role is invalid: ${value.content_role}`);
+  if (!hasText(value.evidence_purpose)) errors.push(`${field}.evidence_purpose is required`);
+  validateNormalizedRegion(value.focal_region, `${field}.focal_region`, errors);
+  if (value.presentation_treatments !== undefined && (!Array.isArray(value.presentation_treatments) || value.presentation_treatments.some((item) => !SCREENSHOT_TREATMENTS.includes(item)))) {
+    errors.push(`${field}.presentation_treatments contains an invalid value`);
+  }
+  if (value.human_review_required !== undefined && typeof value.human_review_required !== "boolean") errors.push(`${field}.human_review_required must be boolean`);
+  if (value.content_role === "read_required" && (value.presentation_treatments?.length ?? 0) === 0 && value.human_review_required !== true) {
+    errors.push(`${field} with read_required content needs a presentation treatment or human_review_required`);
+  }
+}
+
+function validateNormalizedRegion(value, field, errors) {
+  if (!isObject(value)) { errors.push(`${field} must be an object`); return; }
+  for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(value[key])) errors.push(`${field}.${key} must be a finite number`);
+  if (Number.isFinite(value.x) && (value.x < 0 || value.x > 1)) errors.push(`${field}.x must be between 0 and 1`);
+  if (Number.isFinite(value.y) && (value.y < 0 || value.y > 1)) errors.push(`${field}.y must be between 0 and 1`);
+  if (Number.isFinite(value.width) && (value.width <= 0 || value.width > 1)) errors.push(`${field}.width must be greater than 0 and at most 1`);
+  if (Number.isFinite(value.height) && (value.height <= 0 || value.height > 1)) errors.push(`${field}.height must be greater than 0 and at most 1`);
+  if (Number.isFinite(value.x) && Number.isFinite(value.width) && value.x + value.width > 1) errors.push(`${field}.x + width must not exceed 1`);
+  if (Number.isFinite(value.y) && Number.isFinite(value.height) && value.y + value.height > 1) errors.push(`${field}.y + height must not exceed 1`);
 }
 
 function requireText(value, field, errors, prefix = "") { if (!hasText(value?.[field])) errors.push(`${prefix}${field} is required`); }
