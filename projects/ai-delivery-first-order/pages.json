@@ -1,24 +1,827 @@
 [
-  {"contract_version":"1.0","kind":"page_spec","id":"page-001","page":1,"task":"Open with the complete journey","three_second_message":"从毕业设计到持续接单","relation":"hero","screen_text":{"title":"从毕业设计到持续接单","body":["AI 编程如何进入真实交付"]},"visual_job":"Use one large title and the template brand language","source_refs":[{"source_id":"source-001","locator":"#唯一大纲"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-002","page":2,"task":"State the central thesis","three_second_message":"客户买的是可交付结果","relation":"hero","screen_text":{"title":"客户真正购买的，是一个能被稳定交付的结果","body":["不是身份","不是技术栈","不是几句 AI 指令"]},"visual_job":"Turn the thesis into one memorable sentence","source_refs":[{"source_id":"source-001","locator":"#核心判断"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-003","page":3,"task":"Show the only four-part route","three_second_message":"四段大纲，一条交付主线","relation":"sequence","screen_text":{"title":"四段大纲，一条交付主线","body":["让客户相信你","把事情定义清楚","人和 AI 如何分工","走向第一单和下一单"]},"visual_job":"Draw one directional route with four alternating stage nodes","source_refs":[{"source_id":"source-001","locator":"#唯一大纲"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-004","page":4,"task":"Open module one","three_second_message":"让客户相信你","relation":"hero","screen_text":{"title":"从毕设到第一单","body":["让客户相信你"]},"visual_job":"Create a strong module divider","source_refs":[{"source_id":"source-001","locator":"#唯一大纲 1"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-005","page":5,"task":"Reframe a graduation project as trust evidence","three_second_message":"毕设不是功能清单，是完成记录","relation":"hierarchy","screen_text":{"title":"毕设不是功能清单，是一份完成记录","body":["问题真实","链路完整","结果可检查","责任说得清"]},"visual_job":"Place a completion record at the center of four connected proof branches","source_refs":[{"source_id":"source-001","locator":"#模块一观点"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-006","page":6,"task":"Tell the first-order failure case","three_second_message":"一句 OK，把空白变成责任","relation":"cause_effect","screen_text":{"title":"2024 年暑假：一句“OK”，把所有空白都变成了我的责任","body":["不到两千元","需求未清","演示未定","修改无界"]},"visual_job":"Show OK flowing through three unresolved blanks into one responsibility block","source_refs":[{"source_id":"source-001","locator":"#已核对事实与边界"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-007","page":7,"task":"Give a trust-building method","three_second_message":"信任来自可验证信用","relation":"process","screen_text":{"title":"客户凭什么相信你？","body":["看见作品","理解过程","检查证据","确认责任"]},"visual_job":"Show a four-step trust pipeline","source_refs":[{"source_id":"source-001","locator":"#模块一方法"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-008","page":8,"task":"Open module two","three_second_message":"把事情定义清楚","relation":"hero","screen_text":{"title":"从模糊需求到万元项目","body":["把事情定义清楚"]},"visual_job":"Create a strong module divider","source_refs":[{"source_id":"source-001","locator":"#唯一大纲 2"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-009","page":9,"task":"Show why vague demand is dangerous","three_second_message":"客户不会给你一道完整的题","relation":"hero","screen_text":{"title":"客户不会给你一道完整的题","body":["“帮我做个平台”还不是需求"]},"visual_job":"Use a large quote with unanswered blanks","source_refs":[{"source_id":"source-001","locator":"#模块二案例"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-010","page":10,"task":"Turn vague language into a delivery map","three_second_message":"先定义目标、范围、边界、验收","relation":"hierarchy","screen_text":{"title":"把一句话，变成一张交付地图","body":["目标：为谁解决什么","范围：做哪些功能与数据","边界：不做什么、改几次","验收：谁在什么环境检查"]},"visual_job":"Use a four-direction scope map around one deliverable task","source_refs":[{"source_id":"source-001","locator":"#模块二方法"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-011","page":11,"task":"Explain responsible pricing","three_second_message":"报价是在给责任链定价","relation":"process","screen_text":{"title":"报价不是给代码定价，是给整条责任链定价","body":["澄清","方案","开发","验证与部署","变更与风险"]},"visual_job":"Show responsibility accumulating through five growing linked nodes","source_refs":[{"source_id":"source-001","locator":"#报价边界"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-012","page":12,"task":"Define delivery gates","three_second_message":"关键节点必须可验收","relation":"process","screen_text":{"title":"万元项目不是一次写完，而是四次把风险关在门外","body":["需求冻结","中期演示","交付预检","验收交接"]},"visual_job":"Draw four physical gate symbols across one delivery road","source_refs":[{"source_id":"source-001","locator":"#企业交付节点"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-013","page":13,"task":"Open module three","three_second_message":"人和 AI 如何分工","relation":"hero","screen_text":{"title":"从会用 AI 到能完成交付","body":["人和 AI 如何分工"]},"visual_job":"Create a strong module divider","source_refs":[{"source_id":"source-001","locator":"#唯一大纲 3"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-014","page":14,"task":"Separate execution from responsibility","three_second_message":"AI 提速，人承担判断","relation":"comparison","screen_text":{"title":"AI 负责放大执行，人负责守住结果","body":["AI：读代码、拆任务、生成、排错、测试、文档","人：需求、取舍、报价、边界、验证、沟通、责任"]},"visual_job":"Connect an AI execution engine to a human judgment compass","source_refs":[{"source_id":"source-001","locator":"#人机分工"}],"asset_slots":[{"role":"human-owner","asset_id":"page-14-human-owner","fit":"contain"}],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-015","page":15,"task":"Clarify what AI can and cannot own","three_second_message":"AI 提速，交付责任仍由人承担","relation":"comparison","screen_text":{"title":"AI 可以缩短执行时间，但不能替你承担责任","body":["需求判断：人","执行提速：AI","质量判断：人","结果责任：人"]},"visual_job":"Nest AI execution inside the larger human responsibility boundary","source_refs":[{"source_id":"source-001","locator":"#模块三方法"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-016","page":16,"task":"Warn about faster wrong output","three_second_message":"速度不会修正方向","relation":"comparison","screen_text":{"title":"AI 可以把三天压到几小时，也能让错误更快变成实物","body":["方向正确：速度是杠杆","方向错误：速度是放大器"]},"visual_job":"Use a two-direction vector contrast","source_refs":[{"source_id":"source-001","locator":"#AI 速度边界"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-017","page":17,"task":"Define completion through evidence","three_second_message":"完成必须有证据","relation":"hierarchy","screen_text":{"title":"“完成”不是个人感觉，而是一组可回读的证据","body":["测试通过","构建成功","部署可用","真实路径验证","客户验收","文档交接"]},"visual_job":"Show an evidence stack from code to customer","source_refs":[{"source_id":"source-001","locator":"#完成证据"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-018","page":18,"task":"Open module four","three_second_message":"走向第一单和下一单","relation":"hero","screen_text":{"title":"从一次交付到持续接单","body":["走向第一单和下一单"]},"visual_job":"Create a strong module divider","source_refs":[{"source_id":"source-001","locator":"#唯一大纲 4"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-019","page":19,"task":"Give a readiness test","three_second_message":"先回答五个接单问题","relation":"sequence","screen_text":{"title":"接第一单之前，先回答五个问题","body":["该不该接？","需求问清了吗？","报价有边界吗？","完成能证明吗？","能留下信用吗？"]},"visual_job":"Use five numbered self-check questions","source_refs":[{"source_id":"source-001","locator":"#接单五问"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-020","page":20,"task":"Show the first-order ladder","three_second_message":"先完成小而真实的闭环","relation":"sequence","screen_text":{"title":"第一单不求大，先求小而真实","body":["Demo","边界小的问题","付费小单","可验证案例","更高质量机会"]},"visual_job":"Use a five-level upward ladder","source_refs":[{"source_id":"source-001","locator":"#第一单路径"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-021","page":21,"task":"Turn a delivery into reusable assets","three_second_message":"把交付变成复利资产","relation":"cycle","screen_text":{"title":"一笔尾款结算这次项目，案例、流程和信用带来下一次机会","body":["案例页","需求清单","报价模板","验收清单","复盘与转介绍"]},"visual_job":"Use directional arrows to make the delivery asset flywheel visibly cyclical","source_refs":[{"source_id":"source-001","locator":"#持续接单"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}},
-  {"contract_version":"1.0","kind":"page_spec","id":"page-022","page":22,"task":"Close with the durable takeaway","three_second_message":"从能做出来，到值得被交给你","relation":"hero","screen_text":{"title":"从能做出来，到值得被交给你","body":["第一单的终点，不是收到钱；是给下一次机会，留下一份能被验证的信用。"]},"visual_job":"Use one closing sentence with ample negative space","source_refs":[{"source_id":"source-001","locator":"#结尾"}],"asset_slots":[],"content_status":"approved","renderers":{"html":{}}}
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-001",
+    "page": 1,
+    "task": "Open with the complete journey",
+    "three_second_message": "从毕业设计到持续接单",
+    "relation": "hero",
+    "screen_text": {
+      "title": "从毕业设计到持续接单",
+      "body": [
+        "AI 编程如何进入真实交付"
+      ]
+    },
+    "visual_job": "Use one large title and the template brand language",
+    "source_refs": [
+      {
+        "source_id": "source-001",
+        "locator": "#唯一大纲"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {}
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-002",
+    "page": 2,
+    "task": "正面呈现客户购买的三个业务结果，放大核心结论。",
+    "three_second_message": "客户要的，是业务真正跑起来",
+    "relation": "comparison",
+    "screen_text": {
+      "title": "客户要的，是业务真正跑起来",
+      "body": [
+        "订单能提交",
+        "有人能处理",
+        "费用能查清"
+      ]
+    },
+    "visual_job": "BUSINESS-OUTCOME",
+    "source_refs": [
+      {
+        "source_id": "source-001",
+        "locator": "#核心判断"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-2-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "BUSINESS-OUTCOME"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-003",
+    "page": 3,
+    "task": "用二乘二编号目录完整呈现用户确认的四个模块。",
+    "three_second_message": "从毕业设计出发，走向第一单和下一单",
+    "relation": "sequence",
+    "screen_text": {
+      "title": "从毕业设计出发，走向第一单和下一单",
+      "body": [
+        "从毕设到第一单：让客户相信你",
+        "从模糊需求到万元项目：把事情定义清楚",
+        "从会用 AI 到能完成交付：人和 AI 如何分工",
+        "从一次交付到持续接单：走向第一单和下一单"
+      ]
+    },
+    "visual_job": "DELIVERY-ROUTE",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-3-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "DELIVERY-ROUTE"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-004",
+    "page": 4,
+    "task": "用用户确认的主标题与副标题开启该模块。",
+    "three_second_message": "从毕设到第一单",
+    "relation": "hero",
+    "screen_text": {
+      "title": "从毕设到第一单",
+      "body": [
+        "让客户相信你"
+      ]
+    },
+    "visual_job": "Create a strong module divider",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-4-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {}
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-005",
+    "page": 5,
+    "task": "以价格、获客渠道和全包内容简要介绍真实毕设起点，再进入企业物流案例，不扩展获客教程或答辩细节。",
+    "three_second_message": "最早，我从毕设项目起步",
+    "relation": "hierarchy",
+    "screen_text": {
+      "title": "最早，我从毕设项目起步",
+      "body": [
+        "获客渠道：闲鱼",
+        "客单价：800–5,000 元",
+        "海外留学生、硕士项目的客单价通常更高",
+        "通常全包：程序开发、论文撰写、过程表格、期中答辩、最终答辩"
+      ]
+    },
+    "visual_job": "CAPSTONE-INTRO",
+    "source_refs": [
+      {
+        "source_id": "source-001",
+        "locator": "#起步业务：毕设项目"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "CAPSTONE-INTRO"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-006",
+    "page": 6,
+    "task": "用角色与箭头解释业务流转，去掉重复的系统全图。",
+    "three_second_message": "一张订单，串起三种角色",
+    "relation": "sequence",
+    "screen_text": {
+      "title": "一张订单，串起三种角色",
+      "body": [
+        "客户：填写并提交订单",
+        "操作员：补信息、跟进进度",
+        "财务：处理费用、查看账单"
+      ]
+    },
+    "visual_job": "ROLE-FLOW",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-6-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "ROLE-FLOW"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-007",
+    "page": 7,
+    "task": "订单详情配具体试用动作，展示 Demo 如何帮助沟通。",
+    "three_second_message": "做企业商单，一定要有 Demo 能力",
+    "relation": "process",
+    "screen_text": {
+      "title": "做企业商单，一定要有 Demo 能力",
+      "body": [
+        "做出核心流程",
+        "让客户试用",
+        "把反馈变成需求"
+      ]
+    },
+    "visual_job": "DEMO-WALKTHROUGH",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-7-页"
+      }
+    ],
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-detail",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "DEMO-WALKTHROUGH"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-008",
+    "page": 8,
+    "task": "用用户确认的主标题与副标题开启该模块。",
+    "three_second_message": "从模糊需求到万元项目",
+    "relation": "hero",
+    "screen_text": {
+      "title": "从模糊需求到万元项目",
+      "body": [
+        "把事情定义清楚"
+      ]
+    },
+    "visual_job": "Create a strong module divider",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-8-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {}
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-009",
+    "page": 9,
+    "task": "放大真实表单，把需求问题控制为三项。",
+    "three_second_message": "一个表单，先问清三件事",
+    "relation": "process",
+    "screen_text": {
+      "title": "一个表单，先问清三件事",
+      "body": [
+        "谁来填",
+        "哪些必须填",
+        "填完谁接着处理"
+      ]
+    },
+    "visual_job": "FORM-QUESTIONS",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-9-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-9-页"
+      }
+    ],
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-request",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "FORM-QUESTIONS"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-010",
+    "page": 10,
+    "task": "把四项定义落到一份可复用的任务书和具体角色验收。",
+    "three_second_message": "先确认四件事，再交给 AI 执行",
+    "relation": "hierarchy",
+    "screen_text": {
+      "title": "先确认四件事，再交给 AI 执行",
+      "body": [
+        "01 目标 客户填单，团队跟进。 02 范围 首阶段：录单、跟进、查结果。 03 边界 自动抓轨迹等接口，另行确认。 04 验收 客户 A 查得到，客户 B 看不到。 PROJECT BRIEF · 教学示例 首阶段任务书 流程 客户 A 录单 → 操作员更新状态 → A 查结果。 边界 本阶段不接自动轨迹接口。 验收 必填为空时不能提交；刷新后状态仍保存；客户 B 无法读取 A 的订单。 查看填写版任务书 ↗"
+      ]
+    },
+    "visual_job": "四张需求卡以一根箭头指向任务书，全部文字为 HTML",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-10-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-10-页"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-10-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "DEFINITION-MAP"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-011",
+    "page": 11,
+    "task": "用三阶段交付、验收和费用解释万元项目的范围与责任。",
+    "three_second_message": "万元项目，要拆成具体交付与责任",
+    "relation": "sequence",
+    "screen_text": {
+      "title": "万元项目，要拆成具体交付与责任",
+      "body": [
+        "阶段 01 订单与基础权限 ¥6,000 录单、列表、详情与状态更新； 客户隔离从这一阶段开始。 阶段验收 A 录单 → 操作员更新 → A 查结果；B 无法读取 A 的订单。 阶段 02 费用与账单 ¥4,000 费用申请、财务处理、账单查询； 按角色核对处理权限。 阶段验收 提交一笔申请，财务处理后，申请人查到正确金额与状态。 阶段 03 管理与交接 ¥2,000 账号管理、配置与操作说明； 完成部署和约定流程复核。 阶段验收 用新账号按说明走完流程；交接清单与部署入口可用。 教学拆分合计 ¥12,000 范围增加 验收与交接责任增加 查看拆分 ↗"
+      ]
+    },
+    "visual_job": "DELIVERY-STAGES",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-11-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-11-页"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-11-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "DELIVERY-STAGES"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-012",
+    "page": 12,
+    "task": "展示一条可复制的阶段确认消息，包含操作步骤、权限和范围。",
+    "three_second_message": "每次确认，都留下可回看的具体记录",
+    "relation": "sequence",
+    "screen_text": {
+      "title": "每次确认，都留下可回看的具体记录",
+      "body": [
+        "开工前 · 确认任务书 过程中 · 对照实际页面 交付时 · 逐项验收 首阶段完成后的确认消息 · 教学示例 “这次请按下面三项核对。” 用客户 A 新建订单，操作员更新为“处理中”，A 刷新后能看到。 切到客户 B，在列表和详情入口都无法读取 A 的订单。 本阶段包含录单、跟进和查询；自动轨迹接口另行确认。 请逐项回复“通过”或说明卡在哪一步；有差异就附页面截图，修复后重测。"
+      ]
+    },
+    "visual_job": "DELIVERY-CHECKPOINTS",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-12-页"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-12-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "DELIVERY-CHECKPOINTS"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-013",
+    "page": 13,
+    "task": "用用户确认的主标题与副标题开启该模块。",
+    "three_second_message": "从会用 AI 到能完成交付",
+    "relation": "hero",
+    "screen_text": {
+      "title": "从会用 AI 到能完成交付",
+      "body": [
+        "人和 AI 如何分工"
+      ]
+    },
+    "visual_job": "Create a strong module divider",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-13-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {}
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-tech-patience",
+    "page": 14,
+    "task": "把陌生技术可学习的判断落到具体检查和反馈，不承诺必然成功。",
+    "three_second_message": "目标先明确，技术可以边做边学",
+    "relation": "process",
+    "screen_text": {
+      "title": "目标先明确，技术可以边做边学",
+      "body": [
+        "给自己一点 耐心 ，也给每一步一个检查标准。 01 写出目标 例如：客户提交一张订单， 操作员能找到并跟进。 02 先跑通一小步 查资料、问 AI，先做录单； 用一组测试数据实际提交。 03 对照标准补知识 刷新后还在吗？换角色能看吗？ 记录差异，再查原因、修改、重测。 耐心用在“尝试—核对—修正”上；下一步由结果决定。"
+      ]
+    },
+    "visual_job": "TECH-PATIENCE",
+    "source_refs": [
+      {
+        "source_id": "source-001",
+        "locator": "#面对陌生技术"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-14-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "TECH-PATIENCE"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-research-learning",
+    "page": 15,
+    "task": "用原截图中的疑问、跳步和方案调整呈现可学习的方法，区分讨论与实验结果。",
+    "three_second_message": "一次纠错：先停下来，把推断说清楚",
+    "relation": "process",
+    "screen_text": {
+      "title": "一次纠错：先停下来，把推断说清楚",
+      "body": [
+        "Claude Code ⇄ Codex 提出疑问 有表面水层，就能推到“促进吸附”吗？ 指出跳步 截图中的回应：“不能直接这么推。” 调整方案 先停运行，对齐两个体系；把表面吸附水设为待确认变量。 从这段讨论提炼的方法： 拆开前提与结论，确认变量，再决定怎么验证。 方案讨论原图 · 点击放大 此处展示方案调整，未展示实验结果。"
+      ]
+    },
+    "visual_job": "RESEARCH-LEARNING",
+    "source_refs": [
+      {
+        "source_id": "source-001",
+        "locator": "#科研接单与边做边学"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-15-页"
+      }
+    ],
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "research-peer-review",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "RESEARCH-LEARNING"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-014",
+    "page": 16,
+    "task": "人和 AI 的输入输出各自标注方向；三组职责用可投影字号呈现。",
+    "three_second_message": "人定方向，AI 完成执行",
+    "relation": "comparison",
+    "screen_text": {
+      "title": "人定方向，AI 完成执行",
+      "body": [
+        "人：确认需求、范围取舍、验收判断",
+        "人将需求与标准交给 AI",
+        "AI：开发、操作测试、修复",
+        "AI 返回结果与问题"
+      ]
+    },
+    "visual_job": "AI-VS-HUMAN",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-16-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-16-页"
+      }
+    ],
+    "asset_slots": [
+      {
+        "role": "human-owner",
+        "asset_id": "page-14-human-owner",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "AI-VS-HUMAN"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-015",
+    "page": 17,
+    "task": "展示实现、测试、修复的连续执行关系，避免用静态项目图冒充测试录像。",
+    "three_second_message": "开发和测试，都交给 AI",
+    "relation": "process",
+    "screen_text": {
+      "title": "开发和测试，都交给 AI",
+      "body": [
+        "开发实现",
+        "操作测试",
+        "继续修复",
+        "整理结果交由人确认"
+      ]
+    },
+    "visual_job": "AI-EXECUTION-LOOP",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-17-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-17-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "AI-EXECUTION-LOOP"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-016",
+    "page": 18,
+    "task": "按用户回复保留独立演示页与本地文件选择，不伪造录制素材。",
+    "three_second_message": "手机端、多角色，Computer Use 来测",
+    "relation": "hero",
+    "screen_text": {
+      "title": "手机端、多角色，Computer Use 来测",
+      "body": [
+        "Computer Use 操作演示",
+        "手机端操作",
+        "多角色切换",
+        "连续测试"
+      ]
+    },
+    "visual_job": "保留独立视频展示与本地文件选择",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-18-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-18-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "video_slot": {
+          "id": "computer-use-video",
+          "status": "awaiting-user-video",
+          "source": null,
+          "topics": [
+            "手机端操作",
+            "多角色切换",
+            "连续测试"
+          ]
+        },
+        "layout": "COMPUTER-USE-VIDEO"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-017",
+    "page": 19,
+    "task": "从真实下拉选项入口切入小需求，把人的取舍变成具体问题。",
+    "three_second_message": "客户说“加一个选项”，先确认三件事",
+    "relation": "process",
+    "screen_text": {
+      "title": "客户说“加一个选项”，先确认三件事",
+      "body": [
+        "为什么要加",
+        "本次范围、费用与时间",
+        "确认可选择、可保存、后续可用"
+      ]
+    },
+    "visual_job": "CHANGE-DECISION",
+    "source_refs": [
+      {
+        "source_id": "source-simple-cases",
+        "locator": "#第-19-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-19-页"
+      }
+    ],
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "logistics-options",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "CHANGE-DECISION"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-018",
+    "page": 20,
+    "task": "用用户确认的主标题与副标题开启该模块。",
+    "three_second_message": "从一次交付到持续接单",
+    "relation": "hero",
+    "screen_text": {
+      "title": "从一次交付到持续接单",
+      "body": [
+        "走向第一单和下一单"
+      ]
+    },
+    "visual_job": "Create a strong module divider",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-20-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {}
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-019",
+    "page": 21,
+    "task": "让听众明确作品、沟通对象和演示流程，避免重复材料与话术。",
+    "three_second_message": "先选定：一份作品、一个人、一条流程",
+    "relation": "comparison",
+    "screen_text": {
+      "title": "先选定：一份作品、一个人、一条流程",
+      "body": [
+        "还没有商单 从能操作的毕设开始 选一份你能解释、能演示的作品。 示例 订单管理毕设 → 找仍用表格跟单的小团队负责人 → 演示“录单到查状态” 已经交付过项目 从客户的使用反馈开始 选一份有可展示材料的交付案例。 示例 已交付的订单系统 → 联系原客户的业务负责人 → 看“费用申请到查询”还卡在哪 先填一句：我用【作品】，帮【具体的人】看懂【一条流程】。"
+      ]
+    },
+    "visual_job": "ORDER-PATHS",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-21-页"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-21-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "ORDER-PATHS"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-020",
+    "page": 22,
+    "task": "用三张现有原始截图和可打开的完整材料包替换空目录。",
+    "three_second_message": "作品包打开后，客户应该看到什么",
+    "relation": "hierarchy",
+    "screen_text": {
+      "title": "作品包打开后，客户应该看到什么",
+      "body": [
+        "01 · 表单入口 客户从这里填写订单 02 · 订单列表 团队从这里找到待跟进订单 03 · 订单详情 从这里查看订单信息与进度 物流项目示例包 三步页面导览 填写版范围说明 打开完整作品包 ↗ 导览用历史截图说明流程；展示时另配实际演示，并说明当前可用范围。"
+      ]
+    },
+    "visual_job": "PROJECT-PACKAGE",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-22-页"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-22-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "PROJECT-PACKAGE"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-021",
+    "page": 23,
+    "task": "提供第一条完整消息与后续问题，让听众形成可执行的沟通练习。",
+    "three_second_message": "第一条消息，可以这样开口",
+    "relation": "sequence",
+    "screen_text": {
+      "title": "第一条消息，可以这样开口",
+      "body": [
+        "给已有联系的业务负责人 · 示例 “我整理了一个订单管理作品，从录单到查状态都能看见。想到你们平时也要跟单，想请你看看：现在最费时间的是哪一步？如果相关，我可以按你们的流程演示。” 打开话术与行动表 ↗ 对方愿意聊，再问三句 现在这一步由谁做？ 一次要花多久，哪里容易出错？ 如果只先改一处，做到什么算有用？ 现场练习：写下联系人、作品入口和第一条消息。发出后记录回复，再填写任务书。"
+      ]
+    },
+    "visual_job": "NEXT-CONVERSATION",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-23-页"
+      },
+      {
+        "source_id": "source-content-improvements",
+        "locator": "#第-23-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "NEXT-CONVERSATION"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-022",
+    "page": 24,
+    "task": "收束四模块并落到接单行动。",
+    "three_second_message": "从能做出来，到值得被交给你。",
+    "relation": "hero",
+    "screen_text": {
+      "title": "从能做出来，到值得被交给你。",
+      "body": [
+        "用作品建立信任，把需求定义清楚，让 AI 完成执行；再带着交付成果，走向第一单和下一单。"
+      ]
+    },
+    "visual_job": "Use one closing sentence with ample negative space",
+    "source_refs": [
+      {
+        "source_id": "source-framework-alignment",
+        "locator": "#第-24-页"
+      }
+    ],
+    "asset_slots": [],
+    "content_status": "draft",
+    "renderers": {
+      "html": {}
+    }
+  }
 ]

@@ -2,45 +2,428 @@
   "schema_version": "1.0",
   "project_id": "ai-delivery-first-order",
   "status": "implemented_pending_user_acceptance",
-  "goal": "把不可见的交付能力，变成可沿路线检查的证据",
+  "goal": "以物流项目为贯穿案例，按四模块讲清信任、需求、人机分工，以及第一单与下一单的行动",
   "visual_thesis": {
-    "name": "从能力到可信交付",
-    "statement": "路线决定往哪里走，边界决定谁负责什么，证据决定是否完成，闭环决定能否持续接单。"
+    "name": "四个模块，从毕设走向持续接单",
+    "statement": "真实截图说明业务页面，原生图解说明流程与职责，演示视频独立呈现。"
   },
   "motifs": [
-    {"id":"route","purpose":"表达顺序、阶段、风险门和成长","allowed":["node","connector","gate","ladder","vector"],"avoid":"把有先后的内容做成等权卡片墙"},
-    {"id":"boundary","purpose":"表达范围、责任和人机所有权","allowed":["containment","scope-map","responsibility-chain","role-contrast"],"avoid":"用颜色分栏代替包含与归属关系"},
-    {"id":"evidence","purpose":"表达信任、完成和验收依据","allowed":["proof-branch","evidence-stack","verification-step"],"avoid":"用徽章、图标或口号冒充可验证事实"},
-    {"id":"loop","purpose":"表达交付资产如何带来下一次机会","allowed":["directed-cycle","return-arrow","flywheel"],"avoid":"只有圆形装饰但没有方向和输入输出"}
+    {
+      "id": "route",
+      "purpose": "表达顺序、阶段、风险门和成长",
+      "allowed": [
+        "numbered-stage",
+        "connector",
+        "role-flow",
+        "checkpoint"
+      ],
+      "avoid": "有先后关系的卡片必须有明确编号或箭头，避免无顺序堆叠"
+    },
+    {
+      "id": "boundary",
+      "purpose": "表达范围、责任和人机所有权",
+      "allowed": [
+        "confirmation-cards",
+        "task-document",
+        "labeled-role-transfer"
+      ],
+      "avoid": "用颜色分栏代替包含与归属关系"
+    },
+    {
+      "id": "evidence",
+      "purpose": "表达信任、完成和验收依据",
+      "allowed": [
+        "proof-branch",
+        "evidence-stack",
+        "verification-step"
+      ],
+      "avoid": "用徽章、图标或口号冒充可验证事实"
+    },
+    {
+      "id": "loop",
+      "purpose": "表达交付资产如何带来下一次机会",
+      "allowed": [
+        "execution-return",
+        "material-package",
+        "next-introduction"
+      ],
+      "avoid": "只有圆形装饰但没有方向和输入输出"
+    }
   ],
   "density_budgets": {
-    "hero": {"primary_visuals":1,"level_one_nodes":3},
-    "structural": {"primary_visuals":1,"level_one_nodes":6},
-    "closing": {"primary_visuals":1,"level_one_nodes":2}
+    "hero": {
+      "primary_visuals": 1,
+      "level_one_nodes": 3
+    },
+    "structural": {
+      "primary_visuals": 1,
+      "level_one_nodes": 6
+    },
+    "closing": {
+      "primary_visuals": 1,
+      "level_one_nodes": 2
+    }
   },
   "page_decisions": [
-    {"page":1,"page_id":"page-001","relation":"hero","visual_job":"Use one large title and the template brand language","template_id":"template-hero-cover","motif":"route","reading_path":["brand","title","subtitle"],"rationale":"用起点式封面邀请观众进入完整旅程","avoid":"技术图标拼贴或履历墙"},
-    {"page":2,"page_id":"page-002","relation":"hero","visual_job":"Turn the thesis into one memorable sentence","template_id":"template-big-quote","motif":"evidence","reading_path":["three-negations","deliverable-result"],"rationale":"先排除伪购买理由，再落到可交付结果","avoid":"三张并列卡片削弱中心判断"},
-    {"page":3,"page_id":"page-003","relation":"sequence","visual_job":"Draw one directional route with four alternating stage nodes","template_id":"template-agenda-route","motif":"route","reading_path":["stage-01","stage-02","stage-03","stage-04"],"rationale":"四模块本质是一条连续交付路径","avoid":"四宫格或新增第五模块"},
-    {"page":4,"page_id":"page-004","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"route","reading_path":["act-number","act-title","act-outcome"],"rationale":"给第一段留出认知换气","avoid":"在幕封上提前塞方法细节"},
-    {"page":5,"page_id":"page-005","relation":"hierarchy","visual_job":"Place a completion record at the center of four connected proof branches","template_id":"template-proof-branches","motif":"evidence","reading_path":["completion-record","problem","process","proof","ownership"],"rationale":"毕设只有作为完成证据才产生信任","avoid":"四个无连接卖点卡片"},
-    {"page":6,"page_id":"page-006","relation":"cause_effect","visual_job":"Show OK flowing through three unresolved blanks into one responsibility block","template_id":"template-case-flow","motif":"boundary","reading_path":["ok","undefined-items","responsibility"],"rationale":"把未定义事项如何转移成责任画成因果流","avoid":"只列失败清单，不显示责任归属"},
-    {"page":7,"page_id":"page-007","relation":"process","visual_job":"Show a four-step trust pipeline","template_id":"template-trust-pipeline","motif":"evidence","reading_path":["work","process","evidence","responsibility"],"rationale":"信任来自逐步可验证，而非自我宣称","avoid":"客户头像围绕信任装饰"},
-    {"page":8,"page_id":"page-008","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"route","reading_path":["act-number","act-title","act-outcome"],"rationale":"从信任问题切换到需求定义","avoid":"在幕封上继续讲上一模块案例"},
-    {"page":9,"page_id":"page-009","relation":"hero","visual_job":"Use a large quote with unanswered blanks","template_id":"template-hero-question","motif":"boundary","reading_path":["vague-request","unanswered-blanks"],"rationale":"让观众先感到一句话不是需求","avoid":"直接给出答案，跳过问题张力"},
-    {"page":10,"page_id":"page-010","relation":"hierarchy","visual_job":"Use a four-direction scope map around one deliverable task","template_id":"template-definition-map","motif":"boundary","reading_path":["deliverable-task","goal","scope","boundary","acceptance"],"rationale":"四项共同定义一个可交付任务，并非四个技巧","avoid":"2x2卡片墙或把边界放在中心"},
-    {"page":11,"page_id":"page-011","relation":"process","visual_job":"Show responsibility accumulating through five growing linked nodes","template_id":"template-responsibility-chain","motif":"boundary","reading_path":["clarify","solution","build","verify-deploy","change-risk"],"rationale":"报价随责任链累积，而不是按代码量计算","avoid":"等宽价目表或单一金额大字"},
-    {"page":12,"page_id":"page-012","relation":"process","visual_job":"Draw four physical gate symbols across one delivery road","template_id":"template-delivery-gates","motif":"route","reading_path":["freeze","demo","precheck","handoff"],"rationale":"四次验收门把风险分段关住","avoid":"普通时间线，缺少门的阻断语义"},
-    {"page":13,"page_id":"page-013","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"boundary","reading_path":["act-number","act-title","division-question"],"rationale":"进入全篇责任边界的核心章节","avoid":"机器人插画抢走判断主题"},
-    {"page":14,"page_id":"page-014","relation":"comparison","visual_job":"Connect an AI execution engine to a human judgment compass","template_id":"template-ai-vs-human","motif":"boundary","reading_path":["ai-engine","connection","human-compass"],"rationale":"AI 保留原生执行引擎，人用已验收的透明人物插画手持罗盘，强调判断与结果责任","avoid":"红蓝对抗擂台或能力评分榜"},
-    {"page":15,"page_id":"page-015","relation":"comparison","visual_job":"Nest AI execution inside the larger human responsibility boundary","template_id":"template-ai-responsibility","motif":"boundary","reading_path":["human-boundary","ai-execution","human-judgments"],"rationale":"包含关系直接说明责任不能外包","avoid":"把人和AI画成等权并列圆"},
-    {"page":16,"page_id":"page-016","relation":"comparison","visual_job":"Use a two-direction vector contrast","template_id":"template-speed-contrast","motif":"route","reading_path":["correct-vector","wrong-vector"],"rationale":"速度只放大既有方向","avoid":"只比较快慢，忽略方向"},
-    {"page":17,"page_id":"page-017","relation":"hierarchy","visual_job":"Show an evidence stack from code to customer","template_id":"template-evidence-stack","motif":"evidence","reading_path":["tests","build","deployment","real-path","customer","handoff"],"rationale":"完成度随证据层级逐步增加","avoid":"六枚勾选徽章或一句已完成"},
-    {"page":18,"page_id":"page-018","relation":"hero","visual_job":"Create a strong module divider","template_id":"template-act-divider","motif":"loop","reading_path":["act-number","act-title","next-order"],"rationale":"把一次性交付转向持续信用","avoid":"在幕封上提前画完整飞轮"},
-    {"page":19,"page_id":"page-019","relation":"sequence","visual_job":"Use five numbered self-check questions","template_id":"template-readiness-five","motif":"boundary","reading_path":["question-01","question-02","question-03","question-04","question-05"],"rationale":"接单前先连续检查五个边界","avoid":"无顺序问答卡片或人格测试风格"},
-    {"page":20,"page_id":"page-020","relation":"sequence","visual_job":"Use a five-level upward ladder","template_id":"template-first-order-ladder","motif":"route","reading_path":["demo","small-problem","paid-order","verified-case","better-opportunity"],"rationale":"第一单是逐级降低风险的路径","avoid":"从零直接跳到大单的火箭图"},
-    {"page":21,"page_id":"page-021","relation":"cycle","visual_job":"Use directional arrows to make the delivery asset flywheel visibly cyclical","template_id":"template-next-order-flywheel","motif":"loop","reading_path":["delivery","reusable-assets","next-opportunity","return"],"rationale":"尾款结束项目，资产继续产生机会","avoid":"无箭头圆环或五张周边卡片"},
-    {"page":22,"page_id":"page-022","relation":"hero","visual_job":"Use one closing sentence with ample negative space","template_id":"template-closing-hero","motif":"evidence","reading_path":["title","closing-sentence","negative-space"],"rationale":"最后留下值得被交付的信用判断","avoid":"新方法清单、二维码或第二个CTA"}
+    {
+      "page": 1,
+      "page_id": "page-001",
+      "relation": "hero",
+      "visual_job": "Use one large title and the template brand language",
+      "template_id": "template-hero-cover",
+      "motif": "route",
+      "reading_path": [
+        "brand",
+        "title",
+        "subtitle"
+      ],
+      "rationale": "用起点式封面邀请观众进入完整旅程",
+      "avoid": "技术图标拼贴或履历墙"
+    },
+    {
+      "page": 2,
+      "page_id": "page-002",
+      "relation": "comparison",
+      "visual_job": "BUSINESS-OUTCOME",
+      "template_id": "template-business-outcome",
+      "motif": "evidence",
+      "reading_path": [
+        "主结论",
+        "订单提交",
+        "团队处理",
+        "费用查询"
+      ],
+      "rationale": "正面呈现客户购买的三个业务结果，放大核心结论。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 3,
+      "page_id": "page-003",
+      "relation": "sequence",
+      "visual_job": "DELIVERY-ROUTE",
+      "template_id": "template-delivery-route",
+      "motif": "route",
+      "reading_path": [
+        "第一单与信任",
+        "需求与项目",
+        "AI 与交付",
+        "持续接单"
+      ],
+      "rationale": "用二乘二编号目录完整呈现用户确认的四个模块。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 4,
+      "page_id": "page-004",
+      "relation": "hero",
+      "visual_job": "Create a strong module divider",
+      "template_id": "template-act-divider",
+      "motif": "route",
+      "reading_path": [
+        "章节编号",
+        "从毕设到第一单",
+        "让客户相信你"
+      ],
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
+      "avoid": "在幕封上提前塞方法细节"
+    },
+    {
+      "page": 5,
+      "page_id": "page-005",
+      "relation": "hierarchy",
+      "visual_job": "CAPSTONE-INTRO",
+      "template_id": "template-capstone-intro",
+      "motif": "evidence",
+      "reading_path": [
+        "毕设起点",
+        "闲鱼获客",
+        "客单价",
+        "全包内容"
+      ],
+      "rationale": "以价格、获客渠道和全包内容简要介绍真实毕设起点，再进入企业物流案例，不扩展获客教程或答辩细节。",
+      "avoid": "不将后来的物流系统截图作为毕设获客证据；不推断答辩支持细节或成交过程。"
+    },
+    {
+      "page": 6,
+      "page_id": "page-006",
+      "relation": "sequence",
+      "visual_job": "ROLE-FLOW",
+      "template_id": "template-role-flow",
+      "motif": "route",
+      "reading_path": [
+        "客户",
+        "操作员",
+        "财务"
+      ],
+      "rationale": "用角色与箭头解释业务流转，去掉重复的系统全图。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 7,
+      "page_id": "page-007",
+      "relation": "process",
+      "visual_job": "DEMO-WALKTHROUGH",
+      "template_id": "template-demo-walkthrough",
+      "motif": "evidence",
+      "reading_path": [
+        "Demo 观点",
+        "详情截图",
+        "试用流程"
+      ],
+      "rationale": "订单详情配具体试用动作，展示 Demo 如何帮助沟通。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 8,
+      "page_id": "page-008",
+      "relation": "hero",
+      "visual_job": "Create a strong module divider",
+      "template_id": "template-act-divider",
+      "motif": "route",
+      "reading_path": [
+        "章节编号",
+        "从模糊需求到万元项目",
+        "把事情定义清楚"
+      ],
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
+      "avoid": "在幕封上继续讲上一模块案例"
+    },
+    {
+      "page": 9,
+      "page_id": "page-009",
+      "relation": "process",
+      "visual_job": "FORM-QUESTIONS",
+      "template_id": "template-form-questions",
+      "motif": "boundary",
+      "reading_path": [
+        "表单截图",
+        "谁来填",
+        "哪些必填",
+        "谁接着处理"
+      ],
+      "rationale": "放大真实表单，把需求问题控制为三项。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 10,
+      "page_id": "page-010",
+      "relation": "hierarchy",
+      "visual_job": "四张需求卡以一根箭头指向任务书，全部文字为 HTML",
+      "template_id": "template-definition-map",
+      "motif": "boundary",
+      "reading_path": [
+        "先确认四件事，再交给 AI 执行",
+        "01 目标 客户填单，团队跟进。 02 范围 首阶段：录单、跟进、查结果。 03 边界 自动抓轨迹等接口，另行确认。 04 验收 客户 A 查得到，客户 B 看不到。 PROJECT BRIEF · 教学示例 首阶段任务书 流程 客户 A 录单 → 操作员更新"
+      ],
+      "rationale": "把四项定义落到一份可复用的任务书和具体角色验收。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 11,
+      "page_id": "page-011",
+      "relation": "sequence",
+      "visual_job": "DELIVERY-STAGES",
+      "template_id": "template-delivery-stages",
+      "motif": "route",
+      "reading_path": [
+        "万元项目，要拆成具体交付与责任",
+        "阶段 01 订单与基础权限 ¥6,000 录单、列表、详情与状态更新； 客户隔离从这一阶段开始。 阶段验收 A 录单 → 操作员更新 → A 查结果；B 无法读取 A 的订单。 阶段 02 费用与账单 ¥4,000 费用申请、财务处理、账单查询； 按角色核对处"
+      ],
+      "rationale": "用三阶段交付、验收和费用解释万元项目的范围与责任。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 12,
+      "page_id": "page-012",
+      "relation": "sequence",
+      "visual_job": "DELIVERY-CHECKPOINTS",
+      "template_id": "template-delivery-checkpoints",
+      "motif": "route",
+      "reading_path": [
+        "每次确认，都留下可回看的具体记录",
+        "开工前 · 确认任务书 过程中 · 对照实际页面 交付时 · 逐项验收 首阶段完成后的确认消息 · 教学示例 “这次请按下面三项核对。” 用客户 A 新建订单，操作员更新为“处理中”，A 刷新后能看到。 切到客户 B，在列表和详情入口都无法读取 A 的订单。 "
+      ],
+      "rationale": "展示一条可复制的阶段确认消息，包含操作步骤、权限和范围。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 13,
+      "page_id": "page-013",
+      "relation": "hero",
+      "visual_job": "Create a strong module divider",
+      "template_id": "template-act-divider",
+      "motif": "boundary",
+      "reading_path": [
+        "章节编号",
+        "从会用 AI 到能完成交付",
+        "人和 AI 如何分工"
+      ],
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
+      "avoid": "机器人插画抢走判断主题"
+    },
+    {
+      "page": 14,
+      "page_id": "page-tech-patience",
+      "relation": "process",
+      "visual_job": "TECH-PATIENCE",
+      "template_id": "template-tech-patience",
+      "motif": "loop",
+      "reading_path": [
+        "目标先明确，技术可以边做边学",
+        "给自己一点 耐心 ，也给每一步一个检查标准。 01 写出目标 例如：客户提交一张订单， 操作员能找到并跟进。 02 先跑通一小步 查资料、问 AI，先做录单； 用一组测试数据实际提交。 03 对照标准补知识 刷新后还在吗？换角色能看吗？ 记录差异，再查原因、修"
+      ],
+      "rationale": "把陌生技术可学习的判断落到具体检查和反馈，不承诺必然成功。",
+      "avoid": "不虚构技术项目经历，不用口号替代具体尝试动作，不增加技术术语。"
+    },
+    {
+      "page": 15,
+      "page_id": "page-research-learning",
+      "relation": "process",
+      "visual_job": "RESEARCH-LEARNING",
+      "template_id": "template-research-learning",
+      "motif": "evidence",
+      "reading_path": [
+        "一次纠错：先停下来，把推断说清楚",
+        "Claude Code ⇄ Codex 提出疑问 有表面水层，就能推到“促进吸附”吗？ 指出跳步 截图中的回应：“不能直接这么推。” 调整方案 先停运行，对齐两个体系；把表面吸附水设为待确认变量。 从这段讨论提炼的方法： 拆开前提与结论，确认变量，再决定怎么验"
+      ],
+      "rationale": "用原截图中的疑问、跳步和方案调整呈现可学习的方法，区分讨论与实验结果。",
+      "avoid": "不把 AI 讨论截图当作期刊发表或科学结论有效性的证明，不推断朋友的学历或科研背景。"
+    },
+    {
+      "page": 16,
+      "page_id": "page-014",
+      "relation": "comparison",
+      "visual_job": "AI-VS-HUMAN",
+      "template_id": "template-ai-vs-human",
+      "motif": "boundary",
+      "reading_path": [
+        "人负责判断",
+        "需求给 AI",
+        "AI 执行",
+        "结果返回人"
+      ],
+      "rationale": "人和 AI 的输入输出各自标注方向；三组职责用可投影字号呈现。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 17,
+      "page_id": "page-015",
+      "relation": "process",
+      "visual_job": "AI-EXECUTION-LOOP",
+      "template_id": "template-ai-execution-loop",
+      "motif": "loop",
+      "reading_path": [
+        "实现",
+        "操作测试",
+        "修复重测",
+        "整理结果"
+      ],
+      "rationale": "展示实现、测试、修复的连续执行关系，避免用静态项目图冒充测试录像。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 18,
+      "page_id": "page-016",
+      "relation": "hero",
+      "visual_job": "保留独立视频展示与本地文件选择",
+      "template_id": "template-computer-use-video",
+      "motif": "evidence",
+      "reading_path": [
+        "演示主题",
+        "本地视频选择",
+        "独立视频画面"
+      ],
+      "rationale": "按用户回复保留独立演示页与本地文件选择，不伪造录制素材。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 19,
+      "page_id": "page-017",
+      "relation": "process",
+      "visual_job": "CHANGE-DECISION",
+      "template_id": "template-change-decision",
+      "motif": "boundary",
+      "reading_path": [
+        "已有选项截图",
+        "新增理由",
+        "范围变化",
+        "预期结果"
+      ],
+      "rationale": "从真实下拉选项入口切入小需求，把人的取舍变成具体问题。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 20,
+      "page_id": "page-018",
+      "relation": "hero",
+      "visual_job": "Create a strong module divider",
+      "template_id": "template-act-divider",
+      "motif": "loop",
+      "reading_path": [
+        "章节编号",
+        "从一次交付到持续接单",
+        "走向第一单和下一单"
+      ],
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
+      "avoid": "在幕封上提前画完整飞轮"
+    },
+    {
+      "page": 21,
+      "page_id": "page-019",
+      "relation": "comparison",
+      "visual_job": "ORDER-PATHS",
+      "template_id": "template-order-paths",
+      "motif": "loop",
+      "reading_path": [
+        "先选定：一份作品、一个人、一条流程",
+        "还没有商单 从能操作的毕设开始 选一份你能解释、能演示的作品。 示例 订单管理毕设 → 找仍用表格跟单的小团队负责人 → 演示“录单到查状态” 已经交付过项目 从客户的使用反馈开始 选一份有可展示材料的交付案例。 示例 已交付的订单系统 → 联系原客户的业务负"
+      ],
+      "rationale": "让听众明确作品、沟通对象和演示流程，避免重复材料与话术。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 22,
+      "page_id": "page-020",
+      "relation": "hierarchy",
+      "visual_job": "PROJECT-PACKAGE",
+      "template_id": "template-project-package",
+      "motif": "loop",
+      "reading_path": [
+        "作品包打开后，客户应该看到什么",
+        "01 · 表单入口 客户从这里填写订单 02 · 订单列表 团队从这里找到待跟进订单 03 · 订单详情 从这里查看订单信息与进度 物流项目示例包 三步页面导览 填写版范围说明 打开完整作品包 ↗ 导览用历史截图说明流程；展示时另配实际演示，并说明当前可用范围"
+      ],
+      "rationale": "用三张现有原始截图和可打开的完整材料包替换空目录。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 23,
+      "page_id": "page-021",
+      "relation": "sequence",
+      "visual_job": "NEXT-CONVERSATION",
+      "template_id": "template-next-conversation",
+      "motif": "loop",
+      "reading_path": [
+        "第一条消息，可以这样开口",
+        "给已有联系的业务负责人 · 示例 “我整理了一个订单管理作品，从录单到查状态都能看见。想到你们平时也要跟单，想请你看看：现在最费时间的是哪一步？如果相关，我可以按你们的流程演示。” 打开话术与行动表 ↗ 对方愿意聊，再问三句 现在这一步由谁做？ 一次要花多久，"
+      ],
+      "rationale": "提供第一条完整消息与后续问题，让听众形成可执行的沟通练习。",
+      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+    },
+    {
+      "page": 24,
+      "page_id": "page-022",
+      "relation": "hero",
+      "visual_job": "Use one closing sentence with ample negative space",
+      "template_id": "template-closing-hero",
+      "motif": "evidence",
+      "reading_path": [
+        "建立信任",
+        "明确需求与分工",
+        "走向第一单和下一单"
+      ],
+      "rationale": "收束四模块并落到接单行动。",
+      "avoid": "新方法清单、二维码或第二个CTA"
+    }
   ],
   "acceptance": {
     "automated": "passed",

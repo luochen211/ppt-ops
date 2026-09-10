@@ -83,6 +83,20 @@ test("browser profile cleanup retries transient Chromium directory races", async
   assert.deepEqual(waits, [200, 200]);
 });
 
+test("HTML QA rejects text that exceeds its own box or a clipping ancestor", () => {
+  const result = analyzeHtmlGeometry([page([], {
+    textElements: [
+      { id: "own-overflow", rect: { x: 20, y: 20, width: 200, height: 40 }, scrollWidth: 200, scrollHeight: 80, clientWidth: 200, clientHeight: 40, ownClipping: true, clippingAncestors: [] },
+      { id: "ancestor-clipped", rect: { x: 20, y: 120, width: 200, height: 60 }, scrollWidth: 200, scrollHeight: 60, clientWidth: 200, clientHeight: 60, clippingAncestors: [{ id: "frame", rect: { x: 0, y: 0, width: 400, height: 150 } }] }
+    ]
+  })]);
+  assert.equal(result.status, "failed");
+  assert.deepEqual(result.findings.map(({ check, evidence }) => [check, evidence.reason]), [
+    ["html-text-overflow", "text-content-exceeds-own-box"],
+    ["html-text-clipping", "text-crosses-clipping-ancestor"]
+  ]);
+});
+
 test("headless HTML QA emits page-addressable evidence for a rendered collision", async (t) => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-html-qa-test-"));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));
@@ -92,4 +106,28 @@ test("headless HTML QA emits page-addressable evidence for a rendered collision"
   if (result.status === "degraded") return t.skip(result.reason);
   assert.equal(result.status, "failed");
   assert.deepEqual(result.findings.map(({ page, check, evidence }) => [page, check, evidence.reason]), [[7, "html-unintended-overlap", "connector-crosses-protected-element"]]);
+});
+
+for (const code of ["EBUSY", "EMFILE", "ENFILE", "ENOTEMPTY", "EPERM"]) {
+  test(`browser profile cleanup bounds retries for persistent ${code}`, async () => {
+    const error = Object.assign(new Error("profile remains busy"), { code });
+    let attempts = 0;
+    const waits = [];
+    await assert.rejects(removeBrowserProfile("/tmp/pptops-html-qa-profile", {
+      rm: async () => { attempts += 1; throw error; },
+      wait: async (milliseconds) => waits.push(milliseconds),
+    }), (actual) => actual === error);
+    assert.equal(attempts, 25);
+    assert.deepEqual(waits, Array(24).fill(200));
+  });
+}
+
+test("browser profile cleanup immediately propagates non-retryable errors", async () => {
+  const error = Object.assign(new Error("invalid profile argument"), { code: "EINVAL" });
+  let attempts = 0;
+  await assert.rejects(removeBrowserProfile("/tmp/pptops-html-qa-profile", {
+    rm: async () => { attempts += 1; throw error; },
+    wait: async () => assert.fail("non-retryable errors must not wait"),
+  }), (actual) => actual === error);
+  assert.equal(attempts, 1);
 });

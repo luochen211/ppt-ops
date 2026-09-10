@@ -8,11 +8,21 @@
     "html"
   ],
   "source_ids": [
-    "source-001"
+    "source-001",
+    "source-simple-cases",
+    "source-editorial-refresh",
+    "source-framework-alignment",
+    "source-content-improvements"
   ],
   "outline_id": "outline-main",
   "theme_id": "theme-default",
   "asset_ids": [
-    "page-14-human-owner"
+    "page-14-human-owner",
+    "logistics-orders",
+    "logistics-detail",
+    "logistics-request",
+    "logistics-options",
+    "logistics-save",
+    "research-peer-review"
   ]
 }

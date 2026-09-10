@@ -4,8 +4,44 @@
     "kind": "source",
     "id": "source-001",
     "file": "brief.md",
-    "bytes": 2434,
+    "bytes": 4775,
     "mime": "text/markdown",
-    "sha256": "d7fe588aab05f69d60406324e837f07a09f544c781e9d2c774d07111c4e0a56d"
+    "sha256": "57afe49d15a9f60b06ef2315b83cbba65417e958a577f002a21524b8e3072dbe"
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-simple-cases",
+    "file": "simple-project-cases.md",
+    "bytes": 5704,
+    "mime": "text/markdown",
+    "sha256": "a6787f638b12cff978b08021658fd9e8cf9e1c92ff1adc1b05d24ba099fd2f8e"
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-editorial-refresh",
+    "file": "editorial-refresh.md",
+    "bytes": 5922,
+    "mime": "text/markdown",
+    "sha256": "2ce2c254b6980a693295ea870c63e590bab21ad5aac79ace5efb21289a47f34f"
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-framework-alignment",
+    "file": "framework-alignment.md",
+    "bytes": 2419,
+    "mime": "text/markdown",
+    "sha256": "7603c663871af3500579b83f698b049a548197177b66298e04766aec3c792e6c"
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-content-improvements",
+    "file": "content-improvements.md",
+    "mime": "text/markdown",
+    "bytes": 6138,
+    "sha256": "3f2cf7eeb2f77c7f55ad512a5c39dba7cebca35877a19ac884140e5871218e18"
   }
 ]

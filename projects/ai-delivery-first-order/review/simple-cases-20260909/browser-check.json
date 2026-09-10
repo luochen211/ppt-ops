@@ -1,0 +1,168 @@
+{
+  "errors": [],
+  "pages": [
+    {
+      "page": 1,
+      "images": [],
+      "title": "从毕业设计\n到持续接单"
+    },
+    {
+      "page": 2,
+      "images": [],
+      "title": "不是你的身份，\n不是技术栈，\n也不是几句 AI 指令。"
+    },
+    {
+      "page": 3,
+      "images": [],
+      "title": "四段大纲，一条交付主线"
+    },
+    {
+      "page": 4,
+      "images": [],
+      "title": "从毕设到第一单"
+    },
+    {
+      "page": 5,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-orders"
+        }
+      ],
+      "title": "这单物流项目，来自闲鱼"
+    },
+    {
+      "page": 6,
+      "images": []
+    },
+    {
+      "page": 7,
+      "images": [],
+      "title": "客户凭什么相信你？"
+    },
+    {
+      "page": 8,
+      "images": [],
+      "title": "从模糊需求\n到万元项目"
+    },
+    {
+      "page": 9,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-request"
+        }
+      ],
+      "title": "一个表单，先问清三件事"
+    },
+    {
+      "page": 10,
+      "images": [],
+      "title": "先定义四件事，再开始写代码"
+    },
+    {
+      "page": 11,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-orders"
+        },
+        {
+          "loaded": true,
+          "asset": "logistics-request"
+        }
+      ],
+      "title": "先说清每一阶段交什么"
+    },
+    {
+      "page": 12,
+      "images": [],
+      "title": "不是一次写完，\n而是四次把风险关在门外"
+    },
+    {
+      "page": 13,
+      "images": [],
+      "title": "从会用 AI\n到能完成交付"
+    },
+    {
+      "page": 14,
+      "images": [
+        {
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": 15,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-options"
+        }
+      ],
+      "title": "给 AI 一个小任务：补齐下拉选项"
+    },
+    {
+      "page": 16,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-save"
+        }
+      ],
+      "title": "点了保存，用户得知道结果"
+    },
+    {
+      "page": 17,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-detail"
+        }
+      ],
+      "title": "验收，按用户的顺序点一遍"
+    },
+    {
+      "page": 18,
+      "images": [],
+      "title": "从一次交付\n到持续接单"
+    },
+    {
+      "page": 19,
+      "images": [],
+      "title": "先回答五个问题"
+    },
+    {
+      "page": 20,
+      "images": [],
+      "title": "第一单不求大，\n先求小而真实"
+    },
+    {
+      "page": 21,
+      "images": [
+        {
+          "loaded": true,
+          "asset": "logistics-orders"
+        },
+        {
+          "loaded": true,
+          "asset": "logistics-request"
+        },
+        {
+          "loaded": true,
+          "asset": "logistics-detail"
+        }
+      ],
+      "title": "下次介绍项目，拿出这三张图"
+    },
+    {
+      "page": 22,
+      "images": [],
+      "title": "从能做出来，\n到值得被交给你。"
+    }
+  ],
+  "zoomOpen": true,
+  "stationary": true,
+  "zoomClosed": true,
+  "navigation": true
+}

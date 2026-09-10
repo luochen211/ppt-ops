@@ -1,0 +1,13 @@
+{
+  "tests": {
+    "passed": 124,
+    "failed": 0
+  },
+  "html_qa": "passed",
+  "graphic_conception": "passed",
+  "browser_pages": 22,
+  "visual_observation": "Six revised pages visually inspected; no detected clipping; video reserved visibly.",
+  "video_player_check": "Local synthetic fixture played; arrows contained; paused on slide exit; reset on reload.",
+  "video_demonstration": "Not supplied by user. No project video claim.",
+  "user_visual_acceptance": "pending"
+}

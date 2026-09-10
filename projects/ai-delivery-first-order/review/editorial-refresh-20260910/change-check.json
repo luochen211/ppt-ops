@@ -1,0 +1,20 @@
+{
+  "source_site_match": true,
+  "unchanged_pages": [
+    1,
+    4,
+    8,
+    13,
+    18,
+    22
+  ],
+  "html_bytes": 109256,
+  "asset_integrity": [
+    "assets/generated/page-14-human-owner.png",
+    "assets/project-screenshots/logistics-orders.jpg",
+    "assets/project-screenshots/logistics-detail.jpg",
+    "assets/project-screenshots/logistics-save.png",
+    "assets/project-screenshots/logistics-options.png",
+    "assets/project-screenshots/logistics-request.png"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "errors": [],
+  "slides": 22,
+  "initial": {
+    "hidden": true,
+    "noSource": true
+  },
+  "playback": {
+    "visible": true,
+    "time": 0.222524,
+    "ready": 4
+  },
+  "videoKeysDoNotTurnSlides": true,
+  "pauseOnSlideExit": true,
+  "reloadRestoresPlaceholder": true,
+  "testVideo": "Synthetic local player fixture only; not a project demonstration; not included in deliverable."
+}
