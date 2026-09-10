@@ -1,0 +1,205 @@
+{
+  "created_at": "2026-09-10T06:21:26.185Z",
+  "project": "ai-delivery-first-order",
+  "source_revision": "1a12760894eb29d70c3c62d3d2a1ed586270d95c",
+  "scope": "all 24 pages; emphasis on visible page 15 and continuity",
+  "url": "https://luo-chen.com/slides/decks/ai-delivery/?slide=15",
+  "live_html_sha256": "28641fdd9491d5eee4316db3d94109bc6a5d2e6633550b70508edfb8587c4d19",
+  "live_equals_local_after_resource_path_and_injected_script_normalization": true,
+  "browser_status": "CUA timed out twice; no fresh live UI validation",
+  "inputs": [
+    {
+      "path": "brief.md",
+      "sha256": "9251ca09734abcd26e312906be1cffce1e75cbceb7599ca825f31d0f3f2332d7"
+    },
+    {
+      "path": "project.json",
+      "sha256": "3476be0951c15a32f6e7a697bb8817d0c3c19878718c3d7b88001556071a02aa"
+    },
+    {
+      "path": "outline.json",
+      "sha256": "1182579fb861d894cd6c1fe0e5b9d454b884b5e8881abbcb03d7a56bd55c4613"
+    },
+    {
+      "path": "pages.json",
+      "sha256": "2cb665ace2affc3b42233e44f8e411e6cb9ef3c48ee43ee65bd773abf5f0a42c"
+    },
+    {
+      "path": "framework-alignment.md",
+      "sha256": "e50b027a8ee81a576886f3cbb4ccc571b7a8354b451ffafb58b4721e31473ed9"
+    },
+    {
+      "path": "ppt/index.html",
+      "sha256": "a1999a269308b07cb6655ca1acf10b222bb87b28125ec150c9866a5794cb5990"
+    },
+    {
+      "path": "review/research-learning-20260910/browser-check.json",
+      "sha256": "267a20304a4573753e34aa375cafee45d68591d615e3ed4bdbd8ba8e9d2735a4"
+    }
+  ],
+  "skills": [
+    {
+      "name": "dbs-jtbd",
+      "path": "/Users/luochen/.mirasim/skills/dbs-jtbd/SKILL.md",
+      "sha256": "f43f41f0d65ef03ade8e3e1b82d1227d664153240e2b21dc4660e6de37eee78f",
+      "status": "used"
+    },
+    {
+      "name": "dbs-theory-grounding",
+      "path": "/Users/luochen/.mirasim/skills/dbs-theory-grounding/SKILL.md",
+      "sha256": "4c919ccebeb9bade10d4d5018501bc26148e3d2a829e4c50e1471cb0932e704d",
+      "status": "used"
+    },
+    {
+      "name": "dbs-skill-maker",
+      "status": "skipped",
+      "reason": "Only content analysis was requested; no skill generation."
+    }
+  ],
+  "archived_screenshots": [
+    {
+      "page": 1,
+      "path": "review/research-learning-20260910/pages/01.png",
+      "sha256": "5984ee0219923bbe07bcf25a510f854c09ffa0d57b38854d60894f35f096fd7e",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 2,
+      "path": "review/research-learning-20260910/pages/02.png",
+      "sha256": "a3a04df085dda8008bd767c40512ba21ab81e2fc148e41907140771ee464507d",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 3,
+      "path": "review/research-learning-20260910/pages/03.png",
+      "sha256": "6195c8f0d33b459ce7dd686fe1918ff2c1c5212a19bafda4624a53ac7744d982",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 4,
+      "path": "review/research-learning-20260910/pages/04.png",
+      "sha256": "9f60a88d11098ea749af49e98356c43dc5e73f02eac7ac10361109380d85c39a",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 5,
+      "path": "review/research-learning-20260910/pages/05.png",
+      "sha256": "415be1e469b04768dc71b407648aa4f85581e89ab1a74bb02f663cd3fad8fcab",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 6,
+      "path": "review/research-learning-20260910/pages/06.png",
+      "sha256": "1554bc37d1689d74b1a8ccc4d8a86dc947faa243682ef05030e094c5bd91143e",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 7,
+      "path": "review/research-learning-20260910/pages/07.png",
+      "sha256": "1bde48c84554e6070cc0b4c25e2ed4f6c64c2f5ba62844e752b239964adf3068",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 8,
+      "path": "review/research-learning-20260910/pages/08.png",
+      "sha256": "ab17acc0c2bbcc20d24621726d1a375d9deee984e2c2356ffff76b4be721831c",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 9,
+      "path": "review/research-learning-20260910/pages/09.png",
+      "sha256": "141d58bebabfe8bde3d644db9acbc725ec6292dcc6bdc03865c5a82a0303f05f",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 10,
+      "path": "review/research-learning-20260910/pages/10.png",
+      "sha256": "cff72107e8e94c7d1d9a1111a2ad99d412615bed3628d5db3bd1d768303cb8b9",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 11,
+      "path": "review/research-learning-20260910/pages/11.png",
+      "sha256": "0f76fa4a0bd9d363c47bc7408e24bd0f50e96bb65901e7fac2bd3664ef4bee5c",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 12,
+      "path": "review/research-learning-20260910/pages/12.png",
+      "sha256": "226c97552aab35a4eb4547992feb37418e57e51e88f76fb0b2e279c1227c4922",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 13,
+      "path": "review/research-learning-20260910/pages/13.png",
+      "sha256": "5eca5f333903f987fe90f3f0cfd3a0c6e094e51bc6c9332761dda92568f03f2a",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 14,
+      "path": "review/research-learning-20260910/pages/14.png",
+      "sha256": "af439e6cc83c1796c70ae79f06e2b3bb8953dd42e7d2228d3411b8d65340edc7",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 15,
+      "path": "review/research-learning-20260910/pages/15.png",
+      "sha256": "d260e949a68f018a14cad3a5841e0e0b1e83d7918747245c53165742fab8c24b",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 16,
+      "path": "review/research-learning-20260910/pages/16.png",
+      "sha256": "bb2eb0ae547357a4d589b0d571e689518407c8e103608a91fd154faecdb063ac",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 17,
+      "path": "review/research-learning-20260910/pages/17.png",
+      "sha256": "e62aa3a6b0410d5331837584d02cfa056d95ade1a15d0a55c86215f101fe07ed",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 18,
+      "path": "review/research-learning-20260910/pages/18.png",
+      "sha256": "c8485debe19c24ed7a5f4d3bc2d9f155472ee391aff5e24e9281840045dad3a1",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 19,
+      "path": "review/research-learning-20260910/pages/19.png",
+      "sha256": "3d4dacabc242a77117cd25a6ea7342a0580eca6832bdf3fb8d3e9ed180e558fd",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 20,
+      "path": "review/research-learning-20260910/pages/20.png",
+      "sha256": "bd424caf6580ab63bfde21e9145410eaae3c0fa6c1c8436c75ad64e3280212f6",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 21,
+      "path": "review/research-learning-20260910/pages/21.png",
+      "sha256": "04a188527d433d87b08320bb425842a72f91800f0f75e2345c707e1e6d805c1f",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 22,
+      "path": "review/research-learning-20260910/pages/22.png",
+      "sha256": "1867bd471105e2e316009b11d17f09f75310ee33aa0ed978e3194977cdeccfd8",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 23,
+      "path": "review/research-learning-20260910/pages/23.png",
+      "sha256": "28c744b7c52d32f9542b1c03616d712e8d11c960aa0801a409618bc98ca1eb74",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    },
+    {
+      "page": 24,
+      "path": "review/research-learning-20260910/pages/24.png",
+      "sha256": "20fb5b33ae3517e6aab54378142bfa71324ed5a80d04845b22809257c14a12a1",
+      "observation": "existing archived screenshot inspected this turn; not a fresh live capture"
+    }
+  ]
+}
