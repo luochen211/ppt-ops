@@ -1,3 +1,5 @@
+import { visibleScreenshotRegion } from "../layout/screenshot.js";
+
 const SLIDE_WIDTH_EMU = 12191695;
 const SLIDE_HEIGHT_EMU = 6858000;
 
@@ -25,7 +27,8 @@ export function analyzeScreenshotEvidence(project, placements = [], options = {}
         }));
         continue;
       }
-      const usage = { page: page.page, asset_id: asset.id, sha256: asset.sha256, evidence_purpose: evidencePurpose };
+      const placement = byPageAndAsset.get(`${page.page}:${asset.id}`);
+      const usage = { page: page.page, asset_id: asset.id, sha256: placement?.sha256 ?? asset.sha256, evidence_purpose: evidencePurpose };
       usages.push(usage);
       const treatments = Array.isArray(semantics.presentation_treatments) ? semantics.presentation_treatments : [];
       if (semantics.content_role === "read_required" && treatments.length === 0 && semantics.human_review_required !== true) {
@@ -34,7 +37,6 @@ export function analyzeScreenshotEvidence(project, placements = [], options = {}
           automated_claim: "Read-required content has no declared treatment or human-review requirement; human readability was not assessed."
         }));
       }
-      const placement = byPageAndAsset.get(`${page.page}:${asset.id}`);
       if (!placement) {
         findings.push(finding(page.page, asset.id, "screenshot-placement-unresolved", "warning", {
           evidence_purpose: evidencePurpose,
@@ -42,13 +44,14 @@ export function analyzeScreenshotEvidence(project, placements = [], options = {}
         }));
         continue;
       }
-      const focalCoverage = placement.width * placement.height * semantics.focal_region.width * semantics.focal_region.height / (SLIDE_WIDTH_EMU * SLIDE_HEIGHT_EMU);
+      const visible = visibleScreenshotRegion(semantics.focal_region, placement);
+      const focalCoverage = visible.width * visible.height / (SLIDE_WIDTH_EMU * SLIDE_HEIGHT_EMU);
       if (focalCoverage < threshold) {
         findings.push(finding(page.page, asset.id, "screenshot-focal-coverage", "warning", {
           evidence_purpose: evidencePurpose,
           estimated_slide_coverage: Number(focalCoverage.toFixed(4)),
           minimum_slide_coverage: threshold,
-          basis: "declared focal-region area multiplied by placed image-box area",
+          basis: "source focal region mapped through the rendered image crop",
           automated_claim: "Composition risk only; human readability was not assessed."
         }));
       }

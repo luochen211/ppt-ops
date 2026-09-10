@@ -27,7 +27,8 @@
           "uniqueItems": true,
           "items": { "type": "string", "enum": ["crop", "zoom", "callout", "annotation"] }
         },
-        "human_review_required": { "type": "boolean" }
+        "annotation_text": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "human_review_required": { "type": "boolean" }
       },
       "additionalProperties": false
     },

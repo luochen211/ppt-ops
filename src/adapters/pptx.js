@@ -5,6 +5,9 @@ import PptxGenJS from "pptxgenjs";
 import { resolveProjectPath } from "../core/project.js";
 import { compileProjectLayout } from "../layout/catalog.js";
 
+import { detectRaster } from "../visual-assets/raster.js";
+import { screenshotPlacement, visibleScreenshotRegion } from "../layout/screenshot.js";
+
 const EMU_PER_INCH = 914400;
 
 /** Render a normalized shared project to an editable PowerPoint file. */
@@ -16,6 +19,17 @@ export async function buildPptx(project, outputFile) {
     throw new TypeError("buildPptx requires an output file");
   }
 
+  project = { ...project, assets: await Promise.all(project.assets.map(async (asset) => {
+    if (!asset.screenshot_evidence) return asset;
+    const bytes = await fs.readFile(resolveProjectPath(project.root, asset.file));
+    let dimensions = detectRaster(bytes);
+    if (!dimensions.supported && path.extname(asset.file).toLowerCase() === ".svg") {
+      const viewBox = bytes.toString().match(/viewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)["']/);
+      if (viewBox) dimensions = { width: Number(viewBox[1]), height: Number(viewBox[2]) };
+    }
+    if (!(dimensions.width > 0 && dimensions.height > 0)) throw new Error(`cannot measure screenshot: ${asset.id}`);
+    return { ...asset, screenshot_dimensions: dimensions };
+  })) };
   const pptx = createPresentation(project);
   const plans = compileProjectLayout(project);
   for (const [index, page] of project.pages.entries()) renderSlide(pptx, page, plans[index], project, index, project.pages.length);
@@ -122,7 +136,7 @@ function renderSlide(pptx, page, plan, project, index, count) {
   const body = bodyLines(page.screen_text);
   if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
   else renderMessage(slide, pptx, page.three_second_message, theme, colors, bodyFont, contentBox.copy);
-  if (assets.length > 0) renderAssets(slide, assets, contentBox.assets);
+  if (assets.length > 0) renderAssets(slide, assets, contentBox.assets, bodyFont);
 
   addShape(slide, pptx.ShapeType.line, {
     x: margin, y: height - margin - 0.18, w: width - (margin * 2), h: 0,
@@ -139,7 +153,7 @@ function renderBoundarySlide(slide, pptx, page, assets, theme, colors, headingFo
   const { width, height } = theme.dimensions;
   const margin = theme.spacing.page_margin;
   if (assets.length > 0) {
-    renderAssets(slide, assets, { x: width * 0.36, y: 0.08, w: width * 0.64, h: height - 0.16 });
+    renderAssets(slide, assets, { x: width * 0.36, y: 0.08, w: width * 0.64, h: height - 0.16 }, headingFont);
   }
   addShape(slide, pptx.ShapeType.rect, {
     x: 0, y: height * 0.2, w: width * 0.49, h: height * 0.6,
@@ -228,12 +242,31 @@ function resolveSlideAssets(page, project) {
   });
 }
 
-function renderAssets(slide, assets, bounds) {
+function renderAssets(slide, assets, bounds, fontFace) {
   const gap = 0.22;
   const itemHeight = (bounds.h - gap * (assets.length - 1)) / assets.length;
-  assets.forEach(({ asset, path: imagePath, fit }, index) => {
+  assets.forEach(({ asset, path: imagePath, fit, evidence_purpose }, index) => {
     const geometry = { x: bounds.x, y: bounds.y + index * (itemHeight + gap), w: bounds.w, h: itemHeight };
     assertGeometry(geometry);
+    if (asset.screenshot_evidence) {
+      const semantics = asset.screenshot_evidence;
+      const annotated = (semantics.presentation_treatments ?? []).some((value) => ["callout", "annotation"].includes(value));
+      const caption = semantics.annotation_text ?? evidence_purpose ?? semantics.evidence_purpose;
+      if (annotated && (typeof caption !== "string" || !caption.trim() || caption.length > 80)) throw new Error(`screenshot ${asset.id} needs annotation_text of 1–80 characters`);
+      if (annotated && geometry.h < 1.3) throw new Error(`insufficient space for annotated screenshot ${asset.id}`);
+      const imageBounds = { ...geometry, h: geometry.h - (annotated ? 0.9 : 0) };
+      const { image, placement } = screenshotPlacement(asset.screenshot_dimensions.width, asset.screenshot_dimensions.height, imageBounds, fit);
+      slide.addImage({ path: imagePath, ...image, altText: asset.alt ?? asset.id, objectName: `Asset ${asset.id}` });
+      if (annotated) {
+        const region = visibleScreenshotRegion(semantics.focal_region, placement);
+        if (!(region.width > 0 && region.height > 0)) throw new Error(`screenshot ${asset.id} focal region is cropped out; use contain or revise the focal region`);
+        addShape(slide, "rect", { x: region.x, y: region.y, w: region.width, h: region.height,
+          fill: { color: "FFFFFF", transparency: 100 }, line: { color: "D14343", width: 2 }, objectName: `Decorative Screenshot focus ${asset.id}` });
+        addText(slide, caption, { x: geometry.x, y: geometry.y + imageBounds.h + 0.1, w: geometry.w, h: 0.8,
+          fontFace, fontSize: 12, color: "222222", fill: { color: "FFFFFF" }, margin: 0.05, valign: "mid", objectName: `Screenshot caption ${asset.id}` });
+      }
+      return;
+    }
     slide.addImage({
       path: imagePath, ...geometry,
       sizing: { type: fit === "cover" ? "cover" : "contain", w: geometry.w, h: geometry.h },
