@@ -465,8 +465,45 @@
   {
     "contract_version": "1.0",
     "kind": "page_spec",
-    "id": "page-014",
+    "id": "page-research-learning",
     "page": 15,
+    "task": "用用户提供的真实科研讨论截图、朋友的接单价格和双工具审查方法，具体承接边做边学的观点。",
+    "three_second_message": "复杂的科研任务，也能边学边做",
+    "relation": "process",
+    "screen_text": {
+      "title": "复杂的科研任务，也能边学边做",
+      "body": [
+        "朋友的科研技术服务：约 3,000 元一单，面向期刊研究的技术任务。",
+        "Claude Code 与 Codex 相互审查，发现问题后继续修正。",
+        "人在过程中学习，逐步理解问题与方法。"
+      ]
+    },
+    "visual_job": "RESEARCH-LEARNING",
+    "source_refs": [
+      {
+        "source_id": "source-001",
+        "locator": "#科研接单与边做边学"
+      }
+    ],
+    "asset_slots": [
+      {
+        "role": "project-screenshot",
+        "asset_id": "research-peer-review",
+        "fit": "contain"
+      }
+    ],
+    "content_status": "draft",
+    "renderers": {
+      "html": {
+        "layout": "RESEARCH-LEARNING"
+      }
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "page_spec",
+    "id": "page-014",
+    "page": 16,
     "task": "人和 AI 的输入输出各自标注方向；三组职责用可投影字号呈现。",
     "three_second_message": "人定方向，AI 完成执行",
     "relation": "comparison",
@@ -483,11 +520,11 @@
     "source_refs": [
       {
         "source_id": "source-simple-cases",
-        "locator": "#第-15-页"
+        "locator": "#第-16-页"
       },
       {
         "source_id": "source-editorial-refresh",
-        "locator": "#第-15-页"
+        "locator": "#第-16-页"
       }
     ],
     "asset_slots": [
@@ -508,7 +545,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-015",
-    "page": 16,
+    "page": 17,
     "task": "展示实现、测试、修复的连续执行关系，避免用静态项目图冒充测试录像。",
     "three_second_message": "开发和测试，都交给 AI",
     "relation": "process",
@@ -525,11 +562,11 @@
     "source_refs": [
       {
         "source_id": "source-simple-cases",
-        "locator": "#第-16-页"
+        "locator": "#第-17-页"
       },
       {
         "source_id": "source-editorial-refresh",
-        "locator": "#第-16-页"
+        "locator": "#第-17-页"
       }
     ],
     "asset_slots": [],
@@ -544,7 +581,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-016",
-    "page": 17,
+    "page": 18,
     "task": "按用户回复保留独立演示页与本地文件选择，不伪造录制素材。",
     "three_second_message": "手机端、多角色，Computer Use 来测",
     "relation": "hero",
@@ -561,11 +598,11 @@
     "source_refs": [
       {
         "source_id": "source-simple-cases",
-        "locator": "#第-17-页"
+        "locator": "#第-18-页"
       },
       {
         "source_id": "source-editorial-refresh",
-        "locator": "#第-17-页"
+        "locator": "#第-18-页"
       }
     ],
     "asset_slots": [],
@@ -590,7 +627,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-017",
-    "page": 18,
+    "page": 19,
     "task": "从真实下拉选项入口切入小需求，把人的取舍变成具体问题。",
     "three_second_message": "客户说“加一个选项”，先确认三件事",
     "relation": "process",
@@ -606,11 +643,11 @@
     "source_refs": [
       {
         "source_id": "source-simple-cases",
-        "locator": "#第-18-页"
+        "locator": "#第-19-页"
       },
       {
         "source_id": "source-editorial-refresh",
-        "locator": "#第-18-页"
+        "locator": "#第-19-页"
       }
     ],
     "asset_slots": [
@@ -631,7 +668,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-018",
-    "page": 19,
+    "page": 20,
     "task": "用用户确认的主标题与副标题开启该模块。",
     "three_second_message": "从一次交付到持续接单",
     "relation": "hero",
@@ -645,7 +682,7 @@
     "source_refs": [
       {
         "source_id": "source-framework-alignment",
-        "locator": "#第-19-页"
+        "locator": "#第-20-页"
       }
     ],
     "asset_slots": [],
@@ -658,7 +695,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-019",
-    "page": 20,
+    "page": 21,
     "task": "对照两种起点，各给出三项行动，让第四模块落到第一单和下一单。",
     "three_second_message": "起点不同，都从已有成果开始",
     "relation": "comparison",
@@ -673,7 +710,7 @@
     "source_refs": [
       {
         "source_id": "source-framework-alignment",
-        "locator": "#第-20-页"
+        "locator": "#第-21-页"
       }
     ],
     "asset_slots": [],
@@ -688,7 +725,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-020",
-    "page": 21,
+    "page": 22,
     "task": "让毕设与商单都能形成可展示的材料，服务具体需求沟通。",
     "three_second_message": "用一个作品包，支撑下一次沟通",
     "relation": "hierarchy",
@@ -704,7 +741,7 @@
     "source_refs": [
       {
         "source_id": "source-framework-alignment",
-        "locator": "#第-21-页"
+        "locator": "#第-22-页"
       }
     ],
     "asset_slots": [],
@@ -719,7 +756,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-021",
-    "page": 22,
+    "page": 23,
     "task": "用三个连续动作把作品材料接到需求沟通，不虚构成交结果。",
     "three_second_message": "下一步：用作品开启一次具体沟通",
     "relation": "sequence",
@@ -735,7 +772,7 @@
     "source_refs": [
       {
         "source_id": "source-framework-alignment",
-        "locator": "#第-22-页"
+        "locator": "#第-23-页"
       }
     ],
     "asset_slots": [],
@@ -750,7 +787,7 @@
     "contract_version": "1.0",
     "kind": "page_spec",
     "id": "page-022",
-    "page": 23,
+    "page": 24,
     "task": "收束四模块并落到接单行动。",
     "three_second_message": "从能做出来，到值得被交给你。",
     "relation": "hero",
@@ -764,7 +801,7 @@
     "source_refs": [
       {
         "source_id": "source-framework-alignment",
-        "locator": "#第-23-页"
+        "locator": "#第-24-页"
       }
     ],
     "asset_slots": [],

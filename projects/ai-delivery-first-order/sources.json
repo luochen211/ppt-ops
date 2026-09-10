@@ -4,27 +4,27 @@
     "kind": "source",
     "id": "source-001",
     "file": "brief.md",
-    "bytes": 4039,
+    "bytes": 4489,
     "mime": "text/markdown",
-    "sha256": "e37e5da0a2b22be2e7cf301ed8c1f4cee0cb6c1bb62be189ea5a7ceefc15e129"
+    "sha256": "9251ca09734abcd26e312906be1cffce1e75cbceb7599ca825f31d0f3f2332d7"
   },
   {
     "contract_version": "1.0",
     "kind": "source",
     "id": "source-simple-cases",
     "file": "simple-project-cases.md",
-    "bytes": 5424,
+    "bytes": 5704,
     "mime": "text/markdown",
-    "sha256": "32c031f54fd1cf2215545097642ff0754f3afba61d8e795b4f31ed4da8ee0ecf"
+    "sha256": "a6787f638b12cff978b08021658fd9e8cf9e1c92ff1adc1b05d24ba099fd2f8e"
   },
   {
     "contract_version": "1.0",
     "kind": "source",
     "id": "source-editorial-refresh",
     "file": "editorial-refresh.md",
-    "bytes": 6250,
+    "bytes": 6579,
     "mime": "text/markdown",
-    "sha256": "0b466fc8b938833bb6626761ff17b7add46f46e022f81a36492f097916203e1d"
+    "sha256": "2d0cf713b37c3c81f4e2303df9cfde19497bd33dfec66288db927e6a1f1d736a"
   },
   {
     "contract_version": "1.0",
@@ -33,6 +33,6 @@
     "file": "framework-alignment.md",
     "bytes": 2786,
     "mime": "text/markdown",
-    "sha256": "c00ffedefdb3b98a2ef1801b205b74439b4a2a3513447a7c2a297ebfc4b0bb3e"
+    "sha256": "e50b027a8ee81a576886f3cbb4ccc571b7a8354b451ffafb58b4721e31473ed9"
   }
 ]

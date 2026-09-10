@@ -21,6 +21,7 @@
     "logistics-detail",
     "logistics-request",
     "logistics-options",
-    "logistics-save"
+    "logistics-save",
+    "research-peer-review"
   ]
 }

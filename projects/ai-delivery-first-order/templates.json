@@ -164,6 +164,22 @@
   {
     "contract_version": "1.0",
     "kind": "template",
+    "id": "template-research-learning",
+    "name": "Research service and learning through peer review",
+    "slots": {
+      "title": "required",
+      "screenshot": "required",
+      "price": "required",
+      "tools": "two",
+      "learning": "required"
+    },
+    "renderers": {
+      "html": "RESEARCH-LEARNING"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
     "id": "template-ai-vs-human",
     "name": "Connected role comparison",
     "slots": {
