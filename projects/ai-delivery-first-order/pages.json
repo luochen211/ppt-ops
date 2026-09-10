@@ -66,26 +66,22 @@
     "kind": "page_spec",
     "id": "page-003",
     "page": 3,
-    "task": "四个有编号的环节串起全篇，每步指向一个可带走的产物。",
-    "three_second_message": "沿着一单项目，走完四个环节",
+    "task": "用二乘二编号目录完整呈现用户确认的四个模块。",
+    "three_second_message": "从毕业设计出发，走向第一单和下一单",
     "relation": "sequence",
     "screen_text": {
-      "title": "沿着一单项目，走完四个环节",
+      "title": "从毕业设计出发，走向第一单和下一单",
       "body": [
-        "拿到机会：Demo",
-        "定义需求：任务书",
-        "完成交付：业务流程",
-        "留下作品：作品包"
+        "从毕设到第一单：让客户相信你",
+        "从模糊需求到万元项目：把事情定义清楚",
+        "从会用 AI 到能完成交付：人和 AI 如何分工",
+        "从一次交付到持续接单：走向第一单和下一单"
       ]
     },
     "visual_job": "DELIVERY-ROUTE",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#唯一大纲"
-      },
-      {
-        "source_id": "source-editorial-refresh",
+        "source_id": "source-framework-alignment",
         "locator": "#第-3-页"
       }
     ],
@@ -102,20 +98,20 @@
     "kind": "page_spec",
     "id": "page-004",
     "page": 4,
-    "task": "Open module one",
+    "task": "用用户确认的主标题与副标题开启该模块。",
     "three_second_message": "从毕设到第一单",
     "relation": "hero",
     "screen_text": {
       "title": "从毕设到第一单",
       "body": [
-        "从闲鱼上的物流项目讲起"
+        "让客户相信你"
       ]
     },
     "visual_job": "Create a strong module divider",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#唯一大纲 1"
+        "source_id": "source-framework-alignment",
+        "locator": "#第-4-页"
       }
     ],
     "asset_slots": [],
@@ -245,20 +241,20 @@
     "kind": "page_spec",
     "id": "page-008",
     "page": 8,
-    "task": "Open module two",
-    "three_second_message": "把物流需求定义清楚",
+    "task": "用用户确认的主标题与副标题开启该模块。",
+    "three_second_message": "从模糊需求到万元项目",
     "relation": "hero",
     "screen_text": {
-      "title": "把物流需求定义清楚",
+      "title": "从模糊需求到万元项目",
       "body": [
-        "谁填单，谁处理，什么算做好"
+        "把事情定义清楚"
       ]
     },
     "visual_job": "Create a strong module divider",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#唯一大纲 2"
+        "source_id": "source-framework-alignment",
+        "locator": "#第-8-页"
       }
     ],
     "asset_slots": [],
@@ -419,20 +415,19 @@
     "kind": "page_spec",
     "id": "page-013",
     "page": 13,
-    "task": "Open module three",
-    "three_second_message": "从会用 AI到能完成交付",
+    "task": "用用户确认的主标题与副标题开启该模块。",
+    "three_second_message": "从会用 AI 到能完成交付",
     "relation": "hero",
     "screen_text": {
-      "title": "从会用 AI到能完成交付",
+      "title": "从会用 AI 到能完成交付",
       "body": [
-        "开发、测试交给 AI",
-        "需求、判断交给人"
+        "人和 AI 如何分工"
       ]
     },
     "visual_job": "Create a strong module divider",
     "source_refs": [
       {
-        "source_id": "source-simple-cases",
+        "source_id": "source-framework-alignment",
         "locator": "#第-13-页"
       }
     ],
@@ -612,20 +607,20 @@
     "kind": "page_spec",
     "id": "page-018",
     "page": 18,
-    "task": "Open module four",
+    "task": "用用户确认的主标题与副标题开启该模块。",
     "three_second_message": "从一次交付到持续接单",
     "relation": "hero",
     "screen_text": {
       "title": "从一次交付到持续接单",
       "body": [
-        "把这单物流项目，变成下次的作品"
+        "走向第一单和下一单"
       ]
     },
     "visual_job": "Create a strong module divider",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#唯一大纲 4"
+        "source_id": "source-framework-alignment",
+        "locator": "#第-18-页"
       }
     ],
     "asset_slots": [],
@@ -639,39 +634,28 @@
     "kind": "page_spec",
     "id": "page-019",
     "page": 19,
-    "task": "用保存入口与验收路径代替重复总结；截图与测试通过证据分开。",
-    "three_second_message": "交付前，把一条业务流程走到底",
-    "relation": "process",
+    "task": "对照两种起点，各给出三项行动，让第四模块落到第一单和下一单。",
+    "three_second_message": "起点不同，都从已有成果开始",
+    "relation": "comparison",
     "screen_text": {
-      "title": "交付前，把一条业务流程走到底",
+      "title": "起点不同，都从已有成果开始",
       "body": [
-        "填写并提交",
-        "查回数据与状态",
-        "切换角色核对权限"
+        "走向第一单：毕设 Demo → 展示用途 → 需求沟通",
+        "走向下一单：交付案例 → 使用反馈与类似需求 → 重新确认范围和费用"
       ]
     },
-    "visual_job": "ACCEPTANCE-FLOW",
+    "visual_job": "ORDER-PATHS",
     "source_refs": [
       {
-        "source_id": "source-simple-cases",
-        "locator": "#第-5-页"
-      },
-      {
-        "source_id": "source-editorial-refresh",
+        "source_id": "source-framework-alignment",
         "locator": "#第-19-页"
       }
     ],
-    "asset_slots": [
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-save",
-        "fit": "contain"
-      }
-    ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
       "html": {
-        "layout": "ACCEPTANCE-FLOW"
+        "layout": "ORDER-PATHS"
       }
     }
   },
@@ -680,25 +664,21 @@
     "kind": "page_spec",
     "id": "page-020",
     "page": 20,
-    "task": "把抽象材料沉淀具体化为演示、截图、说明三个可整理的产物。",
-    "three_second_message": "做完一单，留下一个作品包",
+    "task": "让毕设与商单都能形成可展示的材料，服务具体需求沟通。",
+    "three_second_message": "用一个作品包，支撑下一次沟通",
     "relation": "hierarchy",
     "screen_text": {
-      "title": "做完一单，留下一个作品包",
+      "title": "用一个作品包，支撑下一次沟通",
       "body": [
         "一段演示：讲流程",
-        "三张截图：看结果",
+        "三张脱敏截图：看结果",
         "一份说明：定范围"
       ]
     },
     "visual_job": "PROJECT-PACKAGE",
     "source_refs": [
       {
-        "source_id": "source-simple-cases",
-        "locator": "#第-5-页"
-      },
-      {
-        "source_id": "source-editorial-refresh",
+        "source_id": "source-framework-alignment",
         "locator": "#第-20-页"
       }
     ],
@@ -715,49 +695,29 @@
     "kind": "page_spec",
     "id": "page-021",
     "page": 21,
-    "task": "真实截图各自承担列表、表单、详情一种用途，形成项目介绍顺序。",
-    "three_second_message": "三张图，讲清这套系统怎么用",
+    "task": "用三个连续动作把作品材料接到需求沟通，不虚构成交结果。",
+    "three_second_message": "下一步：用作品开启一次具体沟通",
     "relation": "sequence",
     "screen_text": {
-      "title": "三张图，讲清这套系统怎么用",
+      "title": "下一步：用作品开启一次具体沟通",
       "body": [
-        "列表：找到订单",
-        "表单：录入信息",
-        "详情：查看结果"
+        "选一个合适的人：有类似业务需求的人，或已经合作过的客户。 先确定这份作品对谁有用。",
+        "演示一条相关流程：从录入到查结果，让对方看见能解决的问题。 围绕对方的业务挑选演示。",
+        "问一个具体问题：“你现在的流程里，哪一步最费时间？” 把回答记成目标、范围和验收。"
       ]
     },
-    "visual_job": "PROJECT-GALLERY",
+    "visual_job": "NEXT-CONVERSATION",
     "source_refs": [
       {
-        "source_id": "source-simple-cases",
-        "locator": "#第-21-页"
-      },
-      {
-        "source_id": "source-editorial-refresh",
+        "source_id": "source-framework-alignment",
         "locator": "#第-21-页"
       }
     ],
-    "asset_slots": [
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
-      },
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-request",
-        "fit": "contain"
-      },
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-detail",
-        "fit": "contain"
-      }
-    ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
       "html": {
-        "layout": "PROJECT-GALLERY"
+        "layout": "NEXT-CONVERSATION"
       }
     }
   },
@@ -766,20 +726,20 @@
     "kind": "page_spec",
     "id": "page-022",
     "page": 22,
-    "task": "Close with the durable takeaway",
+    "task": "收束四模块并落到接单行动。",
     "three_second_message": "从能做出来，到值得被交给你。",
     "relation": "hero",
     "screen_text": {
       "title": "从能做出来，到值得被交给你。",
       "body": [
-        "闲鱼拿到机会，人确认需求，AI 完成执行；把这单物流项目，留下来作为下一次的作品。"
+        "用作品建立信任，把需求定义清楚，让 AI 完成执行；再带着交付成果，走向第一单和下一单。"
       ]
     },
     "visual_job": "Use one closing sentence with ample negative space",
     "source_refs": [
       {
-        "source_id": "source-001",
-        "locator": "#结尾"
+        "source_id": "source-framework-alignment",
+        "locator": "#第-22-页"
       }
     ],
     "asset_slots": [],

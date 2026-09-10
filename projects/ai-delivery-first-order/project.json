@@ -10,7 +10,8 @@
   "source_ids": [
     "source-001",
     "source-simple-cases",
-    "source-editorial-refresh"
+    "source-editorial-refresh",
+    "source-framework-alignment"
   ],
   "outline_id": "outline-main",
   "theme_id": "theme-default",

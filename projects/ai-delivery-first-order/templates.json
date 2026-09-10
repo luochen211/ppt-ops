@@ -201,14 +201,14 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-acceptance-flow",
-    "name": "Acceptance Flow",
+    "id": "template-order-paths",
+    "name": "First and next order paths",
     "slots": {
       "title": "required",
       "primary_visual": "required"
     },
     "renderers": {
-      "html": "ACCEPTANCE-FLOW"
+      "html": "ORDER-PATHS"
     }
   },
   {
@@ -227,14 +227,14 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-project-gallery",
-    "name": "Project Gallery",
+    "id": "template-next-conversation",
+    "name": "Three steps into a needs conversation",
     "slots": {
       "title": "required",
       "primary_visual": "required"
     },
     "renderers": {
-      "html": "PROJECT-GALLERY"
+      "html": "NEXT-CONVERSATION"
     }
   },
   {

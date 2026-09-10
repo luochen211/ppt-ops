@@ -686,9 +686,6 @@
 .dark .ed-card p{color:#c2e5da}.dark .ed-icon{background:#17574c}.dark .ed-number{color:#add7c9}
 .ed-bottom-line{font-size:1.65vw;font-weight:700;line-height:1.4;margin-top:2vh;border-top:1px solid #9bc8b9;padding-top:2.2vh}
 .dark .ed-bottom-line{border-color:#43796a}
-.ed-route{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.5vw}
-.ed-route .ed-card{padding:3vh 1.4vw}.ed-route .ed-card h2{font-size:1.9vw}.ed-route .ed-card p{font-size:1.2vw}
-.ed-route .ed-card:not(:last-child)::after{content:'→';position:absolute;right:-1.4vw;top:47%;font-size:1.5vw;z-index:2}
 .ed-output{margin-top:5vh;padding-top:1.8vh;border-top:1px solid #a9d1c2;font-size:1.15vw;font-weight:700}
 .ed-split{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:4vw;align-items:center;min-height:0;flex:1}
 .ed-split.acquisition{grid-template-columns:minmax(0,.85fr) minmax(0,1.45fr)}
@@ -699,9 +696,8 @@
 .ed-figure.orders-focus img{object-fit:cover;object-position:50% 76%}
 .ed-figure.detail-focus img{object-fit:cover;object-position:50% 30%}
 .ed-figure.form-focus img{object-fit:cover;object-position:center top}
-.ed-figure.options-focus .case-image-button,.ed-figure.save-focus .case-image-button{aspect-ratio:1.4;overflow:hidden}
+.ed-figure.options-focus .case-image-button{aspect-ratio:1.4;overflow:hidden}
 .ed-figure.options-focus img{width:175%;max-width:none;height:auto;position:absolute;left:-60%;top:-18%;object-fit:initial}
-.ed-figure.save-focus img{width:180%;max-width:none;height:auto;position:absolute;left:-25%;top:-60%;object-fit:initial}
 .ed-tag{display:inline-block;align-self:flex-start;border:1px solid currentColor;border-radius:.35vw;padding:.55vh .7vw;font-size:1vw;line-height:1.3;opacity:.85}
 .channel-word{font-size:7.4vw;font-weight:900;line-height:1.2;letter-spacing:-.08em;margin:1vh 0 2vh}
 .ed-acquisition h2{font-size:2.5vw;font-weight:900;line-height:1.25;margin-bottom:2vh}.ed-acquisition p{font-size:1.4vw;line-height:1.65}
@@ -725,11 +721,22 @@
 .ed-division{display:grid;grid-template-columns:1fr 15vw 1fr;gap:3vw;align-items:center}.ed-owner{text-align:center}.ed-owner-visual{width:12vw;height:12vw;border:1px solid #9cc5b6;border-radius:50%;margin:0 auto 2vh;display:grid;place-items:center;position:relative}.ed-owner-visual img{height:12.5vw;width:12.5vw;object-fit:contain}.ed-owner h2{font-size:2.4vw;font-weight:900;line-height:1.3;margin:1.5vh 0 2vh}.ed-owner ul{list-style:none;display:grid;gap:1vh;font-size:1.4vw;color:#d0ebe1}.ed-owner .ed-tag{font-size:.95vw;border:0;padding:0;letter-spacing:.14em;color:#b6d9cd}.ai-orbit::after{content:'';position:absolute;inset:1.2vw;border:1px solid #9cc5b65c;border-radius:50%}.ai-orbit strong{font-size:4vw}.ed-transfers{display:grid;gap:4vh}.ed-transfers>div{display:grid;gap:1vh;text-align:center}.ed-transfers b{font-size:1.1vw;font-weight:500;color:#c3e5d9}.ed-transfers .ed-arrow{color:#88bcaa}
 .ed-execution .ed-card{padding:3vh 2vw}.ed-loop-note{display:flex;justify-content:space-between;gap:2vw;font-size:1.4vw;padding:2.5vh 0;border-top:1px solid #98cbb9;margin-top:2vh}
 .ed-package .ed-card{background:#fffefa;padding:3vh 2vw}.ed-material-list{margin:3vh 0 0;padding-top:2vh;border-top:1px solid #b5d3c3;list-style:none;display:grid;gap:1.3vh;font-size:1.25vw}.ed-material-list li::before{content:'✓';margin-right:.8vw;color:#5a9f85}
-.ed-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2vw;align-items:start}.ed-gallery-title{display:flex;align-items:center;gap:1vw;margin-bottom:2vh}.ed-gallery-title h2{font-size:1.6vw;font-weight:800}.ed-gallery .case-image-button{aspect-ratio:1.2;max-height:38vh}.ed-gallery .ed-number{color:#a9d4c4}.ed-gallery figcaption{font-size:.75vw}
 .case-slide .case-heading h1{font-size:min(3.5vw,6.2vh)}
 .computer-demo{border-color:#5a8b7d}.demo-placeholder h2{font-size:2.5vw}.demo-select{font-size:1.2vw;padding:1.2vh 1.4vw}.demo-caption strong{font-size:1.6vw}.demo-caption span{font-size:1.1vw}
 .ed-stage [hidden]{display:none}
 @media(max-aspect-ratio:1/1){.slide.editorial{padding:4vh 5vw 8vh}.ed-heading{margin:3vh 0}.ed-stage{justify-content:center}.ed-card{padding:2vh 1.5vw}.ed-split{flex:0}.ed-figure .case-image-button{max-height:32vh}.ed-definition{gap:1vw}.ed-paper{padding:2vh 1.5vw}.ed-card-top{margin-bottom:1.5vh}}
+
+
+.ed-framework{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2.2vh 2vw}
+.ed-framework .ed-card{display:flex;gap:1.8vw;align-items:flex-start;padding:3vh 2vw}
+.ed-framework .ed-number{padding-top:.65vh}.ed-framework h2{font-size:2.05vw;margin-bottom:1vh}.ed-framework p{font-size:1.45vw}
+.ed-order-paths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2.6vw}
+.ed-order-paths .ed-card{padding:2.6vh 2vw}.ed-order-paths h2{font-size:2.4vw;margin:1.6vh 0 2vh}
+.ed-order-steps{list-style:none;display:flex;flex-direction:column;gap:2.3vh;margin:0;padding:0}
+.ed-order-steps li{display:flex;gap:1.2vw;align-items:flex-start}.ed-order-steps .ed-number{padding-top:.5vh}
+.ed-order-steps h3{font-size:1.55vw;line-height:1.4;margin-bottom:.6vh}.ed-order-steps p{font-size:1.25vw;line-height:1.55}
+.ed-conversation{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2vw}
+.ed-conversation h2{margin:2.5vh 0 2vh}.ed-conversation p{min-height:6.5em}.ed-conversation .ed-output{margin-top:2vh;line-height:1.5}
 
 </style>
 </head>
@@ -793,16 +800,16 @@
 
 <section class="slide light editorial" data-layout="DELIVERY-ROUTE" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>THE ROUTE · 03</div></div>
-  <header class="ed-heading" data-qa-id="page-3-heading" data-qa-role="content"><div class="eyebrow">THE ROUTE · 四段主线</div><h1>沿着一单项目，走完四个环节</h1></header>
-  <div class="ed-stage" data-qa-id="page-3-body" data-qa-role="content"><div class="ed-route"><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></span><span class="ed-number">01</span></div><h2>拿到机会</h2><p>从毕设到第一单</p><div class="ed-output">带走：可展示的 Demo</div></article><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 8-8m-4 0h4v4"/></svg></span><span class="ed-number">02</span></div><h2>定义需求</h2><p>把物流需求说清楚</p><div class="ed-output">带走：明确的任务书</div></article><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 2 2 4-4m-6 9 2 2 4-4m3-5h9m-9 7h9M3 20h18"/></svg></span><span class="ed-number">03</span></div><h2>完成交付</h2><p>AI 执行，人确认结果</p><div class="ed-output">带走：可验收的业务流程</div></article><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h7l2 3h9v11H3z"/><path d="M3 6V3h7l2 3h9v3"/></svg></span><span class="ed-number">04</span></div><h2>留下作品</h2><p>为下一次沟通准备材料</p><div class="ed-output">带走：项目作品包</div></article></div></div>
-  <div class="foot" data-qa-id="page-3-foot" data-qa-role="content"><div>机会 → 需求 → 交付 → 作品</div><div>03 / 22</div></div>
+  <header class="ed-heading" data-qa-id="page-3-heading" data-qa-role="content"><div class="eyebrow">THE ROUTE · 四段主线</div><h1>从毕业设计出发，走向第一单和下一单</h1></header>
+  <div class="ed-stage" data-qa-id="page-3-body" data-qa-role="content"><div class="ed-framework"><article class="ed-card"><span class="ed-number">01</span><div><h2>从毕设到第一单</h2><p>让客户相信你</p></div></article><article class="ed-card"><span class="ed-number">02</span><div><h2>从模糊需求到万元项目</h2><p>把事情定义清楚</p></div></article><article class="ed-card"><span class="ed-number">03</span><div><h2>从会用 AI 到能完成交付</h2><p>人和 AI 如何分工</p></div></article><article class="ed-card"><span class="ed-number">04</span><div><h2>从一次交付到持续接单</h2><p>走向第一单和下一单</p></div></article></div></div>
+  <div class="foot" data-qa-id="page-3-foot" data-qa-role="content"><div>用物流项目贯穿四个模块：信任 → 需求 → 分工 → 接单</div><div>03 / 22</div></div>
 </section>
 
 <section class="slide hero dark" data-layout="ACT-DIVIDER" data-animate="hero">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>ACT I · TRUST</div></div>
   <div style="display:grid;grid-template-columns:4fr 8fr;gap:5vw;align-items:center;flex:1">
     <div class="module-number" data-anim>01</div>
-    <div><div class="eyebrow" data-anim>FROM CAPSTONE TO FIRST ORDER</div><h1 class="module-title" data-anim style="margin-top:2vh">从毕设到第一单</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">从闲鱼上的物流项目讲起</p></div>
+    <div><div class="eyebrow" data-anim>FROM CAPSTONE TO FIRST ORDER</div><h1 class="module-title" data-anim style="margin-top:2vh">从毕设到第一单</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">让客户相信你</p></div>
   </div>
   <div class="foot"><div>第一单的起点不是报价，是信任</div><div>04 / 22</div></div>
 </section>
@@ -832,7 +839,7 @@
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>ACT II · SCOPE</div></div>
   <div style="display:grid;grid-template-columns:4fr 8fr;gap:5vw;align-items:center;flex:1">
     <div class="module-number" data-anim>02</div>
-    <div><div class="eyebrow" data-anim>FROM VAGUE REQUEST TO ENTERPRISE PROJECT</div><h1 class="module-title" data-anim style="margin-top:2vh">把物流需求<br>定义清楚</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">谁填单，谁处理，什么算做好</p></div>
+    <div><div class="eyebrow" data-anim>FROM VAGUE REQUEST TO ENTERPRISE PROJECT</div><h1 class="module-title" data-anim style="margin-top:2vh">从模糊需求<br>到万元项目</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">把事情定义清楚</p></div>
   </div>
   <div class="foot"><div>范围没有被定义，风险就会被默认承担</div><div>08 / 22</div></div>
 </section>
@@ -869,7 +876,7 @@
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>ACT III · DELIVERY</div></div>
   <div style="display:grid;grid-template-columns:4fr 8fr;gap:5vw;align-items:center;flex:1">
     <div class="module-number" data-anim>03</div>
-    <div><div class="eyebrow" data-anim>FROM USING AI TO OWNING THE RESULT</div><h1 class="module-title" data-anim style="margin-top:2vh">从会用 AI<br>到能完成交付</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">回到这单：AI 开发与测试，人确认需求与结果</p></div>
+    <div><div class="eyebrow" data-anim>FROM USING AI TO OWNING THE RESULT</div><h1 class="module-title" data-anim style="margin-top:2vh">从会用 AI<br>到能完成交付</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">人和 AI 如何分工</p></div>
   </div>
   <div class="foot"><div>AI 连续执行，人确认方向</div><div>13 / 22</div></div>
 </section>
@@ -912,30 +919,30 @@
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>ACT IV · LEVERAGE</div></div>
   <div style="display:grid;grid-template-columns:4fr 8fr;gap:5vw;align-items:center;flex:1">
     <div class="module-number" data-anim>04</div>
-    <div><div class="eyebrow" data-anim>FROM ONE DELIVERY TO THE NEXT ORDER</div><h1 class="module-title" data-anim style="margin-top:2vh">从一次交付<br>到持续接单</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">把这单物流项目，变成下次的作品</p></div>
+    <div><div class="eyebrow" data-anim>FROM ONE DELIVERY TO THE NEXT ORDER</div><h1 class="module-title" data-anim style="margin-top:2vh">从一次交付<br>到持续接单</h1><p class="module-subtitle" data-anim style="margin-top:2.6vh">走向第一单和下一单</p></div>
   </div>
-  <div class="foot"><div>尾款结算项目，信用带来下一次机会</div><div>18 / 22</div></div>
+  <div class="foot"><div>把已经做出的成果，带进下一次需求沟通</div><div>18 / 22</div></div>
 </section>
 
-<section class="slide light editorial" data-layout="ACCEPTANCE-FLOW" data-qa-policy="strict">
+<section class="slide light editorial" data-layout="ORDER-PATHS" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>LEVERAGE · 19</div></div>
-  <header class="ed-heading" data-qa-id="page-19-heading" data-qa-role="content"><div class="eyebrow">LEVERAGE · 留下可复查的验收记录</div><h1>交付前，把一条业务流程走到底</h1></header>
-  <div class="ed-stage" data-qa-id="page-19-body" data-qa-role="content"><div class="ed-split"><figure class="ed-figure save-focus"><button class="case-image-button" type="button" aria-label="放大：物流系统提单保存入口，项目存档截图"><img src="../assets/project-screenshots/logistics-save.png" alt="物流系统提单保存入口，项目存档截图" data-asset-id="logistics-save" decoding="async"></button><figcaption>提单保存入口｜项目存档截图 · 点击放大原图</figcaption></figure><div><div class="ed-points"><div><span class="ed-number">01</span><div><h2>填一单，提交一次</h2><p>必要信息齐全，提交动作有明确反馈。</p></div></div><div><span class="ed-number">02</span><div><h2>查回这单，看结果</h2><p>保存内容和约定状态可以核对。</p></div></div><div><span class="ed-number">03</span><div><h2>切换角色，再确认</h2><p>该处理的人能继续，权限符合约定。</p></div></div></div></div></div></div>
-  <div class="foot" data-qa-id="page-19-foot" data-qa-role="content"><div>示例验收路径；截图为保存入口，不作为本次测试通过的证明</div><div>19 / 22</div></div>
+  <header class="ed-heading" data-qa-id="page-19-heading" data-qa-role="content"><div class="eyebrow">NEXT ORDER · 第一单与下一单</div><h1>起点不同，都从已有成果开始</h1></header>
+  <div class="ed-stage" data-qa-id="page-19-body" data-qa-role="content"><div class="ed-order-paths"><article class="ed-card"><span class="ed-tag">还没有商单</span><h2>走向第一单</h2><ol class="ed-order-steps"><li><span class="ed-number">01</span><div><h3>选一个能演示的毕设</h3><p>整理成一条可以操作的业务流程。</p></div></li><li><span class="ed-number">02</span><div><h3>让有类似需求的人看见</h3><p>在闲鱼等渠道，展示用途和演示入口。</p></div></li><li><span class="ed-number">03</span><div><h3>约一次具体的需求沟通</h3><p>请对方试用，再确认本次范围。</p></div></li></ol></article><article class="ed-card"><span class="ed-tag">已经交付过项目</span><h2>走向下一单</h2><ol class="ed-order-steps"><li><span class="ed-number">01</span><div><h3>整理已经交付的项目</h3><p>留下演示、脱敏截图和范围说明。</p></div></li><li><span class="ed-number">02</span><div><h3>联系原客户或类似客户</h3><p>了解使用反馈，询问还有哪一步费时间。</p></div></li><li><span class="ed-number">03</span><div><h3>把新需求重新定义成项目</h3><p>另行确认范围、费用和验收方式。</p></div></li></ol></article></div></div>
+  <div class="foot" data-qa-id="page-19-foot" data-qa-role="content"><div>行动建议：用已有成果开启沟通，具体需求逐项确认</div><div>19 / 22</div></div>
 </section>
 
 <section class="slide light editorial" data-layout="PROJECT-PACKAGE" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>LEVERAGE · 20</div></div>
-  <header class="ed-heading" data-qa-id="page-20-heading" data-qa-role="content"><div class="eyebrow">LEVERAGE · 为下一次沟通准备材料</div><h1>做完一单，留下一个作品包</h1></header>
+  <header class="ed-heading" data-qa-id="page-20-heading" data-qa-role="content"><div class="eyebrow">NEXT ORDER · 毕设和商单都能整理成作品</div><h1>用一个作品包，支撑下一次沟通</h1></header>
   <div class="ed-stage" data-qa-id="page-20-body" data-qa-role="content"><div class="ed-package"><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m10 8 6 4-6 4z"/></svg></span><span class="ed-number">01</span></div><h2>一段演示</h2><p>让客户看懂流程</p><ul class="ed-material-list"><li>从哪里开始</li><li>中间怎样操作</li><li>最后得到什么</li></ul></article><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="ed-number">02</span></div><h2>三张截图</h2><p>让客户看见结果</p><ul class="ed-material-list"><li>列表：在哪里找</li><li>表单：怎样填写</li><li>详情：怎样查看</li></ul></article><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg></span><span class="ed-number">03</span></div><h2>一份说明</h2><p>让双方对齐范围</p><ul class="ed-material-list"><li>实现了哪些功能</li><li>各角色怎么操作</li><li>新增需求怎么确认</li></ul></article></div><div class="ed-summary-band"><strong>项目作品包</strong><span>看懂用途</span><span>看见结果</span><span>说清范围</span></div></div>
-  <div class="foot" data-qa-id="page-20-foot" data-qa-role="content"><div>材料整理方法；不代表已产生复购或转介绍</div><div>20 / 22</div></div>
+  <div class="foot" data-qa-id="page-20-foot" data-qa-role="content"><div>演示流程 · 脱敏截图 · 范围说明</div><div>20 / 22</div></div>
 </section>
 
-<section class="slide dark editorial" data-layout="PROJECT-GALLERY" data-qa-policy="strict">
+<section class="slide dark editorial" data-layout="NEXT-CONVERSATION" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>LEVERAGE · 21</div></div>
-  <header class="ed-heading" data-qa-id="page-21-heading" data-qa-role="content"><div class="eyebrow">LEVERAGE · 下一次介绍项目的顺序</div><h1>三张图，讲清这套系统怎么用</h1></header>
-  <div class="ed-stage" data-qa-id="page-21-body" data-qa-role="content"><div class="ed-gallery"><article><div class="ed-gallery-title"><span class="ed-number">01</span><h2>列表：找到订单</h2></div><figure class="ed-figure orders-focus"><button class="case-image-button" type="button" aria-label="放大：物流系统订单列表，历史演示数据"><img src="../assets/project-screenshots/logistics-orders.jpg" alt="物流系统订单列表，历史演示数据" data-asset-id="logistics-orders" decoding="async"></button><figcaption>六月演示数据 · 点击放大原图</figcaption></figure></article><article><div class="ed-gallery-title"><span class="ed-number">02</span><h2>表单：录入信息</h2></div><figure class="ed-figure form-focus"><button class="case-image-button" type="button" aria-label="放大：物流系统费用申请，本地测试截图"><img src="../assets/project-screenshots/logistics-request.png" alt="物流系统费用申请，本地测试截图" data-asset-id="logistics-request" decoding="async"></button><figcaption>七月本地测试截图 · 点击放大原图</figcaption></figure></article><article><div class="ed-gallery-title"><span class="ed-number">03</span><h2>详情：查看结果</h2></div><figure class="ed-figure detail-focus"><button class="case-image-button" type="button" aria-label="放大：物流系统订单详情，历史演示数据"><img src="../assets/project-screenshots/logistics-detail.jpg" alt="物流系统订单详情，历史演示数据" data-asset-id="logistics-detail" decoding="async"></button><figcaption>六月演示数据 · 点击放大原图</figcaption></figure></article></div><p class="ed-bottom-line">先讲用途，再展示操作，最后说明本次能做的范围。</p></div>
-  <div class="foot" data-qa-id="page-21-foot" data-qa-role="content"><div>项目历史截图，用于作品介绍</div><div>21 / 22</div></div>
+  <header class="ed-heading" data-qa-id="page-21-heading" data-qa-role="content"><div class="eyebrow">NEXT ORDER · 今天就能开始的三个动作</div><h1>下一步：用作品开启一次具体沟通</h1></header>
+  <div class="ed-stage" data-qa-id="page-21-body" data-qa-role="content"><div class="ed-conversation"><article class="ed-card"><span class="ed-number">01</span><h2>选一个合适的人</h2><p>有类似业务需求的人，或已经合作过的客户。</p><div class="ed-output">先确定这份作品对谁有用。</div></article><article class="ed-card"><span class="ed-number">02</span><h2>演示一条相关流程</h2><p>从录入到查结果，让对方看见能解决的问题。</p><div class="ed-output">围绕对方的业务挑选演示。</div></article><article class="ed-card"><span class="ed-number">03</span><h2>问一个具体问题</h2><p>“你现在的流程里，哪一步最费时间？”</p><div class="ed-output">把回答记成目标、范围和验收。</div></article></div><p class="ed-bottom-line">从一份作品，推进到一次需求沟通，再定义一个项目。</p></div>
+  <div class="foot" data-qa-id="page-21-foot" data-qa-role="content"><div>沟通方法与示例问法</div><div>21 / 22</div></div>
 </section>
 
 <section class="slide hero light" data-layout="CLOSING-HERO" data-animate="hero">
@@ -943,7 +950,7 @@
   <div class="closing-copy">
     <div class="eyebrow" data-anim>从毕业设计到持续接单</div>
     <h1 data-anim style="margin-top:2vh">从能做出来，<br>到值得被交给你。</h1>
-    <p data-anim>闲鱼拿到机会，人确认需求，AI 完成执行；<br>把这单物流项目，留下来作为下一次的作品。</p>
+    <p data-anim>用作品建立信任，把需求定义清楚，让 AI 完成执行；<br>再带着交付成果，走向第一单和下一单。</p>
   </div>
   <div class="foot"><div>AI 编程 · 真实项目 · 稳定交付</div><div>22 / 22</div></div>
 </section>

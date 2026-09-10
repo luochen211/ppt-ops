@@ -2,9 +2,9 @@
   "schema_version": "1.0",
   "project_id": "ai-delivery-first-order",
   "status": "implemented_pending_user_acceptance",
-  "goal": "沿着物流项目讲清机会、需求、交付与作品，每页只解释一个具体问题",
+  "goal": "以物流项目为贯穿案例，按四模块讲清信任、需求、人机分工，以及第一单与下一单的行动",
   "visual_thesis": {
-    "name": "一单项目，四段可复用的方法",
+    "name": "四个模块，从毕设走向持续接单",
     "statement": "真实截图说明业务页面，原生图解说明流程与职责，演示视频独立呈现。"
   },
   "motifs": [
@@ -104,12 +104,12 @@
       "template_id": "template-delivery-route",
       "motif": "route",
       "reading_path": [
-        "机会",
-        "需求",
-        "交付",
-        "作品"
+        "第一单与信任",
+        "需求与项目",
+        "AI 与交付",
+        "持续接单"
       ],
-      "rationale": "四个有编号的环节串起全篇，每步指向一个可带走的产物。",
+      "rationale": "用二乘二编号目录完整呈现用户确认的四个模块。",
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
@@ -120,11 +120,11 @@
       "template_id": "template-act-divider",
       "motif": "route",
       "reading_path": [
-        "act-number",
-        "act-title",
-        "act-outcome"
+        "章节编号",
+        "从毕设到第一单",
+        "让客户相信你"
       ],
-      "rationale": "给第一段留出认知换气",
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
       "avoid": "在幕封上提前塞方法细节"
     },
     {
@@ -180,11 +180,11 @@
       "template_id": "template-act-divider",
       "motif": "route",
       "reading_path": [
-        "act-number",
-        "act-title",
-        "act-outcome"
+        "章节编号",
+        "从模糊需求到万元项目",
+        "把事情定义清楚"
       ],
-      "rationale": "从信任问题切换到需求定义",
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
       "avoid": "在幕封上继续讲上一模块案例"
     },
     {
@@ -258,11 +258,11 @@
       "template_id": "template-act-divider",
       "motif": "boundary",
       "reading_path": [
-        "act-number",
-        "act-title",
-        "division-question"
+        "章节编号",
+        "从会用 AI 到能完成交付",
+        "人和 AI 如何分工"
       ],
-      "rationale": "进入全篇责任边界的核心章节",
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
       "avoid": "机器人插画抢走判断主题"
     },
     {
@@ -336,27 +336,27 @@
       "template_id": "template-act-divider",
       "motif": "loop",
       "reading_path": [
-        "act-number",
-        "act-title",
-        "next-order"
+        "章节编号",
+        "从一次交付到持续接单",
+        "走向第一单和下一单"
       ],
-      "rationale": "把一次性交付转向持续信用",
+      "rationale": "用用户确认的主标题与副标题开启该模块。",
       "avoid": "在幕封上提前画完整飞轮"
     },
     {
       "page": 19,
       "page_id": "page-019",
-      "relation": "process",
-      "visual_job": "ACCEPTANCE-FLOW",
-      "template_id": "template-acceptance-flow",
-      "motif": "evidence",
+      "relation": "comparison",
+      "visual_job": "ORDER-PATHS",
+      "template_id": "template-order-paths",
+      "motif": "loop",
       "reading_path": [
-        "保存入口",
-        "提交",
-        "查回",
-        "切角色核对"
+        "还没有商单",
+        "第一单行动",
+        "已经交付过项目",
+        "下一单行动"
       ],
-      "rationale": "用保存入口与验收路径代替重复总结；截图与测试通过证据分开。",
+      "rationale": "对照两种起点，各给出三项行动，让第四模块落到第一单和下一单。",
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
@@ -370,25 +370,25 @@
         "演示",
         "截图",
         "说明",
-        "作品包"
+        "需求沟通"
       ],
-      "rationale": "把抽象材料沉淀具体化为演示、截图、说明三个可整理的产物。",
+      "rationale": "让毕设与商单都能形成可展示的材料，服务具体需求沟通。",
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
       "page": 21,
       "page_id": "page-021",
       "relation": "sequence",
-      "visual_job": "PROJECT-GALLERY",
-      "template_id": "template-project-gallery",
-      "motif": "evidence",
+      "visual_job": "NEXT-CONVERSATION",
+      "template_id": "template-next-conversation",
+      "motif": "loop",
       "reading_path": [
-        "列表",
-        "表单",
-        "详情",
-        "介绍顺序"
+        "选择对象",
+        "演示流程",
+        "询问具体问题",
+        "定义新项目"
       ],
-      "rationale": "真实截图各自承担列表、表单、详情一种用途，形成项目介绍顺序。",
+      "rationale": "用三个连续动作把作品材料接到需求沟通，不虚构成交结果。",
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
@@ -399,11 +399,11 @@
       "template_id": "template-closing-hero",
       "motif": "evidence",
       "reading_path": [
-        "title",
-        "closing-sentence",
-        "negative-space"
+        "建立信任",
+        "明确需求与分工",
+        "走向第一单和下一单"
       ],
-      "rationale": "最后留下值得被交付的信用判断",
+      "rationale": "收束四模块并落到接单行动。",
       "avoid": "新方法清单、二维码或第二个CTA"
     }
   ],
