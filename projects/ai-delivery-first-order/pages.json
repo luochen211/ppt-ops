@@ -31,28 +31,34 @@
     "kind": "page_spec",
     "id": "page-002",
     "page": 2,
-    "task": "State the central thesis",
-    "three_second_message": "不是你的身份，不是技术栈，也不是几句 AI 指令。",
-    "relation": "hero",
+    "task": "正面呈现客户购买的三个业务结果，放大核心结论。",
+    "three_second_message": "客户要的，是业务真正跑起来",
+    "relation": "comparison",
     "screen_text": {
-      "title": "不是你的身份，不是技术栈，也不是几句 AI 指令。",
+      "title": "客户要的，是业务真正跑起来",
       "body": [
-        "不是身份",
-        "不是技术栈",
-        "不是几句 AI 指令"
+        "订单能提交",
+        "有人能处理",
+        "费用能查清"
       ]
     },
-    "visual_job": "Turn the thesis into one memorable sentence",
+    "visual_job": "BUSINESS-OUTCOME",
     "source_refs": [
       {
         "source_id": "source-001",
         "locator": "#核心判断"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-2-页"
       }
     ],
     "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "BUSINESS-OUTCOME"
+      }
     }
   },
   {
@@ -60,29 +66,35 @@
     "kind": "page_spec",
     "id": "page-003",
     "page": 3,
-    "task": "Show the only four-part route",
-    "three_second_message": "四段大纲，一条交付主线",
+    "task": "四个有编号的环节串起全篇，每步指向一个可带走的产物。",
+    "three_second_message": "沿着一单项目，走完四个环节",
     "relation": "sequence",
     "screen_text": {
-      "title": "四段大纲，一条交付主线",
+      "title": "沿着一单项目，走完四个环节",
       "body": [
-        "闲鱼拿到物流项目",
-        "人确认业务与范围",
-        "AI 开发和操作测试",
-        "把这单沉淀成作品"
+        "拿到机会：Demo",
+        "定义需求：任务书",
+        "完成交付：业务流程",
+        "留下作品：作品包"
       ]
     },
-    "visual_job": "Draw one directional route with four alternating stage nodes",
+    "visual_job": "DELIVERY-ROUTE",
     "source_refs": [
       {
         "source_id": "source-001",
         "locator": "#唯一大纲"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-3-页"
       }
     ],
     "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "DELIVERY-ROUTE"
+      }
     }
   },
   {
@@ -117,21 +129,24 @@
     "kind": "page_spec",
     "id": "page-005",
     "page": 5,
-    "task": "通过真实项目截图讲解一个简单动作",
+    "task": "渠道与真实作品分开表达，不把系统页面当作获客过程证据。",
     "three_second_message": "这单物流项目，来自闲鱼",
     "relation": "process",
     "screen_text": {
       "title": "这单物流项目，来自闲鱼",
       "body": [
-        "闲鱼获客",
-        "展示页面",
-        "说清用途"
+        "获客渠道：闲鱼",
+        "展示具体页面、说明用途，再沟通需求"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "ACQUISITION-PROOF",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-5-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-5-页"
       }
     ],
@@ -144,7 +159,9 @@
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "ACQUISITION-PROOF"
+      }
     }
   },
   {
@@ -152,37 +169,34 @@
     "kind": "page_spec",
     "id": "page-006",
     "page": 6,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "客户看到的，是怎样一套系统",
-    "relation": "process",
+    "task": "用角色与箭头解释业务流转，去掉重复的系统全图。",
+    "three_second_message": "一张订单，串起三种角色",
+    "relation": "sequence",
     "screen_text": {
-      "title": "客户看到的，是怎样一套系统",
+      "title": "一张订单，串起三种角色",
       "body": [
-        "客户提交订单",
-        "把运输需求录入系统。",
-        "操作员跟进订单",
-        "查订单、补信息、更新进度。",
-        "财务处理费用",
-        "费用申请和账单也在同一套系统里。"
+        "客户：填写并提交订单",
+        "操作员：补信息、跟进进度",
+        "财务：处理费用、查看账单"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "ROLE-FLOW",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-5-页"
-      }
-    ],
-    "asset_slots": [
+      },
       {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-6-页"
       }
     ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "ROLE-FLOW"
+      }
     }
   },
   {
@@ -190,37 +204,40 @@
     "kind": "page_spec",
     "id": "page-007",
     "page": 7,
-    "task": "说明企业商单需要用可操作的 Demo 建立客户信任",
+    "task": "订单详情配具体试用动作，展示 Demo 如何帮助沟通。",
     "three_second_message": "做企业商单，一定要有 Demo 能力",
     "relation": "process",
     "screen_text": {
       "title": "做企业商单，一定要有 Demo 能力",
       "body": [
-        "把需求快速做成 Demo",
-        "拿物流需求举例，先做出能操作的核心流程。",
-        "让客户亲手试一遍",
-        "订单怎么填、结果怎么查，对着 Demo 确认。",
-        "用做出来的结果赢得信任",
-        "客户看见你能做，才更愿意把项目交给你。"
+        "做出核心流程",
+        "让客户试用",
+        "把反馈变成需求"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "DEMO-WALKTHROUGH",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-5-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-7-页"
       }
     ],
     "asset_slots": [
       {
         "role": "project-screenshot",
-        "asset_id": "logistics-orders",
+        "asset_id": "logistics-detail",
         "fit": "contain"
       }
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "DEMO-WALKTHROUGH"
+      }
     }
   },
   {
@@ -255,7 +272,7 @@
     "kind": "page_spec",
     "id": "page-009",
     "page": 9,
-    "task": "通过真实项目截图讲解一个简单动作",
+    "task": "放大真实表单，把需求问题控制为三项。",
     "three_second_message": "一个表单，先问清三件事",
     "relation": "process",
     "screen_text": {
@@ -263,13 +280,17 @@
       "body": [
         "谁来填",
         "哪些必须填",
-        "填完去哪看"
+        "填完谁接着处理"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "FORM-QUESTIONS",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-9-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-9-页"
       }
     ],
@@ -282,7 +303,9 @@
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "FORM-QUESTIONS"
+      }
     }
   },
   {
@@ -290,29 +313,35 @@
     "kind": "page_spec",
     "id": "page-010",
     "page": 10,
-    "task": "Turn vague language into a delivery map",
+    "task": "四张确认卡汇入任务书，仅保留一根指向 AI 任务输入的箭头；文字保持可编辑。",
     "three_second_message": "先确认四件事，再交给 AI 执行",
     "relation": "hierarchy",
     "screen_text": {
       "title": "先确认四件事，再交给 AI 执行",
       "body": [
-        "目标：为谁解决什么",
-        "范围：做哪些功能与数据",
-        "边界：不做什么、改几次",
-        "验收：什么结果才算满足需求"
+        "目标：客户填单，团队跟进。",
+        "范围：订单、费用、账号权限。",
+        "边界：新增需求，另行确认。",
+        "验收：约定的业务流程能完成。"
       ]
     },
-    "visual_job": "Use a four-direction scope map around one deliverable task",
+    "visual_job": "四张需求卡以一根箭头指向任务书，全部文字为 HTML",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-10-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-10-页"
       }
     ],
     "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "DEFINITION-MAP"
+      }
     }
   },
   {
@@ -320,39 +349,34 @@
     "kind": "page_spec",
     "id": "page-011",
     "page": 11,
-    "task": "通过真实项目截图讲解一个简单动作",
+    "task": "以交付内容和确认点为主图，避免截图挤占阶段信息。",
     "three_second_message": "先说清每一阶段交什么",
-    "relation": "comparison",
+    "relation": "sequence",
     "screen_text": {
       "title": "先说清每一阶段交什么",
       "body": [
-        "先跑通业务",
-        "再补齐财务",
-        "最后完善管理"
+        "业务：填单、查单、看进度",
+        "财务：费用申请、账单",
+        "管理：账号、权限、操作说明"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "DELIVERY-STAGES",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-11-页"
-      }
-    ],
-    "asset_slots": [
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
       },
       {
-        "role": "project-screenshot",
-        "asset_id": "logistics-request",
-        "fit": "contain"
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-11-页"
       }
     ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "DELIVERY-STAGES"
+      }
     }
   },
   {
@@ -360,37 +384,34 @@
     "kind": "page_spec",
     "id": "page-012",
     "page": 12,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "这单怎么交，开工前就说清",
-    "relation": "process",
+    "task": "明确三个沟通时机与各自应留存的记录。",
+    "three_second_message": "每一阶段，都留一个确认点",
+    "relation": "sequence",
     "screen_text": {
-      "title": "这单怎么交，开工前就说清",
+      "title": "每一阶段，都留一个确认点",
       "body": [
-        "先确认业务流程",
-        "填单、查单、费用处理，哪些在本次范围？",
-        "中途看结果是否对",
-        "用真实页面沟通，方向偏了及时判断。",
-        "最后按约定验收",
-        "AI 执行测试，人判断是否满足确认的需求。"
+        "开工前确认任务书",
+        "过程中确认阶段结果",
+        "交付时确认验收结果"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "DELIVERY-CHECKPOINTS",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-5-页"
-      }
-    ],
-    "asset_slots": [
+      },
       {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-12-页"
       }
     ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "DELIVERY-CHECKPOINTS"
+      }
     }
   },
   {
@@ -426,20 +447,26 @@
     "kind": "page_spec",
     "id": "page-014",
     "page": 14,
-    "task": "Separate execution from responsibility",
-    "three_second_message": "执行交给 AI，需求和判断由人负责",
+    "task": "人和 AI 的输入输出各自标注方向；三组职责用可投影字号呈现。",
+    "three_second_message": "人定方向，AI 完成执行",
     "relation": "comparison",
     "screen_text": {
-      "title": "执行交给 AI，需求和判断由人负责",
+      "title": "人定方向，AI 完成执行",
       "body": [
-        "AI：开发实现、修复问题、手机端操作、多角色切换、自动测试、整理交付",
-        "人：需求确认、业务判断、范围取舍、验收标准、客户沟通、最终决策"
+        "人：确认需求、范围取舍、验收判断",
+        "人将需求与标准交给 AI",
+        "AI：开发、操作测试、修复",
+        "AI 返回结果与问题"
       ]
     },
-    "visual_job": "Connect an AI execution engine to a human judgment compass",
+    "visual_job": "AI-VS-HUMAN",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-14-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-14-页"
       }
     ],
@@ -452,7 +479,9 @@
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "AI-VS-HUMAN"
+      }
     }
   },
   {
@@ -460,34 +489,35 @@
     "kind": "page_spec",
     "id": "page-015",
     "page": 15,
-    "task": "展示 AI 执行与人类需求判断的分工",
+    "task": "展示实现、测试、修复的连续执行关系，避免用静态项目图冒充测试录像。",
     "three_second_message": "开发和测试，都交给 AI",
     "relation": "process",
     "screen_text": {
       "title": "开发和测试，都交给 AI",
       "body": [
         "开发实现",
-        "发现问题，继续修复",
-        "直接操作界面"
+        "操作测试",
+        "继续修复",
+        "整理结果交由人确认"
       ]
     },
-    "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
+    "visual_job": "AI-EXECUTION-LOOP",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-15-页"
-      }
-    ],
-    "asset_slots": [
+      },
       {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-15-页"
       }
     ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "AI-EXECUTION-LOOP"
+      }
     }
   },
   {
@@ -495,23 +525,26 @@
     "kind": "page_spec",
     "id": "page-016",
     "page": 16,
-    "task": "展示 AI 执行与人类需求判断的分工",
+    "task": "按用户回复保留独立演示页与本地文件选择，不伪造录制素材。",
     "three_second_message": "手机端、多角色，Computer Use 来测",
     "relation": "hero",
     "screen_text": {
       "title": "手机端、多角色，Computer Use 来测",
       "body": [
-        "视频展示位",
+        "Computer Use 操作演示",
         "手机端操作",
         "多角色切换",
-        "连续测试",
-        "我还没跟上，AI 已经测完了"
+        "连续测试"
       ]
     },
-    "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
+    "visual_job": "保留独立视频展示与本地文件选择",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-16-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-16-页"
       }
     ],
@@ -528,7 +561,8 @@
             "多角色切换",
             "连续测试"
           ]
-        }
+        },
+        "layout": "COMPUTER-USE-VIDEO"
       }
     }
   },
@@ -537,34 +571,40 @@
     "kind": "page_spec",
     "id": "page-017",
     "page": 17,
-    "task": "展示 AI 执行与人类需求判断的分工",
-    "three_second_message": "人来判断：这次到底做不做",
+    "task": "从真实下拉选项入口切入小需求，把人的取舍变成具体问题。",
+    "three_second_message": "客户说“加一个选项”，先确认三件事",
     "relation": "process",
     "screen_text": {
-      "title": "人来判断：这次到底做不做",
+      "title": "客户说“加一个选项”，先确认三件事",
       "body": [
         "为什么要加",
-        "这次做多少",
-        "什么算做好"
+        "本次范围、费用与时间",
+        "确认可选择、可保存、后续可用"
       ]
     },
-    "visual_job": "Show a project screenshot or reserved video while explaining responsibility in plain language",
+    "visual_job": "CHANGE-DECISION",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-17-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-17-页"
       }
     ],
     "asset_slots": [
       {
         "role": "project-screenshot",
-        "asset_id": "logistics-request",
+        "asset_id": "logistics-options",
         "fit": "contain"
       }
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "CHANGE-DECISION"
+      }
     }
   },
   {
@@ -599,37 +639,40 @@
     "kind": "page_spec",
     "id": "page-019",
     "page": 19,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "回看这单，关键判断都由人负责",
+    "task": "用保存入口与验收路径代替重复总结；截图与测试通过证据分开。",
+    "three_second_message": "交付前，把一条业务流程走到底",
     "relation": "process",
     "screen_text": {
-      "title": "回看这单，关键判断都由人负责",
+      "title": "交付前，把一条业务流程走到底",
       "body": [
-        "闲鱼拿到机会",
-        "先沟通业务，再确认需求与范围。",
-        "AI 完成执行",
-        "开发、修复、手机端和多角色测试。",
-        "人确认最终结果",
-        "是否满足需求，哪些变更要另谈。"
+        "填写并提交",
+        "查回数据与状态",
+        "切换角色核对权限"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "ACCEPTANCE-FLOW",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-5-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-19-页"
       }
     ],
     "asset_slots": [
       {
         "role": "project-screenshot",
-        "asset_id": "logistics-orders",
+        "asset_id": "logistics-save",
         "fit": "contain"
       }
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "ACCEPTANCE-FLOW"
+      }
     }
   },
   {
@@ -637,37 +680,34 @@
     "kind": "page_spec",
     "id": "page-020",
     "page": 20,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "做完这单，留下下次能用的材料",
-    "relation": "process",
+    "task": "把抽象材料沉淀具体化为演示、截图、说明三个可整理的产物。",
+    "three_second_message": "做完一单，留下一个作品包",
+    "relation": "hierarchy",
     "screen_text": {
-      "title": "做完这单，留下下次能用的材料",
+      "title": "做完一单，留下一个作品包",
       "body": [
-        "留下一段流程",
-        "用填单、查单、费用处理讲清用途。",
-        "留下页面和演示",
-        "让下一位客户看见具体结果。",
-        "留下范围和说明",
-        "新需求重新确认，已有经验继续复用。"
+        "一段演示：讲流程",
+        "三张截图：看结果",
+        "一份说明：定范围"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "PROJECT-PACKAGE",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
         "locator": "#第-5-页"
-      }
-    ],
-    "asset_slots": [
+      },
       {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
+        "source_id": "source-editorial-refresh",
+        "locator": "#第-20-页"
       }
     ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "PROJECT-PACKAGE"
+      }
     }
   },
   {
@@ -675,21 +715,25 @@
     "kind": "page_spec",
     "id": "page-021",
     "page": 21,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "下次介绍项目，拿出这三张图",
-    "relation": "process",
+    "task": "真实截图各自承担列表、表单、详情一种用途，形成项目介绍顺序。",
+    "three_second_message": "三张图，讲清这套系统怎么用",
+    "relation": "sequence",
     "screen_text": {
-      "title": "下次介绍项目，拿出这三张图",
+      "title": "三张图，讲清这套系统怎么用",
       "body": [
-        "列表找订单",
-        "表单录信息",
-        "详情看结果"
+        "列表：找到订单",
+        "表单：录入信息",
+        "详情：查看结果"
       ]
     },
-    "visual_job": "Show large real project screenshots with concise plain-language actions",
+    "visual_job": "PROJECT-GALLERY",
     "source_refs": [
       {
         "source_id": "source-simple-cases",
+        "locator": "#第-21-页"
+      },
+      {
+        "source_id": "source-editorial-refresh",
         "locator": "#第-21-页"
       }
     ],
@@ -712,7 +756,9 @@
     ],
     "content_status": "draft",
     "renderers": {
-      "html": {}
+      "html": {
+        "layout": "PROJECT-GALLERY"
+      }
     }
   },
   {

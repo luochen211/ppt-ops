@@ -9,7 +9,8 @@
   ],
   "source_ids": [
     "source-001",
-    "source-simple-cases"
+    "source-simple-cases",
+    "source-editorial-refresh"
   ],
   "outline_id": "outline-main",
   "theme_id": "theme-default",
@@ -17,6 +18,8 @@
     "page-14-human-owner",
     "logistics-orders",
     "logistics-detail",
-    "logistics-request"
+    "logistics-request",
+    "logistics-options",
+    "logistics-save"
   ]
 }

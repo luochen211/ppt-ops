@@ -9,7 +9,7 @@ const project = path.resolve("projects/ai-delivery-first-order");
 test("AI delivery graphic conception is traceable across project artifacts", async () => {
   const result = await inspectGraphicConception(project);
   assert.equal(result.status, "passed");
-  assert.deepEqual(result.metrics, { pages: 22, decisions: 22, motifs: 4, templates: 9, html_layouts: 22 });
+  assert.deepEqual(result.metrics, { pages: 22, decisions: 22, motifs: 4, templates: 19, html_layouts: 22 });
   assert.deepEqual(result.findings, []);
 });
 
@@ -17,7 +17,7 @@ test("traceability rejects missing decisions, semantic drift, and incomplete rea
   const fixture = await loadFixture();
   fixture.design.page_decisions.shift();
   Object.assign(fixture.design.page_decisions[0], {
-    relation: "comparison",
+    relation: fixture.design.page_decisions[0].relation === "comparison" ? "sequence" : "comparison",
     visual_job: "Drifted visual job",
     motif: "decoration",
     template_id: "template-missing",
@@ -35,7 +35,7 @@ test("traceability rejects missing decisions, semantic drift, and incomplete rea
 test("traceability rejects duplicate pages and HTML layout-order drift", async () => {
   const fixture = await loadFixture();
   fixture.design.page_decisions[1].page = 1;
-  fixture.html = fixture.html.replace('data-layout="AGENDA-4"', 'data-layout="PROOF-4"');
+  fixture.html = fixture.html.replace('data-layout="DELIVERY-ROUTE"', 'data-layout="PROOF-4"');
   const result = validateGraphicConception(fixture);
   assert.equal(result.status, "failed");
   assert.ok(result.findings.some(({ code }) => code === "duplicate-design-page"));

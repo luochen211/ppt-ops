@@ -15,26 +15,27 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-big-quote",
-    "name": "Thesis contrast quote",
+    "id": "template-business-outcome",
+    "name": "Business Outcome",
     "slots": {
-      "negations": "required",
-      "conclusion": "required"
+      "title": "required",
+      "primary_visual": "required"
     },
     "renderers": {
-      "html": "BIG-QUOTE"
+      "html": "BUSINESS-OUTCOME"
     }
   },
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-agenda-route",
-    "name": "Four-stage route",
+    "id": "template-delivery-route",
+    "name": "Delivery Route",
     "slots": {
-      "stages": "four"
+      "title": "required",
+      "primary_visual": "required"
     },
     "renderers": {
-      "html": "AGENDA-4"
+      "html": "DELIVERY-ROUTE"
     }
   },
   {
@@ -54,11 +55,64 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-definition-map",
-    "name": "Deliverable definition map",
+    "id": "template-acquisition-proof",
+    "name": "Acquisition Proof",
     "slots": {
-      "center": "required",
-      "dimensions": "four"
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "ACQUISITION-PROOF"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-role-flow",
+    "name": "Role Flow",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "ROLE-FLOW"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-demo-walkthrough",
+    "name": "Demo Walkthrough",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "DEMO-WALKTHROUGH"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-form-questions",
+    "name": "Form Questions",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "FORM-QUESTIONS"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-definition-map",
+    "name": "Four confirmations into one task document",
+    "slots": {
+      "dimensions": "four",
+      "task_document": "required",
+      "connector": "single"
     },
     "renderers": {
       "html": "DEFINITION-MAP"
@@ -67,12 +121,39 @@
   {
     "contract_version": "1.0",
     "kind": "template",
+    "id": "template-delivery-stages",
+    "name": "Delivery Stages",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "DELIVERY-STAGES"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-delivery-checkpoints",
+    "name": "Delivery Checkpoints",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "DELIVERY-CHECKPOINTS"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
     "id": "template-ai-vs-human",
     "name": "Connected role comparison",
     "slots": {
-      "left": "required",
-      "connection": "required",
-      "right": "required"
+      "human": "left",
+      "ai": "right",
+      "requirements": "rightward",
+      "results": "leftward"
     },
     "renderers": {
       "html": "AI-VS-HUMAN"
@@ -81,28 +162,14 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-closing-hero",
-    "name": "Evidence closing hero",
+    "id": "template-ai-execution-loop",
+    "name": "Ai Execution Loop",
     "slots": {
       "title": "required",
-      "statement": "required"
+      "primary_visual": "required"
     },
     "renderers": {
-      "html": "CLOSING-HERO"
-    }
-  },
-  {
-    "contract_version": "1.0",
-    "kind": "template",
-    "id": "template-project-case",
-    "name": "Real project screenshot and simple action",
-    "slots": {
-      "title": "required",
-      "screenshots": "required",
-      "actions": "maximum-three"
-    },
-    "renderers": {
-      "html": "PROJECT-CASE"
+      "html": "AI-EXECUTION-LOOP"
     }
   },
   {
@@ -116,6 +183,71 @@
     },
     "renderers": {
       "html": "COMPUTER-USE-VIDEO"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-change-decision",
+    "name": "Change Decision",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "CHANGE-DECISION"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-acceptance-flow",
+    "name": "Acceptance Flow",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "ACCEPTANCE-FLOW"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-project-package",
+    "name": "Project Package",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "PROJECT-PACKAGE"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-project-gallery",
+    "name": "Project Gallery",
+    "slots": {
+      "title": "required",
+      "primary_visual": "required"
+    },
+    "renderers": {
+      "html": "PROJECT-GALLERY"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
+    "id": "template-closing-hero",
+    "name": "Evidence closing hero",
+    "slots": {
+      "title": "required",
+      "statement": "required"
+    },
+    "renderers": {
+      "html": "CLOSING-HERO"
     }
   }
 ]

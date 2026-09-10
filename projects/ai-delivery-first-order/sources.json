@@ -13,8 +13,17 @@
     "kind": "source",
     "id": "source-simple-cases",
     "file": "simple-project-cases.md",
-    "bytes": 4694,
+    "bytes": 4400,
     "mime": "text/markdown",
-    "sha256": "ea1e1fb75beeefd5610f78468c624b16bd8dc21ea9d5433c7062c591d3caad17"
+    "sha256": "686bd6d4a72d2c6a1863adbce943698cf07fa4657b3c410e3b3a9a88ca615e56"
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-editorial-refresh",
+    "file": "editorial-refresh.md",
+    "bytes": 5361,
+    "mime": "text/markdown",
+    "sha256": "9e8930ee34a4d12da0bcc11abbe9d3107e6ff4c763b021bf908a71bc644dbbbc"
   }
 ]

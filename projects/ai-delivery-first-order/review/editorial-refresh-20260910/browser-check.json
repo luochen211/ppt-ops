@@ -1,0 +1,412 @@
+{
+  "url": "http://127.0.0.1:4198/slides/decks/ai-delivery/?static=1",
+  "slides": 22,
+  "viewports": 2,
+  "findings": [],
+  "errors": [],
+  "keyboard": "passed",
+  "lightbox": {
+    "src": "http://127.0.0.1:4198/slides/decks/ai-delivery/assets/project-screenshots/logistics-options.png",
+    "naturalWidth": 2414
+  },
+  "overview": 22,
+  "video": "independent local-video slot retained per user",
+  "results": [
+    {
+      "page": 1,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "HERO-COVER",
+      "bad": []
+    },
+    {
+      "page": 2,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "BUSINESS-OUTCOME",
+      "bad": []
+    },
+    {
+      "page": 3,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "DELIVERY-ROUTE",
+      "bad": []
+    },
+    {
+      "page": 4,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 5,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ACQUISITION-PROOF",
+      "bad": []
+    },
+    {
+      "page": 6,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ROLE-FLOW",
+      "bad": []
+    },
+    {
+      "page": 7,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "DEMO-WALKTHROUGH",
+      "bad": []
+    },
+    {
+      "page": 8,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 9,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "FORM-QUESTIONS",
+      "bad": []
+    },
+    {
+      "page": 10,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "DEFINITION-MAP",
+      "bad": []
+    },
+    {
+      "page": 11,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "DELIVERY-STAGES",
+      "bad": []
+    },
+    {
+      "page": 12,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "DELIVERY-CHECKPOINTS",
+      "bad": []
+    },
+    {
+      "page": 13,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 14,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "AI-VS-HUMAN",
+      "bad": []
+    },
+    {
+      "page": 15,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "AI-EXECUTION-LOOP",
+      "bad": []
+    },
+    {
+      "page": 16,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "COMPUTER-USE-VIDEO",
+      "bad": []
+    },
+    {
+      "page": 17,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "CHANGE-DECISION",
+      "bad": []
+    },
+    {
+      "page": 18,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 19,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "ACCEPTANCE-FLOW",
+      "bad": []
+    },
+    {
+      "page": 20,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "PROJECT-PACKAGE",
+      "bad": []
+    },
+    {
+      "page": 21,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "PROJECT-GALLERY",
+      "bad": []
+    },
+    {
+      "page": 22,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "layout": "CLOSING-HERO",
+      "bad": []
+    },
+    {
+      "page": 1,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "HERO-COVER",
+      "bad": []
+    },
+    {
+      "page": 2,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "BUSINESS-OUTCOME",
+      "bad": []
+    },
+    {
+      "page": 3,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "DELIVERY-ROUTE",
+      "bad": []
+    },
+    {
+      "page": 4,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 5,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ACQUISITION-PROOF",
+      "bad": []
+    },
+    {
+      "page": 6,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ROLE-FLOW",
+      "bad": []
+    },
+    {
+      "page": 7,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "DEMO-WALKTHROUGH",
+      "bad": []
+    },
+    {
+      "page": 8,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 9,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "FORM-QUESTIONS",
+      "bad": []
+    },
+    {
+      "page": 10,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "DEFINITION-MAP",
+      "bad": []
+    },
+    {
+      "page": 11,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "DELIVERY-STAGES",
+      "bad": []
+    },
+    {
+      "page": 12,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "DELIVERY-CHECKPOINTS",
+      "bad": []
+    },
+    {
+      "page": 13,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 14,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "AI-VS-HUMAN",
+      "bad": []
+    },
+    {
+      "page": 15,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "AI-EXECUTION-LOOP",
+      "bad": []
+    },
+    {
+      "page": 16,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "COMPUTER-USE-VIDEO",
+      "bad": []
+    },
+    {
+      "page": 17,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "CHANGE-DECISION",
+      "bad": []
+    },
+    {
+      "page": 18,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ACT-DIVIDER",
+      "bad": []
+    },
+    {
+      "page": 19,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "ACCEPTANCE-FLOW",
+      "bad": []
+    },
+    {
+      "page": 20,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "PROJECT-PACKAGE",
+      "bad": []
+    },
+    {
+      "page": 21,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "PROJECT-GALLERY",
+      "bad": []
+    },
+    {
+      "page": 22,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "layout": "CLOSING-HERO",
+      "bad": []
+    }
+  ]
+}

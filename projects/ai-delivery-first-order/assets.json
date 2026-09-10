@@ -76,5 +76,41 @@
       "source_path": "docs/qa/assets/finance-ui-2026-07-30/01-new-request.png",
       "note": "原始截图字节保留；页面局部放大仅由 CSS 完成。历史界面不代表当前生产状态。"
     }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-options",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-options.png",
+    "mime": "image/png",
+    "sha256": "2a4fcef8ef2f93ff22d1f25dc486806dff24d2af987eb7e398bd6d0d9b9a591b",
+    "bytes": 164287,
+    "width": 65536,
+    "height": 4292542531,
+    "alt": "物流系统运输方式下拉选项，项目存档截图",
+    "provenance": {
+      "kind": "project_screenshot",
+      "source_path": "existing project asset: assets/project-screenshots/logistics-options.png",
+      "note": "复用本项目已存档的原始截图；未补充未核实的拍摄日期或测试结论。"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "asset",
+    "id": "logistics-save",
+    "type": "image",
+    "file": "assets/project-screenshots/logistics-save.png",
+    "mime": "image/png",
+    "sha256": "550e067eb10ccd35a1181e0e74f076879910a45115c57e4c0e659eebc6228166",
+    "bytes": 131601,
+    "width": 65536,
+    "height": 4292542531,
+    "alt": "物流系统提单保存入口，项目存档截图",
+    "provenance": {
+      "kind": "project_screenshot",
+      "source_path": "existing project asset: assets/project-screenshots/logistics-save.png",
+      "note": "复用本项目已存档的原始截图；未补充未核实的拍摄日期或测试结论。"
+    }
   }
 ]
