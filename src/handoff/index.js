@@ -38,6 +38,7 @@ export async function createHandoff(project, reviewReport, options = {}) {
       passed: reviewReport.passed,
       required_failure_count: reviewReport.required_failure_count
     },
+    ...(options.deliverySelection ? { delivery_selection: options.deliverySelection } : {}),
     ...(options.boundaryImages ? { boundary_images: options.boundaryImages.boundaries.map(({ boundary, roles, page_id, asset_id, generation_id, sha256 }) => ({ boundary, roles, page_id, asset_id, generation_id, sha256 })) } : {})
   };
   const manifestFile = path.join(packageDir, HANDOFF_MANIFEST_FILE);

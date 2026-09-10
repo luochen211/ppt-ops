@@ -8,6 +8,7 @@ import { normalizeFeedbackFindings, repeatedRootCauseFingerprints } from "../cor
 import { readProject, resolveProjectPath } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { createHandoff } from "../handoff/index.js";
+import { deliveryCapabilities, exportOutlineMarkdown, readDeliverySelection, recordDeliverySelection } from "../delivery/selection.js";
 import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
@@ -255,14 +256,45 @@ export class ApplicationService {
     return this.replaceManifest("review", review.id, stripRevision(recorded));
   }
 
-  async createHandoff(buildId, reviewId) {
+  deliveryCapabilities(artifactType, buildId) {
+    if (artifactType === "presentation") {
+      const build = this.requireBuild(buildId);
+      return deliveryCapabilities({ artifactType, availableFormats: build.targets });
+    }
+    return deliveryCapabilities({ artifactType, availableFormats: ["markdown"] });
+  }
+
+  async selectDelivery({ artifactType, formats, sourceId, sourceRevision, actor, selectionSource, buildId }) {
+    let availableFormats;
+    if (artifactType === "presentation") {
+      const build = this.requireBuild(buildId);
+      if (sourceId !== build.id || sourceRevision !== build.version_id) throw new ApplicationError("DELIVERY_SELECTION_MISMATCH", "presentation selection must target the selected Build and frozen Version");
+      availableFormats = build.targets;
+    } else {
+      if (sourceId !== this.project.contracts.outline.id) throw new ApplicationError("DELIVERY_SELECTION_MISMATCH", "outline selection must target the current accepted Outline");
+      availableFormats = ["markdown"];
+    }
+    const recorded = await recordDeliverySelection(this.project.root, {
+      artifact_type: artifactType, formats, source_id: sourceId, source_revision: sourceRevision,
+      actor, selection_source: selectionSource, available_formats: availableFormats
+    });
+    const artifacts = artifactType === "outline" ? await exportOutlineMarkdown(this.project, recorded.decision) : [];
+    return { ...recorded, artifacts };
+  }
+
+  async createHandoff(buildId, reviewId, options = {}) {
     const review = this.requireEntity("review", reviewId);
     if (review.state !== "accepted" || review.build_id !== buildId) throw new ApplicationError("REVIEW_NOT_ACCEPTED", "handoff requires an accepted review for the selected build");
     const frozenProject = await this.projectFromVersion(this.requireBuild(buildId).version_id);
     const boundaryImages = await assertBoundaryGeneratedImages(frozenProject);
     const report = await reviewProject(frozenProject);
-    const sourceFiles = await this.buildHandoffFiles(buildId, review);
-    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages });
+    const build = this.requireBuild(buildId);
+    const selection = options.deliverySelectionId ? await readDeliverySelection(this.project.root, options.deliverySelectionId) : undefined;
+    if (selection && (selection.artifact_type !== "presentation" || selection.source_id !== buildId || selection.source_revision !== build.version_id)) throw new ApplicationError("DELIVERY_SELECTION_MISMATCH", "handoff selection must target the selected Build and frozen Version");
+    if (selection?.formats?.some((format) => !build.targets.includes(format))) throw new ApplicationError("EXPORTER_UNAVAILABLE", "the selected Build does not contain every requested format", { capabilities: this.deliveryCapabilities("presentation", buildId) });
+    const selectedFormats = selection?.formats ?? build.targets;
+    const sourceFiles = await this.buildHandoffFiles(buildId, review, selectedFormats);
+    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages, deliverySelection: selection });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
     let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
@@ -270,10 +302,10 @@ export class ApplicationService {
     return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
   }
 
-  async buildHandoffFiles(buildId, review) {
+  async buildHandoffFiles(buildId, review, selectedFormats) {
     const build = this.requireBuild(buildId);
     const files = [];
-    for (const target of build.targets) {
+    for (const target of build.targets.filter((value) => !selectedFormats || selectedFormats.includes(value))) {
       const directory = resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, target));
       for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
         if (entry.isFile()) files.push({ name: entry.name, path: path.join(directory, entry.name) });

@@ -12,7 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "delivery-capabilities", "delivery-select", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
@@ -53,7 +53,9 @@ Usage:
   pptops build-retry <project-dir> --build <id>
   pptops review-run <project-dir> --build <id>
   pptops review-record <project-dir> --review <id> --decision <accepted|rejected> --expected-revision <n> [--evidence <json>]
-  pptops handoff-create <project-dir> --build <id> --review <id>
+  pptops delivery-capabilities <project-dir> --artifact <presentation|outline> [--build <id>]
+  pptops delivery-select <project-dir> --artifact <presentation|outline> --formats <list> --source <id> --source-revision <id> --actor <id> [--build <id>]
+  pptops handoff-create <project-dir> --build <id> --review <id> [--selection <id>]
   pptops doctor [project-dir]
   pptops reindex <project-dir>
   pptops update-preview <repository-root> --source <update-root> [--data-root <path>]
@@ -208,7 +210,12 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "build-retry") return await service.retryBuild(required(options, "build"));
     if (command === "review-run") return await service.runReview(required(options, "build"));
     if (command === "review-record") return await service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });
-    if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"));
+    if (command === "delivery-capabilities") return service.deliveryCapabilities(required(options, "artifact"), options.build);
+    if (command === "delivery-select") return await service.selectDelivery({
+      artifactType: required(options, "artifact"), formats: csvOption(options, "formats"), sourceId: required(options, "source"),
+      sourceRevision: required(options, "source-revision"), actor: required(options, "actor"), selectionSource: options["selection-source"], buildId: options.build
+    });
+    if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"), { deliverySelectionId: options.selection });
     throw new ApplicationError("COMMAND_UNKNOWN", `unknown application command: ${command}`);
   } finally { service.close(); }
 }
@@ -283,7 +290,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "artifact", "formats", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
@@ -298,6 +305,11 @@ function integerOption(options, name) {
   const value = Number(required(options, name));
   if (!Number.isInteger(value) || value < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
   return value;
+}
+function csvOption(options, name) {
+  const values = required(options, name).split(",").map((value) => value.trim()).filter(Boolean);
+  if (values.length === 0) { const error = new Error(`--${name} requires at least one value`); error.code = "OPTION_INVALID"; throw error; }
+  return values;
 }
 function positiveInteger(value, name) {
   const parsed = Number(value);

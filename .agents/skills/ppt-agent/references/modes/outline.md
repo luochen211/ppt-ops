@@ -1,3 +1,5 @@
 # Outline Mode
 
 Use the Brief and approved Source summaries to create a narrative chain. Each page has one cognitive job, one three-second message, a semantic relation, and Source references. Before outline acceptance, follow `content-review.md`: check the audience's intended progress with `dbs-jtbd`, and review empirical claims, terminology, or theoretical attributions with `dbs-theory-grounding` only when relevant. Keep uncertain facts and suggested changes visible; do not force theory onto factual introductions or price lists. Present a compact outline confirmation before acceptance. Exit with an accepted Outline; do not load renderer internals or unauthorized Source bodies.
+
+After explicit Outline acceptance, independently ask whether the user wants the approved outline as Markdown, Word, PDF, or more than one. Record the selection and source revision; do not silently choose a format or treat an outline export as a reviewed presentation Build. Report unavailable exporters and preserve the accepted Outline.

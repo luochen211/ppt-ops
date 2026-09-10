@@ -1,3 +1,4 @@
 # Handoff Mode
 
 Use one selected Build, its Review, delivery preferences, and `visual-assets.md`. Re-verify the first/final accepted ImageGen evidence and refuse a handoff if either boundary or another required check fails. Package the editable PPTX, Review report, source provenance, boundary asset identities, and unresolved acceptance without overwriting an existing package. Exit with a Handoff manifest and concrete file paths.
+Before packaging, ask the user which currently available presentation formats they want: self-contained HTML, editable PowerPoint, PDF, or more than one. Do not infer a default from `Project.outputs`. Record the explicit selection with artifact type, source Build and frozen Version, actor, decision time, and conversation source. Package only selected formats. If an exporter is unavailable, say so plainly and offer the remaining choices without changing accepted work or converting one renderer into another.
