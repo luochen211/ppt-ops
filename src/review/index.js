@@ -4,6 +4,7 @@ import { outputDir } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
+import { inspectDeliveryModeFit } from "../contracts/delivery.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -11,6 +12,7 @@ export async function reviewProject(project, options = {}) {
   const directory = outputDir(project);
   const validationErrors = validateProject(project);
   const artifacts = await listOutputArtifacts(directory);
+  const deliveryModeFit = inspectDeliveryModeFit(project);
   const automatedChecks = [
     {
       id: "project-validation",
@@ -27,6 +29,13 @@ export async function reviewProject(project, options = {}) {
       required: false,
       status: "passed",
       evidence: { count: artifacts.length, files: artifacts }
+    },
+    {
+      id: "delivery-mode-fit",
+      kind: "automated",
+      required: false,
+      status: deliveryModeFit.status,
+      evidence: deliveryModeFit
     }
   ];
   const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");

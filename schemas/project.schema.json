@@ -12,6 +12,7 @@
     "source_files": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
     "theme_file": { "type": "string", "minLength": 1 },
     "assets_file": { "type": "string", "minLength": 1 },
+    "delivery_mode": { "type": "string", "enum": ["live_talk", "workshop", "pitch", "leave_behind", "async"] },
     "outputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "enum": ["html", "pptx", "pdf", "png"] } }
   },
   "additionalProperties": false
