@@ -79,7 +79,7 @@ export function analyzeScreenshotEvidence(project, placements = [], options = {}
       if (priorPages.length > 0) {
         findings.push(finding(usage.page, usage.asset_id, "screenshot-evidence-repetition", "warning", {
           evidence_purpose: usage.evidence_purpose,
-          repeated_from_pages: priorPages,
+          repeated_from_pages: [...priorPages],
           screenshot_identity: usage.sha256 ? "sha256" : "asset_id",
           automated_claim: "Repeated screenshot evidence purpose detected; visual usefulness was not assessed."
         }));

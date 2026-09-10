@@ -69,3 +69,14 @@ test("unmapped screenshot placement stays an explicit composition finding", () =
     { page: 7, asset_id: "screen", check: "screenshot-placement-unresolved" }
   ]);
 });
+
+
+test("repetition evidence is a snapshot of earlier pages only", () => {
+  const project = {
+    assets: [{ id: "screen", sha256: digest, screenshot_evidence: semantics }],
+    pages: [1, 2, 3].map((page) => ({ page, asset_slots: [{ asset_id: "screen" }] }))
+  };
+  const result = analyzeScreenshotEvidence(project);
+  assert.deepEqual(result.findings.filter(({ check }) => check === "screenshot-evidence-repetition")
+    .map(({ page, evidence }) => [page, evidence.repeated_from_pages]), [[2, [1]], [3, [1, 2]]]);
+});

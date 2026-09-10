@@ -29,7 +29,7 @@ async function readV1Project(root, contract, projectFile, pagesFile) {
     return { page: page.page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, task: page.task, three_second_message: page.three_second_message, relation: page.relation, screen_text: page.screen_text, visual_job: page.visual_job, asset_slots: page.asset_slots, status: page.content_status, html: page.renderers?.html, pptx: page.renderers?.pptx };
   });
   const theme = themeContract.tokens;
-  const assets = assetContracts.map(({ contract_version, kind, sha256, bytes, mime, provenance, ...asset }) => asset);
+  const assets = assetContracts.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset);
   const referencedFiles = await inspectReferencedFiles(root, project, pages, assets);
   return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, contractModel: "v1", contracts: { project: contract, sources, outline, pages: pageContracts, theme: themeContract, assets: assetContracts, templates } };
 }

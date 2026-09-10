@@ -22,7 +22,7 @@ export async function migrateFoundationProject(projectDir) {
   const assets = await Promise.all((legacyAssets ?? []).map(async (asset) => {
     const metadata = await fileMetadata(root, asset.file);
     if (!asset.alt) warnings.push({ code: "ASSET_ALT_MISSING", subject_id: asset.id, field: "alt" });
-    return entity("asset", asset.id, { type: asset.type, file: asset.file, alt: asset.alt ?? "", ...metadata, provenance: { migrated_from: "foundation" } });
+    return entity("asset", asset.id, { type: asset.type, file: asset.file, alt: asset.alt ?? "", ...(asset.screenshot_evidence !== undefined ? { screenshot_evidence: structuredClone(asset.screenshot_evidence) } : {}), ...metadata, provenance: { migrated_from: "foundation" } });
   }));
   const legacyPageList = legacyPages ?? [];
   const pages = legacyPageList.map((page, index) => {
