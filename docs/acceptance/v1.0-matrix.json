@@ -9,7 +9,9 @@
     {
       "id": "automated_release_candidate",
       "status": "passed",
-      "evidence": ["docs/acceptance/v1-release-candidate.md"]
+      "evidence": [
+        "docs/acceptance/v1-release-candidate.md"
+      ]
     },
     {
       "id": "human_visual_acceptance",
@@ -19,17 +21,26 @@
     {
       "id": "manual_powerpoint_acceptance",
       "status": "pending",
-      "evidence": ["docs/acceptance/v1-powerpoint-observation.md"]
+      "evidence": [
+        "docs/acceptance/v1-powerpoint-observation.md",
+        "docs/acceptance/2026-09-10-native-audit.md"
+      ]
     },
     {
       "id": "chrome_html_acceptance",
       "status": "passed",
-      "evidence": ["docs/acceptance/v1-browser-acceptance.md", "docs/acceptance/v1-chrome-fullscreen.jpeg"]
+      "evidence": [
+        "docs/acceptance/v1-browser-acceptance.md",
+        "docs/acceptance/v1-chrome-fullscreen.jpeg"
+      ]
     },
     {
       "id": "safari_html_acceptance",
       "status": "passed",
-      "evidence": ["docs/acceptance/v1-browser-acceptance.md", "docs/acceptance/v1-safari-final-slide.jpeg"]
+      "evidence": [
+        "docs/acceptance/v1-browser-acceptance.md",
+        "docs/acceptance/v1-safari-final-slide.jpeg"
+      ]
     },
     {
       "id": "delivery_package_acceptance",
