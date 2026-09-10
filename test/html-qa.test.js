@@ -64,6 +64,24 @@ test("HTML QA reports an unannotated advisory deck as degraded, never passed", (
   assert.match(result.reason, /No data-qa geometry annotations/);
 });
 
+test("HTML QA integrates advisory rendered-rhythm findings without claiming structural failure", () => {
+  const pages = [1, 2, 3].map((number) => page([
+    element(`heading-${number}`, "content", { x: 80, y: 60, width: 1440, height: 100 }),
+    element(`body-${number}`, "content", { x: 80, y: 200, width: 1440, height: 560 })
+  ], {
+    page: number,
+    layoutElements: [
+      { kind: "text", rect: { x: 80, y: 60, width: 1440, height: 100 } },
+      { kind: "structure", rect: { x: 80, y: 200, width: 1440, height: 560 } }
+    ]
+  }));
+  const result = analyzeHtmlGeometry(pages);
+  assert.equal(result.status, "passed");
+  assert.equal(result.rhythm.status, "attention");
+  assert.deepEqual(result.findings.find(({ check }) => check === "rendered-layout-repetition").evidence.pages, [1, 2, 3]);
+  assert.deepEqual(result.pages.map(({ finding_count }) => finding_count), [1, 1, 1]);
+});
+
 test("browser profile cleanup retries transient Chromium directory races", async () => {
   let attempts = 0;
   const waits = [];

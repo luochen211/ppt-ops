@@ -22,6 +22,18 @@
       "additionalProperties": false
     },
     "visual_job": { "type": "string", "minLength": 1 },
+    "estimated_duration_seconds": { "type": "integer", "minimum": 1, "description": "Planning estimate only; not evidence of rehearsed timing." },
+    "speaker_note_intent": { "type": "string", "minLength": 1, "description": "Purpose of off-slide speaker support; never visible slide copy." },
+    "audience_interaction": {
+      "type": "object",
+      "required": ["kind", "intent"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["audience_action", "question", "exercise", "demonstration", "feedback"] },
+        "intent": { "type": "string", "minLength": 1 },
+        "expected_response": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
     "asset_slots": {
       "type": "array",
       "items": {

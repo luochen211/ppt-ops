@@ -22,11 +22,11 @@ async function readV1Project(root, contract, projectFile, pagesFile) {
     readJson(path.join(root, "outline.json")), readJson(path.join(root, "templates.json"))
   ]);
   const sourceById = new Map(sources.map((source) => [source.id, source]));
-  const project = { schema_version: "1.0", name: contract.id, title: contract.title, format: contract.format, source_files: sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contract.outputs };
+  const project = { schema_version: "1.0", name: contract.id, title: contract.title, format: contract.format, source_files: sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contract.outputs, ...(contract.delivery_mode ? { delivery_mode: contract.delivery_mode } : {}) };
   const pages = pageContracts.map((page) => {
     const reference = page.source_refs?.[0];
     const source = reference ? sourceById.get(reference.source_id) : undefined;
-    return { page: page.page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, task: page.task, three_second_message: page.three_second_message, relation: page.relation, screen_text: page.screen_text, visual_job: page.visual_job, asset_slots: page.asset_slots, status: page.content_status, html: page.renderers?.html, pptx: page.renderers?.pptx };
+    return { page: page.page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, task: page.task, three_second_message: page.three_second_message, relation: page.relation, screen_text: page.screen_text, visual_job: page.visual_job, asset_slots: page.asset_slots, status: page.content_status, html: page.renderers?.html, pptx: page.renderers?.pptx, ...(page.estimated_duration_seconds ? { estimated_duration_seconds: page.estimated_duration_seconds } : {}), ...(page.speaker_note_intent ? { speaker_note_intent: page.speaker_note_intent } : {}), ...(page.audience_interaction ? { audience_interaction: page.audience_interaction } : {}) };
   });
   const theme = themeContract.tokens;
   const assets = assetContracts.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset);

@@ -53,6 +53,7 @@ test("layer manifests reject overlap and protect user-owned paths from updates",
   const manifest = createLayerManifest({ repositoryRoot, dataRoot: path.join(repositoryRoot, "projects") });
   assert.doesNotThrow(() => assertSystemUpdatePaths(["src/config/data-contract.js", "package.json"], manifest));
   assert.throws(() => assertSystemUpdatePaths(["config/profile.yml"], manifest), { code: "PPT_OPS_UPDATE_TOUCHES_USER_DATA" });
+  assert.throws(() => assertSystemUpdatePaths(["config/visual-preferences.json"], manifest), { code: "PPT_OPS_UPDATE_TOUCHES_USER_DATA" });
   assert.throws(() => assertSystemUpdatePaths(["projects/client/project.json"], manifest), { code: "PPT_OPS_UPDATE_TOUCHES_USER_DATA" });
   assert.throws(() => createLayerManifest({ repositoryRoot, dataRoot: path.join(repositoryRoot, "src", "projects") }), { code: "PPT_OPS_LAYER_OVERLAP" });
 });

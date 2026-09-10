@@ -1,0 +1,17 @@
+[
+  {
+    "page": 1,
+    "rect": { "x": 0, "y": 0, "width": 1000, "height": 562.5 },
+    "layoutElements": [{ "kind": "structure", "rect": { "x": 60, "y": 120, "width": 400, "height": 320 } }]
+  },
+  {
+    "page": 2,
+    "rect": { "x": 0, "y": 0, "width": 1000, "height": 562.5 },
+    "layoutElements": [{ "kind": "structure", "rect": { "x": 540, "y": 80, "width": 380, "height": 400 } }]
+  },
+  {
+    "page": 3,
+    "rect": { "x": 0, "y": 0, "width": 1000, "height": 562.5 },
+    "layoutElements": [{ "kind": "structure", "rect": { "x": 60, "y": 120, "width": 400, "height": 320 } }]
+  }
+]

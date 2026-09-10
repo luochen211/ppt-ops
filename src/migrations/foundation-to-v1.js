@@ -38,7 +38,10 @@ export async function migrateFoundationProject(projectDir) {
       visual_job: page.visual_job,
       source_refs: sourceId ? [{ source_id: sourceId, locator: locator ? `#${locator}` : "" }] : [],
       asset_slots: page.asset_slots ?? [], content_status: page.status ?? "draft",
-      renderers: { html: page.html ?? {}, pptx: page.pptx ?? {} }
+      renderers: { html: page.html ?? {}, pptx: page.pptx ?? {} },
+      ...(page.estimated_duration_seconds ? { estimated_duration_seconds: page.estimated_duration_seconds } : {}),
+      ...(page.speaker_note_intent ? { speaker_note_intent: page.speaker_note_intent } : {}),
+      ...(page.audience_interaction ? { audience_interaction: page.audience_interaction } : {})
     });
   });
   const outline = entity("outline", "outline-main", { sections: [{ id: "section-main", title: legacyProject.title, page_ids: pages.map(({ id }) => id) }] });
@@ -46,7 +49,8 @@ export async function migrateFoundationProject(projectDir) {
   const project = entity("project", legacyProject.name, {
     title: legacyProject.title, format: legacyProject.format, outputs: legacyProject.outputs,
     source_ids: sources.map(({ id }) => id), outline_id: outline.id, theme_id: theme.id,
-    asset_ids: assets.map(({ id }) => id)
+    asset_ids: assets.map(({ id }) => id),
+    ...(legacyProject.delivery_mode ? { delivery_mode: legacyProject.delivery_mode } : {})
   });
   const bundle = { project, sources, outline, pages, theme, assets, templates: [], candidates: [], approvals: [], versions: [], builds: [], reviews: [], handoffs: [] };
   const errors = validateV1Bundle(bundle);

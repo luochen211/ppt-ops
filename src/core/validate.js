@@ -1,4 +1,5 @@
 import { validateV1Bundle } from "../contracts/v1.js";
+import { DELIVERY_MODES, INTERACTION_KINDS } from "../contracts/delivery.js";
 
 const RELATIONS = new Set(["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]);
 const STATUSES = new Set(["draft", "prototype", "approved", "built", "reviewed"]);
@@ -35,6 +36,7 @@ export function validatePage(page, assetIds = new Set()) {
     });
   }
   if (!STATUSES.has(page.status)) errors.push(`status is invalid: ${page.status}`);
+  validateDeliveryFields(page, errors);
   return errors;
 }
 
@@ -54,6 +56,7 @@ export function validateProject(loaded) {
   if (!hasText(project.theme_file)) errors.push("project.theme_file is required");
   if (!hasText(project.assets_file)) errors.push("project.assets_file is required");
   validateEnumList(project.outputs, "project.outputs", OUTPUTS, errors);
+  if (project.delivery_mode !== undefined && !DELIVERY_MODES.includes(project.delivery_mode)) errors.push(`project.delivery_mode is invalid: ${project.delivery_mode}`);
 
   for (const error of validateTheme(loaded.theme)) errors.push(`theme: ${error}`);
   const assetIds = validateAssets(loaded.assets, errors);
@@ -131,3 +134,18 @@ function validateEnumList(value, field, allowed, errors) {
 
 function requireText(object, field, errors) { if (!hasText(object[field])) errors.push(`${field} is required`); }
 function hasText(value) { return typeof value === "string" && value.trim() !== ""; }
+
+function validateDeliveryFields(page, errors) {
+  if (page.estimated_duration_seconds !== undefined && (!Number.isInteger(page.estimated_duration_seconds) || page.estimated_duration_seconds < 1)) {
+    errors.push("estimated_duration_seconds must be a positive integer");
+  }
+  if (page.speaker_note_intent !== undefined && !hasText(page.speaker_note_intent)) errors.push("speaker_note_intent must be a non-empty string");
+  if (page.audience_interaction !== undefined) {
+    if (!page.audience_interaction || typeof page.audience_interaction !== "object" || Array.isArray(page.audience_interaction)) errors.push("audience_interaction must be an object");
+    else {
+      if (!INTERACTION_KINDS.includes(page.audience_interaction.kind)) errors.push(`audience_interaction.kind is invalid: ${page.audience_interaction.kind}`);
+      if (!hasText(page.audience_interaction.intent)) errors.push("audience_interaction.intent is required");
+      if (page.audience_interaction.expected_response !== undefined && !hasText(page.audience_interaction.expected_response)) errors.push("audience_interaction.expected_response must be a non-empty string");
+    }
+  }
+}

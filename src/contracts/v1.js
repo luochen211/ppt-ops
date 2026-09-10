@@ -1,3 +1,5 @@
+import { DELIVERY_MODES, INTERACTION_KINDS } from "./delivery.js";
+
 export const CONTRACT_VERSION = "1.0";
 export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "layout_composition", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
 export const ROOT_CAUSES = Object.freeze(["content_truth", "page_task", "information_relationship", "visual_grammar", "powerpoint_implementation", "process"]);
@@ -58,6 +60,7 @@ const validators = {
     requireId(value, "theme_id", errors);
     requireIdList(value.asset_ids, "asset_ids", errors, true);
     requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
+    if (value.delivery_mode !== undefined) requireEnum(value, "delivery_mode", DELIVERY_MODES, errors);
   },
   source(value, errors) {
     requireText(value, "file", errors); requireHash(value, errors);
@@ -84,6 +87,8 @@ const validators = {
     for (const [index, slot] of (value.asset_slots ?? []).entries()) {
       if (slot?.evidence_purpose !== undefined && !hasText(slot.evidence_purpose)) errors.push(`asset_slots[${index}].evidence_purpose must be non-empty`);
     }
+
+    validateDeliveryFields(value, errors);
   },
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
@@ -209,6 +214,22 @@ function validateNormalizedRegion(value, field, errors) {
   if (Number.isFinite(value.height) && (value.height <= 0 || value.height > 1)) errors.push(`${field}.height must be greater than 0 and at most 1`);
   if (Number.isFinite(value.x) && Number.isFinite(value.width) && value.x + value.width > 1) errors.push(`${field}.x + width must not exceed 1`);
   if (Number.isFinite(value.y) && Number.isFinite(value.height) && value.y + value.height > 1) errors.push(`${field}.y + height must not exceed 1`);
+}
+
+
+function validateDeliveryFields(value, errors) {
+  if (value.estimated_duration_seconds !== undefined && (!Number.isInteger(value.estimated_duration_seconds) || value.estimated_duration_seconds < 1)) {
+    errors.push("estimated_duration_seconds must be a positive integer");
+  }
+  if (value.speaker_note_intent !== undefined && !hasText(value.speaker_note_intent)) errors.push("speaker_note_intent must be a non-empty string");
+  if (value.audience_interaction !== undefined) {
+    if (!isObject(value.audience_interaction)) errors.push("audience_interaction must be an object");
+    else {
+      requireEnum(value.audience_interaction, "kind", INTERACTION_KINDS, errors);
+      requireText(value.audience_interaction, "intent", errors, "audience_interaction.");
+      if (value.audience_interaction.expected_response !== undefined && !hasText(value.audience_interaction.expected_response)) errors.push("audience_interaction.expected_response must be a non-empty string");
+    }
+  }
 }
 
 function requireText(value, field, errors, prefix = "") { if (!hasText(value?.[field])) errors.push(`${prefix}${field} is required`); }

@@ -113,9 +113,10 @@ function renderBoundarySlide(page, plan, index, assets) {
 function renderAsset(slot, asset) {
   if (!asset) throw new Error(`unknown asset: ${slot.asset_id}`);
   const label = escapeAttribute(asset.alt ?? slot.role);
+  const assetId = escapeAttribute(asset.id);
   const style = `--fit:${slot.fit === "cover" ? "cover" : "contain"}`;
-  if (asset.mime.startsWith("image/")) return `<figure aria-label="${label}" style="${style}"><img src="${asset.uri}" alt="${label}"></figure>`;
-  if (asset.mime.startsWith("video/")) return `<figure aria-label="${label}" style="${style}"><video controls preload="metadata" src="${asset.uri}"></video></figure>`;
+  if (asset.mime.startsWith("image/")) return `<figure aria-label="${label}" style="${style}"><img data-asset-id="${assetId}" src="${asset.uri}" alt="${label}"></figure>`;
+  if (asset.mime.startsWith("video/")) return `<figure aria-label="${label}" style="${style}"><video data-asset-id="${assetId}" controls preload="metadata" src="${asset.uri}"></video></figure>`;
   return `<a class="asset-link" href="${asset.uri}" download="${escapeAttribute(path.basename(asset.file))}">${label}</a>`;
 }
 
