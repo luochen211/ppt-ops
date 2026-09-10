@@ -190,18 +190,18 @@
     "kind": "page_spec",
     "id": "page-007",
     "page": 7,
-    "task": "通过真实项目截图讲解一个简单动作",
-    "three_second_message": "介绍这单，先讲清一个流程",
+    "task": "说明企业商单需要用可操作的 Demo 建立客户信任",
+    "three_second_message": "做企业商单，一定要有 Demo 能力",
     "relation": "process",
     "screen_text": {
-      "title": "介绍这单，先讲清一个流程",
+      "title": "做企业商单，一定要有 Demo 能力",
       "body": [
-        "先指给对方看",
-        "订单在哪里填，结果在哪里查。",
-        "再问他的业务",
-        "谁提交、谁处理、谁看费用？",
-        "再确认能做什么",
-        "把对方要的流程和本次范围说清。"
+        "把需求快速做成 Demo",
+        "拿物流需求举例，先做出能操作的核心流程。",
+        "让客户亲手试一遍",
+        "订单怎么填、结果怎么查，对着 Demo 确认。",
+        "用做出来的结果赢得信任",
+        "客户看见你能做，才更愿意把项目交给你。"
       ]
     },
     "visual_job": "Show large real project screenshots with concise plain-language actions",
