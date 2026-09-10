@@ -1,0 +1,151 @@
+{
+  "base": "file:///Volumes/Luochen/PPT-ops/projects/ai-delivery-first-order/ppt/index.html",
+  "findings": [
+    {
+      "page": 10,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 11,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 12,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 14,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 15,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 21,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 22,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 23,
+      "viewport": {
+        "width": 1600,
+        "height": 900
+      },
+      "bad": []
+    },
+    {
+      "page": 10,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 11,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 12,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 14,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 15,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 21,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 22,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    },
+    {
+      "page": 23,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "bad": []
+    }
+  ],
+  "zoom": {
+    "src": "file:///Volumes/Luochen/PPT-ops/projects/ai-delivery-first-order/assets/project-screenshots/research-peer-review.jpg",
+    "loaded": true
+  },
+  "handoutChecks": [
+    {
+      "width": 1280,
+      "overflow": false,
+      "images": true,
+      "sections": 6
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "images": true,
+      "sections": 6
+    }
+  ]
+}

@@ -4,9 +4,9 @@
     "kind": "source",
     "id": "source-001",
     "file": "brief.md",
-    "bytes": 4489,
+    "bytes": 4775,
     "mime": "text/markdown",
-    "sha256": "9251ca09734abcd26e312906be1cffce1e75cbceb7599ca825f31d0f3f2332d7"
+    "sha256": "57afe49d15a9f60b06ef2315b83cbba65417e958a577f002a21524b8e3072dbe"
   },
   {
     "contract_version": "1.0",
@@ -22,17 +22,26 @@
     "kind": "source",
     "id": "source-editorial-refresh",
     "file": "editorial-refresh.md",
-    "bytes": 6579,
+    "bytes": 5922,
     "mime": "text/markdown",
-    "sha256": "2d0cf713b37c3c81f4e2303df9cfde19497bd33dfec66288db927e6a1f1d736a"
+    "sha256": "2ce2c254b6980a693295ea870c63e590bab21ad5aac79ace5efb21289a47f34f"
   },
   {
     "contract_version": "1.0",
     "kind": "source",
     "id": "source-framework-alignment",
     "file": "framework-alignment.md",
-    "bytes": 2786,
+    "bytes": 2419,
     "mime": "text/markdown",
-    "sha256": "e50b027a8ee81a576886f3cbb4ccc571b7a8354b451ffafb58b4721e31473ed9"
+    "sha256": "7603c663871af3500579b83f698b049a548197177b66298e04766aec3c792e6c"
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "source",
+    "id": "source-content-improvements",
+    "file": "content-improvements.md",
+    "mime": "text/markdown",
+    "bytes": 6138,
+    "sha256": "3f2cf7eeb2f77c7f55ad512a5c39dba7cebca35877a19ac884140e5871218e18"
   }
 ]
