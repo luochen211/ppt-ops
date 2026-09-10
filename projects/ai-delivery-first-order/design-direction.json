@@ -130,17 +130,18 @@
     {
       "page": 5,
       "page_id": "page-005",
-      "relation": "process",
-      "visual_job": "ACQUISITION-PROOF",
-      "template_id": "template-acquisition-proof",
+      "relation": "hierarchy",
+      "visual_job": "CAPSTONE-INTRO",
+      "template_id": "template-capstone-intro",
       "motif": "evidence",
       "reading_path": [
-        "获客渠道",
-        "作品示例",
-        "沟通方法"
+        "毕设起点",
+        "闲鱼获客",
+        "客单价",
+        "全包内容"
       ],
-      "rationale": "渠道与真实作品分开表达，不把系统页面当作获客过程证据。",
-      "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
+      "rationale": "以价格、获客渠道和全包内容简要介绍真实毕设起点，再进入企业物流案例，不扩展获客教程或答辩细节。",
+      "avoid": "不将后来的物流系统截图作为毕设获客证据；不推断答辩支持细节或成交过程。"
     },
     {
       "page": 6,

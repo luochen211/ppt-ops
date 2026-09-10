@@ -55,14 +55,16 @@
   {
     "contract_version": "1.0",
     "kind": "template",
-    "id": "template-acquisition-proof",
-    "name": "Acquisition Proof",
+    "id": "template-capstone-intro",
+    "name": "Capstone business introduction",
     "slots": {
       "title": "required",
-      "primary_visual": "required"
+      "price": "required",
+      "channel": "required",
+      "deliverables": "required"
     },
     "renderers": {
-      "html": "ACQUISITION-PROOF"
+      "html": "CAPSTONE-INTRO"
     }
   },
   {

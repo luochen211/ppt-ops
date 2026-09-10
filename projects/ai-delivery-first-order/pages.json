@@ -125,38 +125,30 @@
     "kind": "page_spec",
     "id": "page-005",
     "page": 5,
-    "task": "渠道与真实作品分开表达，不把系统页面当作获客过程证据。",
-    "three_second_message": "这单物流项目，来自闲鱼",
-    "relation": "process",
+    "task": "以价格、获客渠道和全包内容简要介绍真实毕设起点，再进入企业物流案例，不扩展获客教程或答辩细节。",
+    "three_second_message": "最早，我从毕设项目起步",
+    "relation": "hierarchy",
     "screen_text": {
-      "title": "这单物流项目，来自闲鱼",
+      "title": "最早，我从毕设项目起步",
       "body": [
         "获客渠道：闲鱼",
-        "展示具体页面、说明用途，再沟通需求"
+        "客单价：800–5,000 元",
+        "海外留学生、硕士项目的客单价通常更高",
+        "通常全包：程序开发、论文撰写、过程表格、期中答辩、最终答辩"
       ]
     },
-    "visual_job": "ACQUISITION-PROOF",
+    "visual_job": "CAPSTONE-INTRO",
     "source_refs": [
       {
-        "source_id": "source-simple-cases",
-        "locator": "#第-5-页"
-      },
-      {
-        "source_id": "source-editorial-refresh",
-        "locator": "#第-5-页"
+        "source_id": "source-001",
+        "locator": "#起步业务：毕设项目"
       }
     ],
-    "asset_slots": [
-      {
-        "role": "project-screenshot",
-        "asset_id": "logistics-orders",
-        "fit": "contain"
-      }
-    ],
+    "asset_slots": [],
     "content_status": "draft",
     "renderers": {
       "html": {
-        "layout": "ACQUISITION-PROOF"
+        "layout": "CAPSTONE-INTRO"
       }
     }
   },

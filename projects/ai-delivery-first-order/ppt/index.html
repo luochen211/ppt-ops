@@ -688,7 +688,6 @@
 .dark .ed-bottom-line{border-color:#43796a}
 .ed-output{margin-top:5vh;padding-top:1.8vh;border-top:1px solid #a9d1c2;font-size:1.15vw;font-weight:700}
 .ed-split{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:4vw;align-items:center;min-height:0;flex:1}
-.ed-split.acquisition{grid-template-columns:minmax(0,.85fr) minmax(0,1.45fr)}
 .ed-figure{min-width:0;min-height:0;margin:0;display:flex;flex-direction:column;gap:1vh}
 .ed-figure .case-image-button{aspect-ratio:1.65;box-shadow:0 1.2vh 3vh rgba(0,57,42,.1);border-radius:.8vw;max-height:50vh}
 .ed-figure img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
@@ -699,8 +698,6 @@
 .ed-figure.options-focus .case-image-button{aspect-ratio:1.4;overflow:hidden}
 .ed-figure.options-focus img{width:175%;max-width:none;height:auto;position:absolute;left:-60%;top:-18%;object-fit:initial}
 .ed-tag{display:inline-block;align-self:flex-start;border:1px solid currentColor;border-radius:.35vw;padding:.55vh .7vw;font-size:1vw;line-height:1.3;opacity:.85}
-.channel-word{font-size:7.4vw;font-weight:900;line-height:1.2;letter-spacing:-.08em;margin:1vh 0 2vh}
-.ed-acquisition h2{font-size:2.5vw;font-weight:900;line-height:1.25;margin-bottom:2vh}.ed-acquisition p{font-size:1.4vw;line-height:1.65}
 .ed-points{display:flex;flex-direction:column;gap:3vh}.ed-points>div{display:flex;align-items:flex-start;gap:1.3vw}.ed-points .ed-number{padding-top:.5vh}
 .ed-points h2{font-size:1.8vw;line-height:1.3;font-weight:800;margin-bottom:.8vh}.ed-points p{font-size:1.32vw;line-height:1.6;color:#35675d}
 .ed-arrow{display:block;color:#438f7c;min-width:0}.ed-arrow svg{width:100%;display:block}.ed-arrow.reverse{transform:rotate(180deg)}
@@ -737,6 +734,18 @@
 .ed-order-steps h3{font-size:1.55vw;line-height:1.4;margin-bottom:.6vh}.ed-order-steps p{font-size:1.25vw;line-height:1.55}
 .ed-conversation{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2vw}
 .ed-conversation h2{margin:2.5vh 0 2vh}.ed-conversation p{min-height:6.5em}.ed-conversation .ed-output{margin-top:2vh;line-height:1.5}
+
+
+.ed-capstone{display:grid;grid-template-columns:1fr 1fr;gap:5vw;align-items:center}
+.ed-price-label{font-size:1.45vw;margin:4vh 0 1vh;color:#35675d}
+.ed-price{font-size:5.4vw;font-weight:900;line-height:1.2;letter-spacing:-.055em;white-space:nowrap}
+.ed-price-note{font-size:1.35vw;line-height:1.65;margin-top:2.6vh;color:#35675d}
+.ed-capstone-package{border-left:1px solid #9bc8b9;padding:2vh 0 2vh 4vw}
+.ed-capstone-package>.eyebrow{font-size:.95vw;color:#458776}
+.ed-capstone-package h2{font-size:3.1vw;line-height:1.25;margin:1.8vh 0 3.5vh;font-weight:900}
+.ed-capstone-package ul{list-style:none;display:grid;gap:0;font-size:1.8vw;line-height:1.5}
+.ed-capstone-package li{padding:1.8vh 0;border-top:1px solid #b9dbcd}
+.ed-capstone-package li:last-child{border-bottom:1px solid #b9dbcd}
 
 </style>
 </head>
@@ -814,16 +823,16 @@
   <div class="foot"><div>第一单的起点不是报价，是信任</div><div>04 / 22</div></div>
 </section>
 
-<section class="slide light editorial" data-layout="ACQUISITION-PROOF" data-qa-policy="strict">
+<section class="slide light editorial" data-layout="CAPSTONE-INTRO" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>TRUST · 05</div></div>
-  <header class="ed-heading" data-qa-id="page-5-heading" data-qa-role="content"><div class="eyebrow">TRUST · 第一单的起点</div><h1>这单物流项目，来自闲鱼</h1></header>
-  <div class="ed-stage" data-qa-id="page-5-body" data-qa-role="content"><div class="ed-split acquisition"><div class="ed-acquisition"><span class="ed-tag">获客渠道</span><div class="channel-word">闲鱼</div><h2>让对方先看见<br>你能做什么。</h2><p>拿一个具体页面，说明用途，<br>再聊对方的业务需求。</p></div><figure class="ed-figure orders-focus"><button class="case-image-button" type="button" aria-label="放大：物流系统订单列表，历史演示数据"><img src="../assets/project-screenshots/logistics-orders.jpg" alt="物流系统订单列表，历史演示数据" data-asset-id="logistics-orders" decoding="async"></button><figcaption>项目作品示例｜2026 年 6 月演示数据 · 点击放大原图</figcaption></figure></div></div>
-  <div class="foot" data-qa-id="page-5-foot" data-qa-role="content"><div>来源：分享者确认闲鱼获客；画面为作品示例，不还原成交对话</div><div>05 / 22</div></div>
+  <header class="ed-heading" data-qa-id="page-5-heading" data-qa-role="content"><div class="eyebrow">TRUST · 第一单的起点</div><h1>最早，我从毕设项目起步</h1></header>
+  <div class="ed-stage" data-qa-id="page-5-body" data-qa-role="content"><div class="ed-capstone"><div class="ed-capstone-price"><span class="ed-tag">获客渠道 · 闲鱼</span><p class="ed-price-label">毕设项目客单价</p><div class="ed-price">¥800–5,000</div><p class="ed-price-note">海外留学生、硕士项目<br>客单价通常更高</p></div><div class="ed-capstone-package"><span class="eyebrow">交付内容</span><h2>通常全包</h2><ul><li>程序开发 · 论文撰写</li><li>过程表格</li><li>期中答辩 · 最终答辩</li></ul></div></div></div>
+  <div class="foot" data-qa-id="page-5-foot" data-qa-role="content"><div>从毕设项目起步，后来走向企业项目</div><div>05 / 22</div></div>
 </section>
 
 <section class="slide light editorial" data-layout="ROLE-FLOW" data-qa-policy="strict">
   <div class="chrome"><div class="brand-lockup"><span class="brand-mark">生</span><span>生财有术</span><span class="brand-pill">深海圈</span></div><div>TRUST · 06</div></div>
-  <header class="ed-heading" data-qa-id="page-6-heading" data-qa-role="content"><div class="eyebrow">TRUST · 看懂这套物流系统</div><h1>一张订单，串起三种角色</h1></header>
+  <header class="ed-heading" data-qa-id="page-6-heading" data-qa-role="content"><div class="eyebrow">TRUST · 后来，走向物流这样的企业项目</div><h1>一张订单，串起三种角色</h1></header>
   <div class="ed-stage" data-qa-id="page-6-body" data-qa-role="content"><div class="ed-role-flow"><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></span><span class="ed-number">01</span></div><h2>客户</h2><p>填运输需求<br>提交订单</p></article><span class="ed-arrow" aria-hidden="true"><svg viewBox="0 0 100 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h93m-10-9 10 9-10 9"/></svg></span><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg></span><span class="ed-number">02</span></div><h2>操作员</h2><p>补充业务信息<br>跟进订单进度</p></article><span class="ed-arrow" aria-hidden="true"><svg viewBox="0 0 100 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h93m-10-9 10 9-10 9"/></svg></span><article class="ed-card"><div class="ed-card-top"><span class="ed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 12h1m12 0h1"/></svg></span><span class="ed-number">03</span></div><h2>财务</h2><p>处理费用申请<br>查看相关账单</p></article></div><div class="ed-summary-band"><strong>同一套系统</strong><span>需求录入</span><span>业务跟进</span><span>费用处理</span></div></div>
   <div class="foot" data-qa-id="page-6-foot" data-qa-role="content"><div>业务流程示意；具体角色权限以双方确认的需求为准</div><div>06 / 22</div></div>
 </section>

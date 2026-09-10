@@ -4,27 +4,27 @@
     "kind": "source",
     "id": "source-001",
     "file": "brief.md",
-    "bytes": 3531,
+    "bytes": 3738,
     "mime": "text/markdown",
-    "sha256": "dd1eaa9d6bf72486f6273b101b7111b52218eb2c019ca7a50600d4569fe06d00"
+    "sha256": "ad5194ae28b2d051c43827c7c4fc025196aa7ddea9c11d997974ec586c8bb8c1"
   },
   {
     "contract_version": "1.0",
     "kind": "source",
     "id": "source-simple-cases",
     "file": "simple-project-cases.md",
-    "bytes": 4873,
+    "bytes": 5037,
     "mime": "text/markdown",
-    "sha256": "9f0b273c8effea830685d37e12f811844abe408f70cd66d3fb6caab4db316206"
+    "sha256": "37e653d0f385febe8631861cfe41f32a01e9d36c01cf97c2b646983a181d8b00"
   },
   {
     "contract_version": "1.0",
     "kind": "source",
     "id": "source-editorial-refresh",
     "file": "editorial-refresh.md",
-    "bytes": 5912,
+    "bytes": 5943,
     "mime": "text/markdown",
-    "sha256": "afade1c0cdc11d8d3ee331cecdcf4872a7671e6d7c34f7b52ed139e568e2ae36"
+    "sha256": "e87573e9f4b1e45fa2db421f504d0083300eef57313c049f59701acdd2319ce9"
   },
   {
     "contract_version": "1.0",
