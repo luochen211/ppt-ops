@@ -1,6 +1,7 @@
 {
   "name": "ppt-ops",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "description": "A controlled production workflow for HTML presentations and editable PPTX delivery.",
   "type": "module",
