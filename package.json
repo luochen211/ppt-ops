@@ -9,7 +9,7 @@
     "pptops": "./src/cli.js"
   },
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node --test --test-concurrency=2 test/*.test.js",
     "check": "node --test test/boundary-images.test.js test/integration.test.js"
   },
   "dependencies": {
