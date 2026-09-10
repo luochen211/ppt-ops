@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { analyzeHtmlGeometry, inspectHtmlPresentation } from "../src/qa/html.js";
+import { analyzeHtmlGeometry, inspectHtmlPresentation, removeBrowserProfile } from "../src/qa/html.js";
 
 const page = (elements, extra = {}) => ({ page: 6, policy: "advisory", rect: { x: 0, y: 0, width: 1600, height: 900 }, elements, ...extra });
 const element = (id, role, rect, extra = {}) => ({ id, explicitId: true, role, rect, allowAll: false, allowWith: [], ancestors: [], ...extra });
@@ -64,6 +64,25 @@ test("HTML QA reports an unannotated advisory deck as degraded, never passed", (
   assert.match(result.reason, /No data-qa geometry annotations/);
 });
 
+test("browser profile cleanup retries transient Chromium directory races", async () => {
+  let attempts = 0;
+  const waits = [];
+  await removeBrowserProfile("/tmp/pptops-html-qa-profile", {
+    rm: async (_profile, options) => {
+      attempts += 1;
+      assert.deepEqual(options, { recursive: true, force: true, maxRetries: 0 });
+      if (attempts < 3) {
+        const error = new Error("profile is still busy");
+        error.code = "ENOTEMPTY";
+        throw error;
+      }
+    },
+    wait: async (milliseconds) => waits.push(milliseconds),
+  });
+  assert.equal(attempts, 3);
+  assert.deepEqual(waits, [200, 200]);
+});
+
 test("HTML QA rejects text that exceeds its own box or a clipping ancestor", () => {
   const result = analyzeHtmlGeometry([page([], {
     textElements: [
@@ -87,4 +106,28 @@ test("headless HTML QA emits page-addressable evidence for a rendered collision"
   if (result.status === "degraded") return t.skip(result.reason);
   assert.equal(result.status, "failed");
   assert.deepEqual(result.findings.map(({ page, check, evidence }) => [page, check, evidence.reason]), [[7, "html-unintended-overlap", "connector-crosses-protected-element"]]);
+});
+
+for (const code of ["EBUSY", "EMFILE", "ENFILE", "ENOTEMPTY", "EPERM"]) {
+  test(`browser profile cleanup bounds retries for persistent ${code}`, async () => {
+    const error = Object.assign(new Error("profile remains busy"), { code });
+    let attempts = 0;
+    const waits = [];
+    await assert.rejects(removeBrowserProfile("/tmp/pptops-html-qa-profile", {
+      rm: async () => { attempts += 1; throw error; },
+      wait: async (milliseconds) => waits.push(milliseconds),
+    }), (actual) => actual === error);
+    assert.equal(attempts, 25);
+    assert.deepEqual(waits, Array(24).fill(200));
+  });
+}
+
+test("browser profile cleanup immediately propagates non-retryable errors", async () => {
+  const error = Object.assign(new Error("invalid profile argument"), { code: "EINVAL" });
+  let attempts = 0;
+  await assert.rejects(removeBrowserProfile("/tmp/pptops-html-qa-profile", {
+    rm: async () => { attempts += 1; throw error; },
+    wait: async () => assert.fail("non-retryable errors must not wait"),
+  }), (actual) => actual === error);
+  assert.equal(attempts, 1);
 });
