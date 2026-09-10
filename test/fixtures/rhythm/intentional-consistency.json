@@ -1,0 +1,28 @@
+[
+  {
+    "page": 1,
+    "rect": { "x": 0, "y": 0, "width": 1000, "height": 562.5 },
+    "layoutElements": [
+      { "kind": "text", "rect": { "x": 80, "y": 60, "width": 840, "height": 80 } },
+      { "kind": "structure", "rect": { "x": 80, "y": 180, "width": 840, "height": 280 } }
+    ]
+  },
+  {
+    "page": 2,
+    "rect": { "x": 0, "y": 0, "width": 1000, "height": 562.5 },
+    "rhythmException": "layout",
+    "rhythmExceptionReason": "Three-step process intentionally preserves one frame while state changes",
+    "layoutElements": [
+      { "kind": "text", "rect": { "x": 80, "y": 60, "width": 840, "height": 80 } },
+      { "kind": "structure", "rect": { "x": 80, "y": 180, "width": 840, "height": 280 } }
+    ]
+  },
+  {
+    "page": 3,
+    "rect": { "x": 0, "y": 0, "width": 1000, "height": 562.5 },
+    "layoutElements": [
+      { "kind": "text", "rect": { "x": 80, "y": 60, "width": 840, "height": 80 } },
+      { "kind": "structure", "rect": { "x": 80, "y": 180, "width": 840, "height": 280 } }
+    ]
+  }
+]

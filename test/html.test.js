@@ -21,6 +21,7 @@ test("buildHtml creates a deterministic self-contained semantic deck", async () 
   assert.match(first, /event\.key\.toLowerCase\(\)===['"]f['"]/);
   assert.match(first, /prefers-reduced-motion:reduce/);
   assert.match(first, /data:image\/svg\+xml;base64,/);
+  assert.match(first, /data-asset-id="workflow-mark"/);
   assert.doesNotMatch(first, /(?:src|href)="(?:\.\/|assets\/)/);
   assert.equal((first.match(/data-html-layout="boundary-image-dominant"/g) ?? []).length, 2);
   assert.match(first, /\.boundary-assets figure\{flex:0 0 68%;width:68%;height:96%/);
