@@ -17,7 +17,7 @@ const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ing
 const HELP = `PPT-Ops 1.0
 
 Usage:
-  pptops init <project-dir> [--name <id>] [--title <title>]
+  pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>]
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops import <project-dir> --file <markdown|docx|pptx>
   pptops validate <project-dir>
@@ -91,7 +91,7 @@ try {
   const options = parseOptions(argv.slice(2));
 
   if (command === "init") {
-    const result = await initializeProject(projectDir, { name: options.name, title: options.title });
+    const result = await initializeProject(projectDir, { name: options.name, title: options.title, deliveryMode: options["delivery-mode"] });
     console.log(JSON.stringify({ command, ...result }, null, 2));
   } else if (command === "migrate") {
     if (!options.to) throw new Error("migrate requires --to <v1-project-dir>");
@@ -263,7 +263,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;

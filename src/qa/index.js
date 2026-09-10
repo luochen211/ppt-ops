@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import JSZip from "jszip";
+import { densityGuidanceFor, visibleCharacterCount } from "../contracts/delivery.js";
 
 const execFileAsync = promisify(execFile);
 const POWERPOINT = "/Applications/Microsoft PowerPoint.app";
@@ -33,7 +34,11 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
       ...checkBounds(shapes, page),
       ...checkOverlap(shapes, page),
       ...checkFonts(project, declaredFonts, page),
-      ...checkDensity(project.pages[index], shapes, page, options)
+      ...checkDensity(project.pages[index], shapes, page, {
+        ...options,
+        deliveryMode: project.project?.delivery_mode,
+        boundary: index === 0 || index === slideNames.length - 1
+      })
     ];
     findings.push(...pageFindings);
     pages.push({ page, checks: ["out-of-bounds", "unintended-overlap", "font-substitution", "density"], finding_count: pageFindings.length });
@@ -114,10 +119,12 @@ function checkOverlap(shapes, page) {
   return findings;
 }
 function checkDensity(pageSpec, shapes, page, options) {
-  const text = [pageSpec?.screen_text?.title, ...(pageSpec?.screen_text?.body ?? [])].filter(Boolean).join(" ");
-  const limit = options.characterLimit ?? 700;
-  return text.length > limit || shapes.length > (options.shapeLimit ?? 60)
-    ? [finding(page, "density", "warning", { characters: text.length, shapes: shapes.length, character_limit: limit })] : [];
+  const guidance = densityGuidanceFor(options.deliveryMode);
+  const characterLimit = options.characterLimit ?? guidance.character_limit;
+  const shapeLimit = options.shapeLimit ?? guidance.shape_limit;
+  const characters = visibleCharacterCount(pageSpec, { boundary: options.boundary });
+  return characters > characterLimit || shapes.length > shapeLimit
+    ? [finding(page, "density", "warning", { characters, shapes: shapes.length, character_limit: characterLimit, shape_limit: shapeLimit, delivery_mode: options.deliveryMode ?? null })] : [];
 }
 function checkFonts(project, declaredFonts, page) {
   const expected = [project.theme?.typography?.heading_font, project.theme?.typography?.body_font].filter(Boolean);

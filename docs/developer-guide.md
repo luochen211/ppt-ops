@@ -14,6 +14,10 @@ JSON contracts and project files are portable truth. SQLite stores rebuildable i
 
 Add semantic templates in `src/layout/catalog.js`, including explicit capacity rules and renderer mappings. Both HTML and PPTX must consume the same PageSpec meaning and deterministic Layout Plan. Add fixtures for both renderers and reject over-capacity content rather than silently shrinking it.
 
+## Delivery semantics
+
+`Project.delivery_mode` is optional for backward compatibility and accepts `live_talk`, `workshop`, `pitch`, `leave_behind`, or `async`. Optional PageSpec delivery metadata includes `estimated_duration_seconds` (a planning estimate, not rehearsal evidence), `speaker_note_intent`, and `audience_interaction`. `speaker_note_intent` describes off-slide support; it is not visible copy. Renderers must never place it or interaction metadata into slide shapes or HTML slide content. Mode-aware review guidance lives in `src/contracts/delivery.js`; legacy projects without a declared mode retain the original density limits.
+
 ## Provider adapters
 
 Provider adapters implement the neutral interface consumed by `src/ai/pipeline.js`. They must use HTTPS, a bounded timeout, structured output, retry classification, and sanitized errors. Payload construction is allowlist-based; raw source content is excluded unless the caller explicitly authorizes selected segments. Add payload and non-target-mutation regression tests for every adapter.

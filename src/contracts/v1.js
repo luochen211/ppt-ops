@@ -1,3 +1,5 @@
+import { DELIVERY_MODES, INTERACTION_KINDS } from "./delivery.js";
+
 export const CONTRACT_VERSION = "1.0";
 export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "layout_composition", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
 export const ROOT_CAUSES = Object.freeze(["content_truth", "page_task", "information_relationship", "visual_grammar", "powerpoint_implementation", "process"]);
@@ -56,6 +58,7 @@ const validators = {
     requireId(value, "theme_id", errors);
     requireIdList(value.asset_ids, "asset_ids", errors, true);
     requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
+    if (value.delivery_mode !== undefined) requireEnum(value, "delivery_mode", DELIVERY_MODES, errors);
   },
   source(value, errors) {
     requireText(value, "file", errors); requireHash(value, errors);
@@ -79,6 +82,7 @@ const validators = {
     if (!Array.isArray(value.source_refs)) errors.push("source_refs must be an array");
     for (const [index, ref] of (value.source_refs ?? []).entries()) if (!isId(ref?.source_id)) errors.push(`source_refs[${index}].source_id is invalid`);
     if (!Array.isArray(value.asset_slots)) errors.push("asset_slots must be an array");
+    validateDeliveryFields(value, errors);
   },
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
@@ -176,6 +180,21 @@ function validateFeedbackFinding(finding, index, errors) {
   if (!isObject(finding.evidence)) errors.push(`${prefix}.evidence must be an object`);
   if (finding.classification_confidence !== undefined && (!Number.isFinite(finding.classification_confidence) || finding.classification_confidence < 0 || finding.classification_confidence > 1)) errors.push(`${prefix}.classification_confidence must be between 0 and 1`);
   if (finding.corrected_root_cause !== undefined && !ROOT_CAUSES.includes(finding.corrected_root_cause)) errors.push(`${prefix}.corrected_root_cause is invalid: ${finding.corrected_root_cause}`);
+}
+
+function validateDeliveryFields(value, errors) {
+  if (value.estimated_duration_seconds !== undefined && (!Number.isInteger(value.estimated_duration_seconds) || value.estimated_duration_seconds < 1)) {
+    errors.push("estimated_duration_seconds must be a positive integer");
+  }
+  if (value.speaker_note_intent !== undefined && !hasText(value.speaker_note_intent)) errors.push("speaker_note_intent must be a non-empty string");
+  if (value.audience_interaction !== undefined) {
+    if (!isObject(value.audience_interaction)) errors.push("audience_interaction must be an object");
+    else {
+      requireEnum(value.audience_interaction, "kind", INTERACTION_KINDS, errors);
+      requireText(value.audience_interaction, "intent", errors, "audience_interaction.");
+      if (value.audience_interaction.expected_response !== undefined && !hasText(value.audience_interaction.expected_response)) errors.push("audience_interaction.expected_response must be a non-empty string");
+    }
+  }
 }
 
 function requireText(value, field, errors, prefix = "") { if (!hasText(value?.[field])) errors.push(`${prefix}${field} is required`); }
