@@ -221,6 +221,7 @@ function validateDeliveryFields(value, errors) {
   if (value.estimated_duration_seconds !== undefined && (!Number.isInteger(value.estimated_duration_seconds) || value.estimated_duration_seconds < 1)) {
     errors.push("estimated_duration_seconds must be a positive integer");
   }
+  if (value.speaker_notes !== undefined && !hasText(value.speaker_notes)) errors.push("speaker_notes must be a non-empty string");
   if (value.speaker_note_intent !== undefined && !hasText(value.speaker_note_intent)) errors.push("speaker_note_intent must be a non-empty string");
   if (value.audience_interaction !== undefined) {
     if (!isObject(value.audience_interaction)) errors.push("audience_interaction must be an object");

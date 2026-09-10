@@ -18,7 +18,7 @@ Screenshot assets may opt into evidence semantics and presentation-scale composi
 
 ## Delivery semantics
 
-`Project.delivery_mode` is optional for backward compatibility and accepts `live_talk`, `workshop`, `pitch`, `leave_behind`, or `async`. Optional PageSpec delivery metadata includes `estimated_duration_seconds` (a planning estimate, not rehearsal evidence), `speaker_note_intent`, and `audience_interaction`. `speaker_note_intent` describes off-slide support; it is not visible copy. Renderers must never place it or interaction metadata into slide shapes or HTML slide content. Mode-aware review guidance lives in `src/contracts/delivery.js`; legacy projects without a declared mode retain the original density limits.
+`Project.delivery_mode` is optional for backward compatibility and accepts `live_talk`, `workshop`, `pitch`, `leave_behind`, or `async`. Optional PageSpec delivery metadata includes `estimated_duration_seconds` (a planning estimate, not rehearsal evidence), `speaker_note_intent`, and `audience_interaction`. `speaker_note_intent` describes off-slide support; it is not visible copy. Renderers must never place it or interaction metadata into slide shapes or HTML slide content. Authored `speaker_notes` are exported to native PPTX notes and an independent HTML `?view=notes` view; the default slide view hides them. Intent remains planning metadata and is never substituted for authored notes. Mode-aware review guidance lives in `src/contracts/delivery.js`; legacy projects without a declared mode retain the original density limits.
 
 ## Provider adapters
 
