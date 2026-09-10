@@ -95,6 +95,7 @@ function createPresentation(project) {
 function renderSlide(pptx, page, plan, project, index, count) {
   const theme = plan.theme;
   const slide = pptx.addSlide();
+  if (page.speaker_notes) slide.addNotes(page.speaker_notes);
   const { width, height } = theme.dimensions;
   const margin = theme.spacing.page_margin;
   const colors = normalizeColors(theme.colors);

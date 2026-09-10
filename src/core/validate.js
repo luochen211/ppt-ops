@@ -139,6 +139,7 @@ function validateDeliveryFields(page, errors) {
   if (page.estimated_duration_seconds !== undefined && (!Number.isInteger(page.estimated_duration_seconds) || page.estimated_duration_seconds < 1)) {
     errors.push("estimated_duration_seconds must be a positive integer");
   }
+  if (page.speaker_notes !== undefined && !hasText(page.speaker_notes)) errors.push("speaker_notes must be a non-empty string");
   if (page.speaker_note_intent !== undefined && !hasText(page.speaker_note_intent)) errors.push("speaker_note_intent must be a non-empty string");
   if (page.audience_interaction !== undefined) {
     if (!page.audience_interaction || typeof page.audience_interaction !== "object" || Array.isArray(page.audience_interaction)) errors.push("audience_interaction must be an object");

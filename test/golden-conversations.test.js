@@ -13,9 +13,9 @@ import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
 process.env.PPT_OPS_RENDER_QA = "0";
 const fixturesRoot = new URL("fixtures/golden-conversations/", import.meta.url);
 
-test("five Golden Conversation fixtures record the complete reproducible evidence contract", async () => {
+test("seven Golden Conversation fixtures record the complete reproducible evidence contract", async () => {
   const names = (await fs.readdir(fixturesRoot)).filter((name) => name.endsWith(".json")).sort();
-  assert.equal(names.length, 5);
+  assert.equal(names.length, 7);
   for (const name of names) {
     const fixture = JSON.parse(await fs.readFile(new URL(name, fixturesRoot), "utf8"));
     for (const field of ["id", "user_input", "route", "loaded_context", "forbidden_context", "command_trace", "project_diff", "outputs", "unresolved_acceptance"]) assert.ok(fixture[field], `${name} missing ${field}`);

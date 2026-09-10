@@ -40,6 +40,7 @@ export async function migrateFoundationProject(projectDir) {
       asset_slots: page.asset_slots ?? [], content_status: page.status ?? "draft",
       renderers: { html: page.html ?? {}, pptx: page.pptx ?? {} },
       ...(page.estimated_duration_seconds ? { estimated_duration_seconds: page.estimated_duration_seconds } : {}),
+      ...(page.speaker_notes !== undefined ? { speaker_notes: page.speaker_notes } : {}),
       ...(page.speaker_note_intent ? { speaker_note_intent: page.speaker_note_intent } : {}),
       ...(page.audience_interaction ? { audience_interaction: page.audience_interaction } : {})
     });

@@ -1,0 +1,50 @@
+{
+  "id": "workshop-speaker-notes",
+  "user_input": "Create a workshop with a separate speaker script.",
+  "route": [
+    "new",
+    "outline",
+    "design",
+    "build",
+    "review"
+  ],
+  "loaded_context": [
+    "shared",
+    "delivery_mode",
+    "speaker_notes"
+  ],
+  "forbidden_context": [
+    "historical_project_bodies"
+  ],
+  "command_trace": [
+    "init",
+    "version-freeze",
+    "build-create",
+    "review-run"
+  ],
+  "project_diff": {
+    "scope": [
+      "new-project"
+    ],
+    "forbid": [
+      "unrelated-project"
+    ]
+  },
+  "outputs": [
+    "slides.html",
+    "slides.pptx",
+    "review-report.json"
+  ],
+  "unresolved_acceptance": [
+    "visual",
+    "real_powerpoint",
+    "business",
+    "rehearsed_timing"
+  ],
+  "delivery_mode": "workshop",
+  "speaker_notes": "Explain the example aloud.\nSpeaker-only detail <script>not executable</script>.",
+  "interaction": {
+    "kind": "exercise",
+    "intent": "Ask pairs to compare the two options."
+  }
+}
