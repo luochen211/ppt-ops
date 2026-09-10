@@ -113,6 +113,9 @@ export async function inspectHtmlPresentation({ htmlFile, browserPath, timeoutMs
   const processHandle = spawn(executable, [
     "--headless=new",
     "--disable-gpu",
+    "--disable-dev-shm-usage",
+    "--no-first-run",
+    "--no-default-browser-check",
     "--no-sandbox",
     "--hide-scrollbars",
     "--allow-file-access-from-files",
@@ -120,9 +123,19 @@ export async function inspectHtmlPresentation({ htmlFile, browserPath, timeoutMs
     `--user-data-dir=${profile}`,
     "--window-size=1600,900",
     "about:blank"
-  ], { stdio: "ignore" });
+  ], { stdio: ["ignore", "ignore", "pipe"] });
+  let startupError;
+  let startupLog = "";
+  processHandle.once("error", (error) => { startupError = error; });
+  processHandle.stderr.on("data", (chunk) => { startupLog = (startupLog + chunk.toString()).slice(-4096); });
+  let port;
   try {
-    const port = await waitForDebugPort(profile, processHandle, timeoutMs);
+    try {
+      port = await waitForDebugPort(profile, processHandle, timeoutMs, () => startupError);
+    } catch (error) {
+      const detail = startupLog.trim();
+      throw new Error(`${error.message}${detail ? `; Chromium startup log: ${detail}` : ""}`, { cause: error });
+    }
     const target = await waitForPageTarget(port, timeoutMs);
     const client = await CdpClient.connect(target.webSocketDebuggerUrl);
     try {
@@ -179,10 +192,11 @@ async function findBrowser() {
   return undefined;
 }
 
-async function waitForDebugPort(profile, processHandle, timeoutMs) {
+async function waitForDebugPort(profile, processHandle, timeoutMs, getStartupError = () => undefined) {
   const file = path.join(profile, "DevToolsActivePort");
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    if (getStartupError()) throw getStartupError();
     if (processHandle.exitCode !== null) throw new Error(`browser exited before HTML QA started: ${processHandle.exitCode}`);
     try {
       const [port] = (await fs.readFile(file, "utf8")).trim().split("\n");
@@ -222,7 +236,7 @@ async function waitForDocument(client, expectedUrl, timeoutMs) {
 }
 
 async function terminateProcess(processHandle) {
-  if (processHandle.exitCode !== null) return;
+  if (!processHandle.pid || processHandle.exitCode !== null) return;
   processHandle.kill("SIGTERM");
   await Promise.race([
     new Promise((resolve) => processHandle.once("exit", resolve)),

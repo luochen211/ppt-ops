@@ -149,3 +149,28 @@ test("browser profile cleanup immediately propagates non-retryable errors", asyn
   }), (actual) => actual === error);
   assert.equal(attempts, 1);
 });
+
+
+test("HTML QA reports browser launch failures instead of an unhandled spawn error", async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-browser-missing-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const htmlFile = path.join(directory, "slide.html");
+  await fs.writeFile(htmlFile, "<section class=slide>Test</section>");
+  await assert.rejects(inspectHtmlPresentation({ htmlFile, browserPath: path.join(directory, "missing-browser") }), /ENOENT/);
+});
+
+test("HTML QA includes bounded Chromium startup diagnostics on premature exit", async (t) => {
+  if (process.platform === "win32") return t.skip("POSIX executable fixture");
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-browser-exit-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const htmlFile = path.join(directory, "slide.html");
+  const browserPath = path.join(directory, "browser");
+  await fs.writeFile(htmlFile, "<section class=slide>Test</section>");
+  await fs.writeFile(browserPath, '#!/usr/bin/env node\nprocess.stderr.write("x".repeat(5000) + "startup-resource-failure"); process.exit(42);\n', { mode: 0o755 });
+  await assert.rejects(inspectHtmlPresentation({ htmlFile, browserPath }), (error) => {
+    assert.match(error.message, /browser exited before HTML QA started: 42/);
+    assert.match(error.message, /startup-resource-failure/);
+    assert.ok(error.message.length < 4300);
+    return true;
+  });
+});
