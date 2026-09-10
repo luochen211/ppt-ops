@@ -1,19 +1,20 @@
 # User-approved visual preferences
 
-PPT-Ops may learn reusable visual preferences only through an explicit, inspectable user decision. This first phase provides a user-layer profile store and domain workflow; it does not scan historical projects or extract a reference deck automatically.
+The user-owned profile is `config/visual-preferences.json`; explicitly nominated PPTX files are copied to `config/visual-references/<sha256>.pptx`. Updates protect both locations. No unrelated files are scanned.
 
-The profile lives at `config/visual-preferences.json`, beside the user-owned profile configuration. System updates must never overwrite it.
+The conversation procedure lives in `.agents/skills/ppt-agent/references/visual-preferences.md`. Internal CLI entry points:
 
-## Evidence and consent model
+```sh
+pptops visual-preference <repository-root> --action inspect
+pptops visual-preference <repository-root> --action nominate --payload '{"id":"reference-one","file":"/chosen/deck.pptx","actor":"user"}'
+pptops visual-preference <repository-root> --action observe --payload '{"id":"reference-one"}'
+pptops visual-preference <repository-root> --action propose --payload '{"id":"more-space","kind":"preferred_pattern","dimension":"whitespace","statement":"Leave space around the main message","reference_ids":["reference-one"]}'
+pptops visual-preference <repository-root> --action decide --payload '{"candidate_id":"more-space","decision":"accept","actor":"user","raw_feedback":"Use this preference"}'
+pptops design-context <project-dir> --repository-root <repository-root>
+```
 
-1. A user explicitly nominates a reference deck by stable ID, safe relative path, and SHA-256 digest. Nomination records metadata only; it does not authorize scanning unrelated files.
-2. An agent may record observed visual properties and propose a separate inferred preference or anti-pattern.
-3. A proposal is not available to later projects until the user explicitly accepts it.
-4. Two distinct user rejections with the same `aesthetic_brand` root-cause fingerprint may propose a candidate. Repetition still cannot accept it.
-5. Revision creates a new proposed candidate and supersedes the old one. Removal marks an accepted preference removed without erasing its audit history.
+Nomination computes and verifies the source digest. Extraction emits only structural counts and explicit font-size ranges, with limitations for inherited styles and rendered geometry. Whitespace, semantic image roles and motifs require rendered inspection: optional `visual_observations` record the dimension, value, reference ID and rendered evidence locator separately from automated counts. These observations remain separate from the inferred `statement`; neither is silently accepted.
 
-Only `VisualPreferenceProfileStore.accepted()` is a design input. Proposed, rejected, removed, and superseded candidates are evidence, not active instructions.
+Only an explicit user decision activates a preferred pattern or anti-pattern. Repeated feedback uses actual `candidate_feedback` records from the specified project and needs at least two user aesthetic rejections with the same fingerprint. The project ID accompanies feedback provenance. Proposal creation persists an audit candidate, not an active preference.
 
-## Current boundary
-
-This phase implements nomination, proposal, consent, revision, removal, atomic persistence, and retrieval of accepted preferences. Reference-deck content extraction, CLI commands, a conversational confirmation surface, and automatic Design-mode loading remain future work under issue #64.
+Inspect, revise, reject and remove remain available. Revision supersedes the original and creates an unaccepted replacement. Design reads accepted entries afresh through `design-context`; that context contains no reference text, artwork or rendered slides. Missing profiles return an empty list without writing a file. User review must prevent an inferred statement from copying a creator's identity; structural extraction cannot decide that judgment automatically.

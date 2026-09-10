@@ -71,12 +71,12 @@ export class VisualPreferenceProfileStore {
     });
   }
 
-  async proposeFromRepeatedFeedback({ id, kind, dimension, statement, observed_properties, feedback, root_cause_fingerprint }) {
+  async proposeFromRepeatedFeedback({ id, kind, dimension, statement, observed_properties, feedback, root_cause_fingerprint, project_id }) {
     const supporting = supportingFeedback(feedback, root_cause_fingerprint);
     if (supporting.length < 2) throw new Error("at least two distinct user rejections with the same aesthetic root-cause fingerprint are required");
     return this.update((profile) => {
       requireCandidateFields({ id, kind, dimension, statement, observed_properties });
-      const candidate = createCandidate({ id, kind, dimension, statement, observed_properties, evidence: { source_type: "candidate_feedback", source_ids: supporting.map(({ id: feedbackId }) => feedbackId), root_cause_fingerprint }, created_at: this.now() });
+      const candidate = createCandidate({ id, kind, dimension, statement, observed_properties, evidence: { source_type: "candidate_feedback", ...(project_id ? { project_id } : {}), source_ids: supporting.map(({ id: feedbackId }) => feedbackId), root_cause_fingerprint }, created_at: this.now() });
       insertCandidate(profile, candidate);
       profile.history.push(event("candidate.proposed", id, "agent", this.now()));
       return candidate;

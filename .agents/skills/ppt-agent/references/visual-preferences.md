@@ -1,0 +1,12 @@
+# Visual preference conversation
+
+Keep CLI details out of user-facing conversation. All commands use `node <installed-repository>/src/cli.js visual-preference <repository-root> --action <action> --payload '<json>'`; inspect needs no payload.
+
+- Nominate only a PPTX explicitly selected by the user: `nominate` with `id`, `file`, `actor: user`, optional `title`. This imports only that file into protected user storage and returns structural observations. Do not scan neighboring files.
+- `observe` with `id` verifies the nominated source digest and re-extracts structural observations. Structure alone cannot establish whitespace, imagery roles, or motifs. For those, inspect rendered slides from that nominated file, record the actual page/evidence locator, and state uncertainty when rendering is unavailable. Never claim a visual inspection from XML counts.
+- `propose` accepts `id`, `kind` (`preferred_pattern` or `anti_pattern`), `dimension`, `statement`, `reference_ids`. Optional `visual_observations` contain `property` (one of the six dimensions), `value`, `reference_id`, `evidence` (rendered page locator). Automated observations are attached by the workflow; visual observations are separately labeled as agent observations. A preference statement should generalize the user's desired effect, not preserve a creator's artwork, wording, palette identity, or exact composition.
+- `feedback` takes the same candidate fields plus `project_dir` and `root_cause_fingerprint`. It reads actual feedback from that explicit project. Two distinct user aesthetic rejections permit a proposal only.
+- Show the user observations and the proposed preference separately, then ask for accept, change, or reject in ordinary language. Creating a proposal is not consent. Do not set `actor: user` or infer acceptance from silence, nomination, repeated feedback, or a request to implement this feature.
+- After explicit consent, `decide` takes `candidate_id`, `decision` (`accept` or `reject`), `actor: user`, and the user's `raw_feedback`.
+- `inspect` shows every status and audit history. `revise` takes `candidate_id`, new `id`, `statement`, `actor: user`, `raw_feedback`; the replacement remains proposed and needs a separate acceptance. `remove` takes `candidate_id`, `actor: user`, `raw_feedback` and excludes the preference immediately.
+- Later Design runs load `design-context` again. Never cache an accepted list across user changes; never copy reference sources into the new project.

@@ -5,7 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { analyzeRenderedRhythm } from "./rhythm.js";
 
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 30000;
 const PROFILE_CLEANUP_MAX_ATTEMPTS = 25;
 const PROFILE_CLEANUP_RETRY_DELAY_MS = 200;
 const PROFILE_CLEANUP_RETRYABLE_CODES = new Set(["EBUSY", "EMFILE", "ENFILE", "ENOTEMPTY", "EPERM"]);
