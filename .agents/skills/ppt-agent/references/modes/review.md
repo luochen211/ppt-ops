@@ -1,5 +1,9 @@
 # Review Mode
 
+When the user asks only for content, audience-value, terminology, theory, or speaker-note review, select the routing contract's `content_only` variant and follow `content-review.md`. This path needs no Build, creates a content report only, and exits before the build and ImageGen procedures below. It neither changes accepted pages nor claims formal Review acceptance.
+
+For a full Build Review, also read any content-review report tied to its source revision. Mark outdated reports as stale; record unresolved content findings separately from visual defects. Run new DBS analysis only for requested content checks or changed claims, scoped to the affected pages.
+
 Validate the selected Build and record page-addressable automated evidence. Apply both `visual-quality.md` and `visual-assets.md`; render and inspect when a renderer is available.
 
 Before Review, re-verify that the canonical first and final pages each resolve to an accepted pipeline-registered ImageGen asset; stop if either boundary is missing or inconsistent. A one-page deck may use one accepted image for both roles.

@@ -117,14 +117,51 @@ test("project resolution uses the shared resolver and forbids project guessing",
   assert.match(contract, /Reject absolute project paths, `\.\.`, escape/);
 });
 
+test("content-only review can inspect sources before production exists", async () => {
+  const routing = JSON.parse(await fs.readFile(routingUrl, "utf8"));
+  for (const intent of routing.modes.review.variants.content_only.intents) {
+    assert.equal(route(routing, `请检查${intent}`, { project: true, sources: true }), "review.content_only");
+    assert.equal(route(routing, `请检查${intent}`, { project: true }), "intake");
+  }
+  assert.equal(route(routing, "请检查验收", { project: true, sources: true }), "build");
+  assert.equal(route(routing, "请调整第 3 页配色", { project: true, sources: true, outline: true, design: true }), "revise");
+  assert.ok(!routing.artifact_order.includes("content_review"));
+  for (const mode of Object.values(routing.modes)) assert.ok(!mode.requires.includes("content_review"));
+});
+
+test("content review references resolve without bundling an external skill", async () => {
+  const routing = JSON.parse(await fs.readFile(routingUrl, "utf8"));
+  for (const mode of ["outline", "design", "revise", "review"]) {
+    assert.ok(routing.modes[mode].loads.includes("content_review"));
+    const procedure = await fs.readFile(new URL(`references/modes/${mode}.md`, skillRoot), "utf8");
+    assert.match(procedure, /content-review\.md/);
+  }
+  const reference = await fs.readFile(new URL("references/content-review.md", skillRoot), "utf8");
+  for (const target of [...reference.matchAll(/`(content-review[^`]+\.md)`/g)]) {
+    assert.ok((await fs.stat(new URL(`references/${target[1]}`, skillRoot))).isFile());
+  }
+  for (const name of ["dbs-jtbd", "dbs-theory-grounding", "dbs-skill-maker"]) {
+    assert.match(reference, new RegExp(name));
+    await assert.rejects(fs.access(new URL(`../${name}/SKILL.md`, skillRoot)), { code: "ENOENT" });
+  }
+  const variant = routing.modes.review.variants.content_only;
+  assert.ok(!variant.loads.includes("build"));
+  assert.ok(!variant.loads.includes("visual_assets"));
+  assert.ok(variant.forbids.includes("build_generation"));
+});
+
 function route(contract, request, artifacts) {
   const normalized = request.toLowerCase();
   const matches = Object.entries(contract.modes)
-    .flatMap(([mode, definition]) => definition.intents.map((intent) => ({ mode, intent: intent.toLowerCase() })))
+    .flatMap(([mode, definition]) => [
+      ...Object.entries(definition.variants ?? {}).flatMap(([variant, details]) => details.intents.map((intent) => ({ mode: `${mode}.${variant}`, definition: details, intent: intent.toLowerCase() }))),
+      ...definition.intents.map((intent) => ({ mode, definition, intent: intent.toLowerCase() }))
+    ])
     .filter(({ intent }) => normalized.includes(intent))
     .sort((left, right) => right.intent.length - left.intent.length);
   const requested = matches[0]?.mode ?? contract.fallback;
-  for (const artifact of contract.modes[requested].requires) {
+  const definition = matches[0]?.definition ?? contract.modes[requested];
+  for (const artifact of definition.requires) {
     if (!artifacts[artifact]) return contract.produced_by[artifact];
   }
   return requested;
