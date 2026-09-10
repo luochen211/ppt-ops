@@ -268,6 +268,22 @@
     },
     {
       "page": 14,
+      "page_id": "page-tech-patience",
+      "relation": "process",
+      "visual_job": "TECH-PATIENCE",
+      "template_id": "template-tech-patience",
+      "motif": "loop",
+      "reading_path": [
+        "面对陌生技术",
+        "明确目标",
+        "耐心尝试",
+        "对照调整"
+      ],
+      "rationale": "以目标、尝试、调整的连续路径呈现面对陌生技术的耐心，承接已确认需求并引出人机分工。",
+      "avoid": "不虚构技术项目经历，不用口号替代具体尝试动作，不增加技术术语。"
+    },
+    {
+      "page": 15,
       "page_id": "page-014",
       "relation": "comparison",
       "visual_job": "AI-VS-HUMAN",
@@ -283,7 +299,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 15,
+      "page": 16,
       "page_id": "page-015",
       "relation": "process",
       "visual_job": "AI-EXECUTION-LOOP",
@@ -299,7 +315,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 16,
+      "page": 17,
       "page_id": "page-016",
       "relation": "hero",
       "visual_job": "保留独立视频展示与本地文件选择",
@@ -314,7 +330,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 17,
+      "page": 18,
       "page_id": "page-017",
       "relation": "process",
       "visual_job": "CHANGE-DECISION",
@@ -330,7 +346,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 18,
+      "page": 19,
       "page_id": "page-018",
       "relation": "hero",
       "visual_job": "Create a strong module divider",
@@ -345,7 +361,7 @@
       "avoid": "在幕封上提前画完整飞轮"
     },
     {
-      "page": 19,
+      "page": 20,
       "page_id": "page-019",
       "relation": "comparison",
       "visual_job": "ORDER-PATHS",
@@ -361,7 +377,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 20,
+      "page": 21,
       "page_id": "page-020",
       "relation": "hierarchy",
       "visual_job": "PROJECT-PACKAGE",
@@ -377,7 +393,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 21,
+      "page": 22,
       "page_id": "page-021",
       "relation": "sequence",
       "visual_job": "NEXT-CONVERSATION",
@@ -393,7 +409,7 @@
       "avoid": "不虚构成交、测试或转介绍结果；不用重复全屏截图替代该页的信息关系。"
     },
     {
-      "page": 22,
+      "page": 23,
       "page_id": "page-022",
       "relation": "hero",
       "visual_job": "Use one closing sentence with ample negative space",

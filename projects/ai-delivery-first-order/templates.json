@@ -149,6 +149,21 @@
   {
     "contract_version": "1.0",
     "kind": "template",
+    "id": "template-tech-patience",
+    "name": "Patient progress toward a clear goal",
+    "slots": {
+      "title": "required",
+      "lead": "required",
+      "steps": "three",
+      "takeaway": "required"
+    },
+    "renderers": {
+      "html": "TECH-PATIENCE"
+    }
+  },
+  {
+    "contract_version": "1.0",
+    "kind": "template",
     "id": "template-ai-vs-human",
     "name": "Connected role comparison",
     "slots": {
