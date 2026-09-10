@@ -18,6 +18,7 @@ export const SYSTEM_PATHS = Object.freeze([
 export const USER_PATHS = Object.freeze([
   "config/profile.yml",
   "config/visual-preferences.json",
+  "config/visual-references",
   "config/custom.md",
   "templates/user"
 ]);

@@ -20,6 +20,8 @@ Usage:
   pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>]
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops import <project-dir> --file <markdown|docx|pptx>
+  pptops visual-preference <repository-root> --action <inspect|nominate|observe|propose|feedback|decide|revise|remove> [--payload <json>]
+  pptops design-context <project-dir> [--repository-root <path>]
   pptops validate <project-dir>
   pptops html-qa <html-file> [--browser <path>] [--timeout <ms>]
   pptops intake <project-dir>
@@ -90,7 +92,25 @@ try {
   if (!projectDir || projectDir.startsWith("--")) throw new Error(`${command} requires <project-dir>`);
   const options = parseOptions(argv.slice(2));
 
-  if (command === "init") {
+  if (command === "visual-preference" || command === "design-context") {
+    const { VisualPreferenceWorkflow } = await import("./preferences/workflow.js");
+    const root = command === "visual-preference" ? projectDir : options["repository-root"] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+    const workflow = new VisualPreferenceWorkflow(root);
+    let result;
+    if (command === "design-context") result = await workflow.designContext(projectDir);
+    else {
+      const action = required(options, "action");
+      const payload = action === "inspect" ? {} : jsonOption(options, "payload");
+      if (action === "inspect") result = await workflow.store.load();
+      else if (action === "nominate") result = await workflow.nominate(payload);
+      else if (action === "observe") result = await workflow.observe(payload.id);
+      else if (action === "propose") result = await workflow.propose(payload);
+      else if (action === "feedback") result = await workflow.proposeFeedback(payload.project_dir, payload);
+      else if (["decide", "revise", "remove"].includes(action)) result = await workflow.store[action](payload.candidate_id, payload);
+      else throw new Error(`unknown visual preference action: ${action}`);
+    }
+    console.log(JSON.stringify({ ok: true, command, data: result }, null, 2));
+  } else if (command === "init") {
     const result = await initializeProject(projectDir, { name: options.name, title: options.title, deliveryMode: options["delivery-mode"] });
     console.log(JSON.stringify({ command, ...result }, null, 2));
   } else if (command === "migrate") {
@@ -263,7 +283,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
