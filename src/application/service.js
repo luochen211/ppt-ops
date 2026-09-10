@@ -331,7 +331,7 @@ export class ApplicationService {
         return { ...page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, html: page.renderers?.html, pptx: page.renderers?.pptx, status: page.content_status };
       }),
       theme: contracts.theme.tokens,
-      assets: contracts.assets.map(({ contract_version, kind, sha256, bytes, mime, provenance, ...asset }) => asset),
+      assets: contracts.assets.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset),
       contractModel: "v1", contracts
     };
   }

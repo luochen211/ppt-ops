@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -33,7 +34,14 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
     const page = index + 1;
     const xml = await archive.file(name).async("string");
     const shapes = parseShapes(xml);
-    assetPlacements.push(...shapes.filter(({ assetId }) => assetId).map(({ assetId, x, y, width, height }) => ({ page, asset_id: assetId, x, y, width, height })));
+    const relationships = await archive.file(`ppt/slides/_rels/${path.posix.basename(name)}.rels`)?.async("string") ?? "";
+    for (const { assetId, x, y, width, height, crop, imageRid } of shapes.filter(({ assetId }) => assetId)) {
+      const relationship = [...relationships.matchAll(/<Relationship\b[^>]*\/>/g)].find(([tag]) => tag.match(/\bId="([^"]+)"/)?.[1] === imageRid)?.[0];
+      const target = relationship?.match(/\bTarget="([^"]+)"/)?.[1];
+      const media = target ? archive.file(path.posix.normalize(path.posix.join(path.posix.dirname(name), target))) : undefined;
+      const sha256 = media ? crypto.createHash("sha256").update(await media.async("nodebuffer")).digest("hex") : undefined;
+      assetPlacements.push({ page, asset_id: assetId, x, y, width, height, crop, sha256 });
+    }
     const declaredFonts = [...xml.matchAll(/typeface="([^"]+)"/g)].map((match) => match[1]);
     const pageFindings = [
       ...checkBounds(shapes, page),
@@ -112,11 +120,14 @@ function parseShapes(xml) {
     const block = match[0];
     const geometry = block.match(/<a:off x="(\d+)" y="(\d+)"\/>\s*<a:ext cx="(\d+)" cy="(\d+)"\/>/);
     if (!geometry) continue;
+    const srcRect = block.match(/<a:srcRect\b([^>]*)\/?>/)?.[1] ?? "";
+    const crop = Object.fromEntries([["l", "left"], ["r", "right"], ["t", "top"], ["b", "bottom"]].map(([attribute, key]) => [key, Number(srcRect.match(new RegExp(`\\b${attribute}="(-?\\d+)"`))?.[1] ?? 0) / 100000]));
     const objectName = block.match(/<p:cNvPr[^>]+\bname="([^"]+)"/)?.[1];
     shapes.push({
       x: Number(geometry[1]), y: Number(geometry[2]), width: Number(geometry[3]), height: Number(geometry[4]),
       hasText: /<a:t>/.test(block), decorative: /<p:cNvPr[^>]+(?:name="(?:Background|Decorative)|descr="decorative")/i.test(block),
-      assetId: objectName?.startsWith("Asset ") ? objectName.slice(6) : undefined
+      imageRid: block.match(/<asvg:svgBlip[^>]*r:embed="([^"]+)"/)?.[1] ?? block.match(/<a:blip[^>]*r:embed="([^"]+)"/)?.[1],
+      crop, assetId: objectName?.startsWith("Asset ") ? objectName.slice(6) : undefined
     });
   }
   return shapes;

@@ -199,6 +199,7 @@ function validateScreenshotEvidence(value, field, errors) {
   if (value.presentation_treatments !== undefined && (!Array.isArray(value.presentation_treatments) || value.presentation_treatments.some((item) => !SCREENSHOT_TREATMENTS.includes(item)))) {
     errors.push(`${field}.presentation_treatments contains an invalid value`);
   }
+  if (value.annotation_text !== undefined && (!hasText(value.annotation_text) || value.annotation_text.length > 80)) errors.push(`${field}.annotation_text must contain 1–80 characters`);
   if (value.human_review_required !== undefined && typeof value.human_review_required !== "boolean") errors.push(`${field}.human_review_required must be boolean`);
   if (value.content_role === "read_required" && (value.presentation_treatments?.length ?? 0) === 0 && value.human_review_required !== true) {
     errors.push(`${field} with read_required content needs a presentation treatment or human_review_required`);

@@ -15,7 +15,8 @@ Add `screenshot_evidence` only to assets that are screenshots:
     "content_role": "read_required",
     "evidence_purpose": "Show the approved status and reviewer name",
     "focal_region": { "x": 0.72, "y": 0.04, "width": 0.24, "height": 0.18 },
-    "presentation_treatments": ["zoom", "annotation"],
+    "presentation_treatments": ["callout", "annotation"],
+    "annotation_text": "Approved status and reviewer",
     "human_review_required": true
   }
 }
@@ -43,6 +44,8 @@ PPTX structural review maps generated image objects back to asset IDs, then repo
 
 Every finding identifies both `page` and `asset_id`. The report also sets `human_readability_assessed: false`. Passing automated composition checks therefore never means that the screenshot is readable at projection distance. Rendered-slide inspection and real PowerPoint acceptance remain separate.
 
-## Current boundary
+## Editable PPTX annotations
 
-This increment records `callout` and `annotation` as declared treatments but does not generate them. When authored, callouts and annotations should be native editable shapes in PPTX; automatic editable callout generation remains follow-up work for issue #63.
+`callout` and `annotation` generate a native editable focus rectangle and caption. The caption uses `annotation_text` when present, otherwise the page-specific or asset evidence purpose; keep it to 1–80 characters. The renderer reserves caption space, measures source dimensions, and maps the focus through contain/cover placement. A fully cropped-out focus or insufficient space fails explicitly. Screenshot pixels are never rewritten. PNG, JPEG, and SVG with a viewBox are measured; unsupported dimensions fail rather than guessing.
+
+Review measures visible focal area through the actual PPTX crop and identifies repeated images by embedded-media hashes, including Foundation assets with different IDs. These structural checks do not establish projection readability or human PowerPoint acceptance. `crop`/`zoom` remain authored-treatment declarations; automatic annotation rendering is a PPTX capability.
