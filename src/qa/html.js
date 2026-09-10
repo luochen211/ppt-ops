@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { analyzeRenderedRhythm } from "./rhythm.js";
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const PROFILE_CLEANUP_MAX_ATTEMPTS = 25;
@@ -89,6 +90,8 @@ export function analyzeHtmlGeometry(pages, options = {}) {
       }
     }
   }
+  const rhythm = analyzeRenderedRhythm(pages, options.rhythm);
+  findings.push(...rhythm.findings);
   const annotatedPageCount = pages.filter((page) => (page.elements?.length ?? 0) > 0).length;
   return {
     status: findings.some(({ severity }) => severity === "error") ? "failed" : annotatedPageCount === 0 ? "degraded" : "passed",
@@ -96,7 +99,8 @@ export function analyzeHtmlGeometry(pages, options = {}) {
     page_count: pages.length,
     annotated_page_count: annotatedPageCount,
     findings,
-    pages: pages.map((page) => ({ page: page.page, annotated_element_count: page.elements?.length ?? 0, text_element_count: page.textElements?.length ?? 0, finding_count: findings.filter((item) => item.page === page.page).length }))
+    rhythm,
+    pages: pages.map((page) => ({ page: page.page, annotated_element_count: page.elements?.length ?? 0, text_element_count: page.textElements?.length ?? 0, finding_count: findings.filter((item) => findingTouchesPage(item, page.page)).length }))
   };
 }
 
@@ -261,10 +265,24 @@ async function collectGeometry(client) {
         }
         return result;
       };
+      const significant = [...slide.querySelectorAll('[data-qa-role],h1,h2,h3,p,li,blockquote,figure,article,table,img,video,canvas')]
+        .filter(visible)
+        .map((element) => ({
+          kind: element.dataset.qaRole || (['IMG','VIDEO','CANVAS'].includes(element.tagName) ? 'media' : ['FIGURE','ARTICLE','TABLE'].includes(element.tagName) ? 'structure' : 'text'),
+          rect: relative(element)
+        }))
+        .filter(({rect}) => rect.width * rect.height >= sr.width * sr.height * 0.002 && rect.width * rect.height <= sr.width * sr.height * 0.95);
+      const assets = [...slide.querySelectorAll('img[data-asset-id],video[data-asset-id],canvas[data-asset-id]')]
+        .filter(visible)
+        .map((element) => ({ id: element.dataset.assetId, rect: relative(element) }));
       return {
         page: Number(slide.dataset.page) || index + 1,
         policy: slide.dataset.qaPolicy || 'advisory',
+        rhythmException: slide.dataset.qaRhythmException || '',
+        rhythmExceptionReason: slide.dataset.qaRhythmReason || '',
         rect: { x: 0, y: 0, width: sr.width, height: sr.height },
+        layoutElements: significant,
+        assets,
         elements: annotated.filter(visible).map((element) => ({
           id: ids.get(element), explicitId: Boolean(element.dataset.qaId), role: element.dataset.qaRole,
           rect: relative(element), allowAll: element.dataset.qaOverlap === 'allow',
@@ -325,4 +343,5 @@ function intersectRects(a, b) {
 }
 function area(rect) { return Math.max(0, rect.width) * Math.max(0, rect.height); }
 function finding(page, check, severity, evidence) { return { page, check, severity, evidence }; }
+function findingTouchesPage(item, page) { return item.page === page || (Array.isArray(item.evidence?.pages) && item.evidence.pages.includes(page)); }
 function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
