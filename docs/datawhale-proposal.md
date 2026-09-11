@@ -1,6 +1,6 @@
 # PPT-Ops · Datawhale 立项申请
 
-> 更新日期：2026-09-11。状态：已提交 [DOPMC #438](https://github.com/datawhalechina/DOPMC/issues/438)，开源项目指南与微信联系已确认，行为准则确认待补充。
+> 更新日期：2026-09-11。状态：已提交 [DOPMC #438](https://github.com/datawhalechina/DOPMC/issues/438)，开源项目指南、行为准则与微信联系三项均已确认。
 >
 > 按照 [DOPMC 立项表单](https://github.com/datawhalechina/DOPMC/blob/main/.github/ISSUE_TEMPLATE/establishing.yaml)组织；下方六个主节对应表单正文。人员招募与时间安排为拟定计划。
 
@@ -152,7 +152,7 @@ PPT-Ops 希望把这些步骤组织成可以重复使用的工作流。每一页
 申请正文已提交到 [DOPMC #438](https://github.com/datawhalechina/DOPMC/issues/438)。以下为已核对的 Issue 确认状态：
 
 - [x] 阅读并确认[开源项目指南](https://github.com/datawhalechina/DOPMC/blob/main/GUIDE.md)。
-- [ ] 阅读并确认[行为准则](https://github.com/datawhalechina/DOPMC/blob/main/CODE_OF_CONDUCT.md)，包括维护职责及商业收益条款。
+- [x] 阅读并确认[行为准则](https://github.com/datawhalechina/DOPMC/blob/main/CODE_OF_CONDUCT.md)，包括维护职责及商业收益条款。
 - [x] 已添加微信 `at-Sm1les`。
 
 审核进展、补充材料要求与最终结果以 DOPMC 的实际 Issue 为准。
