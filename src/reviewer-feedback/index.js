@@ -8,7 +8,7 @@ const DECISIONS = new Set(["approve", "request_changes", "comment"]);
 const DISCLOSURES = ["speaker_notes", "sources", "prior_feedback"];
 const PACKAGE_SCHEMA = "1.0";
 
-export async function createReviewerFeedbackPackage({ projectRoot, projectTitle, build, review, frozenProject, fileStore, priorFeedback, brief, now = new Date().toISOString() }) {
+export async function createReviewerFeedbackPackage({ projectRoot, projectTitle, build, review, frozenProject, fileStore, priorFeedback, brief, currentBuild, now = new Date().toISOString() }) {
   if (build.state !== "succeeded") throw applicationError("BUILD_NOT_SUCCEEDED", "review package requires a succeeded build");
   if (review.build_id !== build.id) throw applicationError("REVIEW_BUILD_MISMATCH", "review package Build and Review do not match");
   const normalizedBrief = normalizeBrief(brief);
@@ -29,6 +29,7 @@ export async function createReviewerFeedbackPackage({ projectRoot, projectTitle,
   const reviewHash = hash(reviewManifest.bytes);
   const packageInput = {
     schema_version: PACKAGE_SCHEMA,
+    generator_version: 2,
     build_id: build.id,
     build_sha256: buildHash,
     review_id: review.id,
@@ -55,7 +56,8 @@ export async function createReviewerFeedbackPackage({ projectRoot, projectTitle,
   }));
   const responseBindingHash = hash(stableJson(packageInput));
   const responseTemplate = buildResponseTemplate(packageId, responseBindingHash, pages);
-  const entry = renderReviewerEntry({ projectTitle, packageId, normalizedBrief, pages, frozenProject, responseTemplate, priorFeedback: disclosures.prior_feedback ? priorFeedback : [] });
+  const versionStatus = { checked_at: now, newer_build_known: Boolean(currentBuild && currentBuild.id !== build.id), live_update_available: false };
+  const entry = renderReviewerEntry({ projectTitle, packageId, normalizedBrief, pages, frozenProject, responseTemplate, versionStatus, priorFeedback: disclosures.prior_feedback ? priorFeedback : [] });
   const artifacts = {
     "deck.html": deck,
     "response-template.json": `${JSON.stringify(responseTemplate, null, 2)}\n`,
@@ -67,7 +69,8 @@ export async function createReviewerFeedbackPackage({ projectRoot, projectTitle,
     kind: "reviewer_feedback_package",
     package_id: packageId,
     created_at: now,
-    build: { id: build.id, sha256: buildHash, manifest_sha256: buildManifest.sha256 },
+    build: { id: build.id, sha256: buildHash, manifest_sha256: buildManifest.sha256, ...(build.config?.variant ? { variant: build.config.variant } : {}) },
+    version_status: versionStatus,
     review: { id: review.id, revision: review.revision, sha256: reviewHash, manifest_sha256: reviewManifest.sha256 },
     response_binding_sha256: responseBindingHash,
     review_scope: normalizedBrief,
@@ -79,14 +82,14 @@ export async function createReviewerFeedbackPackage({ projectRoot, projectTitle,
     network_requests_required: false,
     identity_verification: "not_performed",
     acceptance_boundary: "Reviewer feedback is evidence only; it is not creator acceptance, automated QA, visual acceptance, real-PowerPoint acceptance, or final business approval.",
-    accessibility: { status: "baseline_applied", evidence: "Semantic headings, labelled controls, keyboard-operable fields, focus indicators, and reduced-motion styling are included; no external accessibility audit is claimed." }
+    accessibility: { status: "degraded", declared_profile: frozenProject.project.accessibility_profile ?? null, limitation: "The form uses the semantic baseline; complete preview and assistive-technology validation remains separate.", evidence: "Semantic headings, labelled controls, keyboard-operable fields, focus indicators, and reduced-motion styling are included; no external accessibility audit is claimed." }
   };
   for (const [name, contents] of Object.entries(artifacts)) await fileStore.writeImmutable(path.join(packageRoot, name), contents);
   await fileStore.writeImmutable(manifestPath, `${stableJson(manifest)}\n`);
   return { package_id: packageId, package_dir: path.dirname(resolveProjectPath(projectRoot, manifestPath)), entry_file: resolveProjectPath(projectRoot, path.join(packageRoot, "index.html")), manifest_file: resolveProjectPath(projectRoot, manifestPath), manifest, reused: false };
 }
 
-export async function importReviewerResponse({ projectRoot, responseFile, fileStore, store, projectId, currentBuild }) {
+export async function importReviewerResponse({ projectRoot, responseFile, fileStore, store, projectId, currentBuilds = [] }) {
   const rawText = await fs.readFile(path.resolve(responseFile), "utf8");
   let raw;
   try { raw = JSON.parse(rawText); }
@@ -102,11 +105,13 @@ export async function importReviewerResponse({ projectRoot, responseFile, fileSt
   validateBinding(raw, manifest);
   const normalized = normalizeResponse(raw, manifest.page_mapping);
   const responseHash = hash(stableJson(raw));
+  const currentBuild = currentBuilds.find(build => (build.config?.variant?.variant_id ?? "default") === (manifest.build.variant?.variant_id ?? "default"));
+  const stale = !currentBuild || currentBuild.id !== manifest.build.id;
   const existing = store.listEntities(projectId, "reviewer_feedback").find((item) => item.response_sha256 === responseHash);
-  if (existing) return { feedback: existing, stale: existing.stale, conflicts: existing.conflicts ?? [], reused: true };
+  if (existing) return { feedback: existing, stale, current_build_id: currentBuild?.id ?? null, conflicts: existing.conflicts ?? [], reused: true };
   const allFeedback = store.listEntities(projectId, "reviewer_feedback");
   const conflicts = findConflicts(normalized, allFeedback.filter((item) => item.build_id === manifest.build.id));
-  const stale = !currentBuild || currentBuild.id !== manifest.build.id;
+
   const id = `reviewer-feedback-${responseHash.slice(0, 12)}`;
   const relativeEvidence = path.join(".pptops", "reviewer-feedback", id, "response.json");
   await fileStore.writeImmutable(relativeEvidence, `${stableJson(raw)}\n`);
@@ -247,7 +252,7 @@ function assertDisclosureSafe(html, project, priorFeedback, disclosures) {
   }
 }
 
-function renderReviewerEntry({ projectTitle, packageId, normalizedBrief: brief, pages, frozenProject, responseTemplate, priorFeedback }) {
+function renderReviewerEntry({ projectTitle, packageId, normalizedBrief: brief, pages, frozenProject, responseTemplate, priorFeedback, versionStatus }) {
   const disclosureSummary = [
     brief.disclosures.speaker_notes ? "Speaker notes are included." : "Speaker notes are not included.",
     brief.disclosures.sources ? "Source citations are included." : "Source citations are not included.",
@@ -265,7 +270,7 @@ function renderReviewerEntry({ projectTitle, packageId, normalizedBrief: brief, 
   }).join("")}</section>` : "";
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; frame-src 'self'; img-src data:; base-uri 'none'; form-action 'none'"><title>Feedback requested: ${escapeHtml(projectTitle)}</title><style>${entryCss()}</style></head>
-<body><header><p class="eyebrow">Presentation review</p><h1>${escapeHtml(projectTitle)}</h1><p>${escapeHtml(brief.purpose)}</p><dl><div><dt>Audience</dt><dd>${escapeHtml(brief.audience)}</dd></div><div><dt>Review scope</dt><dd>${escapeHtml(brief.scope)}</dd></div>${brief.deadline ? `<div><dt>Reply requested by</dt><dd>${escapeHtml(brief.deadline)}</dd></div>` : ""}<div><dt>Version</dt><dd>Fixed package ${escapeHtml(packageId.slice(-12))}</dd></div></dl><p class="notice">This is a fixed review copy. Your response will not edit the presentation, and reviewer approval remains separate from the creator's acceptance and final business approval.</p></header>
+<body><header><p class="eyebrow">Presentation review</p><h1>${escapeHtml(projectTitle)}</h1><p>${escapeHtml(brief.purpose)}</p><dl><div><dt>Audience</dt><dd>${escapeHtml(brief.audience)}</dd></div><div><dt>Review scope</dt><dd>${escapeHtml(brief.scope)}</dd></div>${brief.deadline ? `<div><dt>Reply requested by</dt><dd>${escapeHtml(brief.deadline)}</dd></div>` : ""}<div><dt>Version</dt><dd>Fixed package ${escapeHtml(packageId.slice(-12))}</dd></div></dl><p class="notice">${versionStatus.newer_build_known ? "A newer version was already available when this package was created." : "No newer version was known when this package was created."} This offline copy cannot check for later updates; confirm the version with the creator. Your response will not edit the presentation, and reviewer approval remains separate from the creator's acceptance and final business approval.</p></header>
 <main><section><h2>Decisions requested</h2><ul>${brief.requested_decisions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section><section><h2>What changed</h2>${brief.change_summary.length ? `<ul>${brief.change_summary.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "<p>No change summary was supplied.</p>"}</section><section><h2>Included context</h2><ul>${disclosureSummary.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>${earlier}<form id="feedback"><section><h2>Your details</h2><p>Only enter details you choose to supply. This package does not verify identity.</p><div class="grid"><label>Name<input name="reviewer-name"></label><label>Role<input name="reviewer-role"></label><label>Contact<input name="reviewer-contact"></label><label>Decision time<input name="decision-time" placeholder="For example, 2026-09-15T14:00:00Z"></label></div></section><section><h2>Overall response</h2><fieldset><legend>Deck-level decision</legend>${decisionInputs("overall")}<label>Overall comment<textarea name="overall-comment" rows="4"></textarea></label></fieldset></section>${pageCards}<section><h2>Return your feedback</h2><p>Select Download response, then return the JSON file to the presentation creator. Opening this package or leaving comments does not count as approval.</p><button type="submit">Download response JSON</button><p id="status" role="status" aria-live="polite"></p></section></form></main><script>${entryScript(responseTemplate)}</script></body></html>\n`;
 }
 

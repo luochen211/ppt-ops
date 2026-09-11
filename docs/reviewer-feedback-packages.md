@@ -51,12 +51,13 @@ pptops review-package-import <project-dir> --response <review-response.json>
 
 Import validates the opaque package binding, checks every human-facing slide reference against the manifest, writes the original response and a portable manifest as immutable evidence, and appends a `reviewer_feedback` record. `reindex` can restore that evidence after rebuilding local metadata. It never changes the selected Review or any presentation artifact.
 
-- If a newer succeeded Build exists, the response is preserved with `stale: true` and records the current Build ID for comparison.
+- The cover states whether a newer Build of this audience version was known at package creation; it cannot discover later updates offline.
+- If a newer succeeded Build of the same audience version exists, the response is preserved with `stale: true` and records the current Build ID for comparison.
 - Responses from different reviewers remain separate. Opposing `approve` and `request_changes` decisions for the same deck or slide are returned as conflicts for the creator to resolve.
 - `comment` is not approval. An opened package, a blank response, silence, or free-form comments without an explicit approval decision never become approval.
 
 ## Accessibility and security boundary
 
-The entry uses semantic headings, labelled fieldsets and controls, visible keyboard focus, high-contrast defaults, responsive sizing, and reduced-motion styling. The manifest calls this `baseline_applied`; it does not claim an external accessibility audit.
+The entry uses semantic headings, labelled fieldsets and controls, visible keyboard focus, high-contrast defaults, responsive sizing, and reduced-motion styling. The manifest carries the declared project profile and reports accessibility as `degraded` until full preview and assistive-technology validation exists; it does not promote form semantics into complete accessibility evidence.
 
 The package uses a restrictive Content Security Policy and contains no network code. It excludes raw prompts, provider logs, local paths, secrets, and source contents. When source disclosure is enabled, the entry shows numbered citation locators rather than source file paths. Other reviewer-facing export formats remain governed by the delivery/export capability boundary and are not simulated here.

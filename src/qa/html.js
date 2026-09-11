@@ -124,7 +124,7 @@ export async function printHtmlPdf({ htmlFile, browserPath, timeoutMs, presentat
   });
 }
 
-async function withHtmlPage({ htmlFile, browserPath, timeoutMs = DEFAULT_TIMEOUT_MS }, operation) {
+export async function withHtmlPage({ htmlFile, browserPath, timeoutMs = DEFAULT_TIMEOUT_MS }, operation) {
   const file = path.resolve(htmlFile);
   await fs.access(file);
   const executable = browserPath ?? await findBrowser();
