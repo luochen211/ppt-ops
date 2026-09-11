@@ -11,6 +11,7 @@ import { createHandoff } from "../handoff/index.js";
 import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
+import { createReviewerFeedbackPackage, importReviewerResponse } from "../reviewer-feedback/index.js";
 import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
@@ -253,6 +254,36 @@ export class ApplicationService {
     if (!["accepted", "rejected"].includes(decision)) throw new ApplicationError("REVIEW_DECISION_INVALID", "review decision must be accepted or rejected");
     const recorded = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
     return this.replaceManifest("review", review.id, stripRevision(recorded));
+  }
+
+  async createReviewerPackage(buildId, reviewId, brief) {
+    const build = this.requireBuild(buildId);
+    const review = this.requireEntity("review", reviewId);
+    const frozenProject = await this.projectFromVersion(build.version_id);
+    return createReviewerFeedbackPackage({
+      projectRoot: this.project.root,
+      projectTitle: frozenProject.project.title,
+      build,
+      review,
+      frozenProject,
+      fileStore: this.files,
+      priorFeedback: this.store.listEntities(this.projectId, "reviewer_feedback"),
+      brief
+    });
+  }
+
+  async importReviewerResponse(responseFile) {
+    const currentBuild = this.store.listBuilds(this.projectId)
+      .filter((build) => build.state === "succeeded")
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))[0];
+    return importReviewerResponse({
+      projectRoot: this.project.root,
+      responseFile,
+      fileStore: this.files,
+      store: this.store,
+      projectId: this.projectId,
+      currentBuild
+    });
   }
 
   async createHandoff(buildId, reviewId) {

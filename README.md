@@ -31,6 +31,7 @@ PPT-Ops 把这些容易遗漏的环节整理成一条清晰流程：
 - 先制作关键页面，确认方向后再完成整套文稿
 - 首页与最后一页强制使用经检查和明确接受的 ImageGen 生图
 - 同时生成浏览器演示稿和可编辑的 PowerPoint 文件
+- 为不使用 Git 或命令行的业务评审者生成可离线返回意见的只读审阅包
 - 保留检查记录和交付文件，方便修改、复盘与再次使用
 
 ## 适合这些场景
@@ -104,6 +105,7 @@ PPT-Ops 目前处于 **V1.0 发布候选阶段**。
 
 - [产品说明](docs/product-v1.0-blueprint.md)
 - [使用与排障指南](docs/operations.md)
+- [非技术评审反馈包](docs/reviewer-feedback-packages.md)
 - [开发者指南](docs/developer-guide.md)
 - [Visual Asset Pipeline 需求](docs/visual-asset-pipeline-requirements.md)
 - [Visual Asset Pipeline 交付 DAG](docs/visual-asset-pipeline-dag.md)

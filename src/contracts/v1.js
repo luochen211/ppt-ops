@@ -11,7 +11,7 @@ export function pageSpecId(page) { return `page-${String(page).padStart(3, "0")}
 export const ENTITY_KINDS = Object.freeze([
   "project", "source", "outline", "page_spec", "theme", "template", "asset",
   "candidate", "candidate_feedback", "powerpoint_observation", "visual_asset_brief", "visual_asset_generation",
-  "visual_asset_observation", "visual_asset_decision", "approval", "version", "build", "review", "handoff"
+  "visual_asset_observation", "visual_asset_decision", "approval", "version", "build", "review", "reviewer_feedback", "handoff"
 ]);
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
@@ -154,6 +154,15 @@ const validators = {
   version(value, errors) { requireEnum(value, "state", ["draft", "approval_pending", "approved", "changes_requested", "frozen"], errors); requireHashField(value, "snapshot_hash", errors); },
   build(value, errors) { requireId(value, "version_id", errors); requireEnum(value, "state", ["queued", "preparing", "rendering", "validating", "succeeded", "failed", "cancelled"], errors); requireEnumList(value.targets, "targets", ["html", "pptx", "pdf", "png"], errors); },
   review(value, errors) { requireId(value, "build_id", errors); requireEnum(value, "state", ["automated_pending", "automated_complete", "human_pending", "accepted", "rejected"], errors); },
+  reviewer_feedback(value, errors) {
+    requireId(value, "package_id", errors); requireId(value, "build_id", errors); requireId(value, "review_id", errors);
+    requireHashField(value, "build_sha256", errors); requireHashField(value, "review_sha256", errors); requireHashField(value, "response_sha256", errors);
+    if (value.identity_verified !== false) errors.push("identity_verified must be false unless a future verifier supplies evidence");
+    if (typeof value.stale !== "boolean") errors.push("stale must be boolean");
+    if (!isObject(value.overall)) errors.push("overall must be an object");
+    if (!Array.isArray(value.pages)) errors.push("pages must be an array");
+    if (!Array.isArray(value.conflicts)) errors.push("conflicts must be an array");
+  },
   handoff(value, errors) { requireId(value, "build_id", errors); requireId(value, "review_id", errors); requireEnum(value, "state", ["preparing", "packaged", "verified", "delivered", "archived"], errors); }
 };
 

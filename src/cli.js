@@ -12,7 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
@@ -53,6 +53,8 @@ Usage:
   pptops build-retry <project-dir> --build <id>
   pptops review-run <project-dir> --build <id>
   pptops review-record <project-dir> --review <id> --decision <accepted|rejected> --expected-revision <n> [--evidence <json>]
+  pptops review-package-create <project-dir> --build <id> --review <id> --brief <json>
+  pptops review-package-import <project-dir> --response <review-response.json>
   pptops handoff-create <project-dir> --build <id> --review <id>
   pptops doctor [project-dir]
   pptops reindex <project-dir>
@@ -208,6 +210,8 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "build-retry") return await service.retryBuild(required(options, "build"));
     if (command === "review-run") return await service.runReview(required(options, "build"));
     if (command === "review-record") return await service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });
+    if (command === "review-package-create") return await service.createReviewerPackage(required(options, "build"), required(options, "review"), jsonOption(options, "brief"));
+    if (command === "review-package-import") return await service.importReviewerResponse(required(options, "response"));
     if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"));
     throw new ApplicationError("COMMAND_UNKNOWN", `unknown application command: ${command}`);
   } finally { service.close(); }
@@ -283,7 +287,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
