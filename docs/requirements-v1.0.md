@@ -8,13 +8,15 @@ V1.0 turns the validated v0.1 dual-renderer foundation into a usable local CLI w
 
 The product has three planned entry points, specified in the [core workflow plan](core-workflows-plan.md):
 
-- Transcript to PPT: produce and confirm the outline before generating the deck.
+- Materials to PPT: accept documents, images, audio, video, web pages, and other source materials individually or in combination; understand their content, then produce and confirm the outline before generating the deck.
 - Structure to PPT: continue from a supplied chapter outline or per-slide structure; expand chapters into pages only when necessary.
 - Existing PPT visual refinement: improve layout, typography, colors, image placement, and supported chart styling while preserving wording, facts, data, slide order, and the established brand style unless a style change is requested.
 
+Source types remain open-ended. Users can provide complete or fragmentary materials directly; the system handles necessary text recognition, transcription, and visual understanding. Images and videos can be primary sources without an accompanying transcript. Video understanding must account for relevant visual events as well as speech, including silent video. Each page retains source locations such as document pages, image regions, or media time ranges; unreadable content and conflicting evidence are identified explicitly.
+
 Copy editing and narrative restructuring are future work for the refinement entry point. They are not prerequisites for visual refinement and do not change the necessary content preparation in the two generation workflows. Existing content review remains a separate capability.
 
-This is a requirements update, not a claim that all three workflows have shipped. Visual refinement must produce an editable PPTX and before/after previews, preserve untargeted pages, and pass real PowerPoint checks. The existing CLI acceptance criteria below remain evidence of the implemented foundation only.
+This is a requirements update, not a claim that all three workflows have shipped. Image, audio, video, and mixed-material understanding each require implementation and independent acceptance evidence. Visual refinement must produce an editable PPTX and before/after previews, preserve untargeted pages, and pass real PowerPoint checks. The existing CLI acceptance criteria below remain evidence of the implemented foundation only.
 
 ## User workflow
 
