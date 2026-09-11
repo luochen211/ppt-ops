@@ -61,6 +61,11 @@ export async function reindexProject(projectDir) {
       replayEntity(store, project.project.name, review, ["automated_pending", "automated_complete", "human_pending", review.state]);
       counts.review += 1;
     }
+    const reviewerFeedback = await readManifests(project.root, "reviewer-feedback");
+    for (const feedback of reviewerFeedback) {
+      store.saveEntity(project.project.name, withoutRevision(feedback));
+    }
+    if (reviewerFeedback.length) counts.reviewer_feedback = reviewerFeedback.length;
     for (const handoff of await readManifests(project.root, "handoffs")) {
       let current = store.createHandoff(project.project.name, { ...handoff, state: "preparing" });
       for (const state of ["packaged", "verified", handoff.state]) {
