@@ -36,6 +36,8 @@ test("CLI applies same-version system changes, deletes retired files, preserves 
   const applied = await runUpdate(["apply", ...args], services);
   assert.equal(applied.ok, true);
   assert.equal(await read(f.target, "src/current.js"), "new\n");
+  const ignoredState = await command("git", ["ls-files", "--others", "--exclude-standard", ".pptops-updates"], f.target);
+  assert.equal(ignoredState.stdout, "");
   await assert.rejects(fs.access(path.join(f.target, "src/retired.js")), { code: "ENOENT" });
   assert.equal((await runUpdate(["check", ...args], services)).update_available, false);
   for (const file of ["projects/client/brief.md", "templates/user/custom.md", "config/profile.yml", "acceptance/private.md", "src/local-only.js"]) assert.equal(await read(f.target, file), "private\n");

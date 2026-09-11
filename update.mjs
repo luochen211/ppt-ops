@@ -52,6 +52,8 @@ export async function runUpdate(argv, services = {}) {
   try {
     if (["apply", "rollback"].includes(action)) {
       await fs.mkdir(stateRoot, { recursive: true });
+      // Older installations do not yet have the root .gitignore entry.
+      await fs.writeFile(path.join(stateRoot, ".gitignore"), "*\n", { flag: "wx" }).catch((error) => { if (error.code !== "EEXIST") throw error; });
       try { await fs.mkdir(path.join(stateRoot, "lock")); locked = true; }
       catch (error) { if (error.code === "EEXIST") throw coded("UPDATE_LOCKED", "another update is active; see docs/system/updates.md for interrupted updates"); throw error; }
       // A state record read before another updater completed must not be used.
