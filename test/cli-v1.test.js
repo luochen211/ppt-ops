@@ -53,10 +53,10 @@ test("build all creates both renderers and deliver creates a complete package", 
   assert.deepEqual(build.outputs.map(({ format }) => format), ["html", "pptx"]);
   await Promise.all(build.outputs.map(({ file }) => fs.access(file)));
 
-  const delivery = JSON.parse((await runCli("deliver", project)).stdout);
+  const delivery = JSON.parse((await runCli("deliver", project, "--formats", "html,pptx", "--actor", "user:fixture")).stdout);
   assert.equal(delivery.review.passed, true);
-  assert.match(delivery.handoff.manifest_file, /package-001\/manifest\.json$/);
-  const manifest = JSON.parse(await fs.readFile(delivery.handoff.manifest_file, "utf8"));
+  assert.match(delivery.manifest_file, /package-001\/manifest\.json$/);
+  const manifest = JSON.parse(await fs.readFile(delivery.manifest_file, "utf8"));
   assert.deepEqual(manifest.outputs.map(({ name }) => name), ["review-report.json", "slides.html", "slides.pptx"]);
   assert.deepEqual(manifest.boundary_images.map(({ boundary, page_id, asset_id }) => ({ boundary, page_id, asset_id })), [
     { boundary: "first+final", page_id: "page-001", asset_id: "generated-page-001-boundary" }

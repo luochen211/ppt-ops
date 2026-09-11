@@ -6,7 +6,7 @@
     { "$ref": "entity.schema.json" },
     {
       "type": "object",
-      "required": ["title", "format", "outputs", "source_ids", "outline_id", "theme_id", "asset_ids"],
+      "required": ["title", "format", "source_ids", "outline_id", "theme_id", "asset_ids"],
       "properties": {
         "kind": { "const": "project" },
         "format": { "const": "16:9" },

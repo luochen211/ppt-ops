@@ -104,11 +104,31 @@ export function analyzeHtmlGeometry(pages, options = {}) {
   };
 }
 
-export async function inspectHtmlPresentation({ htmlFile, browserPath, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+export async function inspectHtmlPresentation(options = {}) {
+  if (!options.browserPath && !await findBrowser()) return { status: "degraded", reason: "Google Chrome or Chromium is unavailable", page_count: 0, annotated_page_count: 0, findings: [], pages: [] };
+  return withHtmlPage(options, async (client, executable, file) => ({ ...analyzeHtmlGeometry(await collectGeometry(client)), browser: executable, html_file: file }));
+}
+
+export async function printHtmlPdf({ htmlFile, browserPath, timeoutMs, presentation = false }) {
+  return withHtmlPage({ htmlFile, browserPath, timeoutMs }, async (client) => {
+    if (presentation) {
+      await client.send("Runtime.evaluate", { expression: `(() => {
+        const style = document.createElement('style');
+        style.textContent = '@page{size:20in 11.25in;margin:0} html,body{width:1920px!important;height:auto!important;overflow:visible!important;background:white!important} .viewport, .stage{position:static!important;display:block!important;transform:none!important;width:1920px!important;height:auto!important;overflow:visible!important} .slide{position:relative!important;inset:auto!important;width:1920px!important;height:1080px!important;visibility:visible!important;opacity:1!important;break-after:page!important;page-break-after:always!important;box-sizing:border-box!important} .slide:last-child{break-after:auto!important;page-break-after:auto!important} .controls,.notes-link,#speaker-notes{display:none!important}';
+        document.head.appendChild(style);
+        document.querySelectorAll('.slide').forEach(slide => {slide.removeAttribute('inert');slide.setAttribute('aria-hidden','false')});
+      })()` });
+    }
+    const result = await client.send("Page.printToPDF", { printBackground: true, displayHeaderFooter: false, preferCSSPageSize: true, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0 });
+    return Buffer.from(result.data, "base64");
+  });
+}
+
+async function withHtmlPage({ htmlFile, browserPath, timeoutMs = DEFAULT_TIMEOUT_MS }, operation) {
   const file = path.resolve(htmlFile);
   await fs.access(file);
   const executable = browserPath ?? await findBrowser();
-  if (!executable) return { status: "degraded", reason: "Google Chrome or Chromium is unavailable", page_count: 0, annotated_page_count: 0, findings: [], pages: [] };
+  if (!executable) { const error = new Error("Google Chrome or Chromium is unavailable"); error.code = "EXPORTER_UNAVAILABLE"; throw error; }
   const profile = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-html-qa-"));
   const processHandle = spawn(executable, [
     "--headless=new",
@@ -144,8 +164,7 @@ export async function inspectHtmlPresentation({ htmlFile, browserPath, timeoutMs
       const url = `${pathToFileURL(file).href}?static=1`;
       await client.send("Page.navigate", { url });
       await waitForDocument(client, url, timeoutMs);
-      const pages = await collectGeometry(client);
-      return { ...analyzeHtmlGeometry(pages), browser: executable, html_file: file };
+      return await operation(client, executable, file);
     } finally {
       client.close();
     }
@@ -176,7 +195,7 @@ export async function removeBrowserProfile(profile, { rm = fs.rm, wait = delay }
   }
 }
 
-async function findBrowser() {
+export async function findBrowser() {
   const candidates = [
     process.env.PPT_OPS_CHROME,
     process.platform === "darwin" ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" : undefined,
