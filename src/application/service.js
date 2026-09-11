@@ -215,7 +215,8 @@ export class ApplicationService {
   async freezeVersion({ variantId } = {}) {
     await this.refresh();
     if (variantId) return freezeAudienceVariant(this, variantId);
-    const snapshot = Object.fromEntries(await Promise.all(CONTRACT_FILES.map(async file => [file, JSON.parse(await fs.readFile(path.join(this.project.root, file), "utf8"))])));
+    const files = [...CONTRACT_FILES, ...(await fileExists(path.join(this.project.root, "fact-ledger.json")) ? ["fact-ledger.json"] : [])];
+    const snapshot = Object.fromEntries(await Promise.all(files.map(async file => [file, JSON.parse(await fs.readFile(path.join(this.project.root, file), "utf8"))])));
     return this.freezeSnapshot(snapshot);
   }
 
@@ -529,6 +530,7 @@ function deepMerge(base, patch) {
 }
 function isPlainObject(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
 function hasText(value) { return typeof value === "string" && value.trim() !== ""; }
+async function fileExists(file) { try { await fs.access(file); return true; } catch (error) { if (error.code === "ENOENT") return false; throw error; } }
 function summarizeCandidate(candidate) { return { id: candidate.id, attempt: candidate.attempt, state: candidate.state, parent_candidate_id: candidate.parent_candidate_id, hypothesis: candidate.hypothesis, patch: candidate.patch, reconstruction: candidate.reconstruction }; }
 function validateReconstruction(value, patch) {
   if (!isPlainObject(value)) throw new ApplicationError("RECONSTRUCTION_REQUIRED", "a semantic reconstruction record is required after repeated rejection");

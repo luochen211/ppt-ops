@@ -18,9 +18,9 @@ export async function readProject(projectDir) {
 async function readV1Project(root, contract, projectFile, pagesFile) {
   const themeFile = path.join(root, "theme.json");
   const assetsFile = path.join(root, "assets.json");
-  let [pageContracts, themeContract, assetContracts, sources, outline, templates] = await Promise.all([
+  let [pageContracts, themeContract, assetContracts, sources, outline, templates, factLedger] = await Promise.all([
     readJson(pagesFile), readJson(themeFile), readJson(assetsFile), readJson(path.join(root, "sources.json")),
-    readJson(path.join(root, "outline.json")), readJson(path.join(root, "templates.json"))
+    readJson(path.join(root, "outline.json")), readJson(path.join(root, "templates.json")), readOptionalJson(path.join(root, "fact-ledger.json"))
   ]);
   const rawPageContracts = pageContracts, rawThemeContract = themeContract;
   const materialized = await materializeCorporateProfile(root, { "project.json": contract, "pages.json": pageContracts, "theme.json": themeContract });
@@ -35,11 +35,16 @@ async function readV1Project(root, contract, projectFile, pagesFile) {
   const theme = themeContract.tokens;
   const assets = assetContracts.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset);
   const referencedFiles = await inspectReferencedFiles(root, project, pages, assets);
-  return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, contractModel: "v1", contracts: { project: contract, sources, outline, pages: rawPageContracts, theme: rawThemeContract, assets: assetContracts, templates } };
+  return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, contractModel: "v1", ...(factLedger ? { factLedger } : {}), contracts: { project: contract, sources, outline, pages: rawPageContracts, theme: rawThemeContract, assets: assetContracts, templates, ...(factLedger ? { factLedger } : {}) } };
 }
 
 async function readJson(file) {
   return JSON.parse(await fs.readFile(file, "utf8"));
+}
+
+async function readOptionalJson(file) {
+  try { return await readJson(file); }
+  catch (error) { if (error.code === "ENOENT") return undefined; throw error; }
 }
 
 async function inspectReferencedFiles(root, project, pages, assets) {

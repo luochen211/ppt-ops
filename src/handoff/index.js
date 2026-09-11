@@ -33,6 +33,7 @@ export async function createHandoff(project, reviewReport, options = {}) {
     });
   }
   const accessibility = accessibilityHandoff(reviewReport);
+  const factLedger = factLedgerHandoff(reviewReport);
 
   const manifest = {
     schema_version: "0.1",
@@ -49,11 +50,25 @@ export async function createHandoff(project, reviewReport, options = {}) {
     ...(options.variant ? { variant: options.variant } : {}),
     ...(options.corporateProfile ? { corporate_profile: options.corporateProfile } : {}),
     ...(accessibility ? { accessibility } : {}),
+    ...(factLedger ? { fact_ledger: factLedger } : {}),
     ...(options.boundaryImages ? { boundary_images: options.boundaryImages.boundaries.map(({ boundary, roles, page_id, asset_id, generation_id, sha256 }) => ({ boundary, roles, page_id, asset_id, generation_id, sha256 })) } : {})
   };
   const manifestFile = path.join(packageDir, HANDOFF_MANIFEST_FILE);
   await fs.writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, { flag: "wx" });
   return { manifest, manifestFile, packageDir };
+}
+
+function factLedgerHandoff(reviewReport) {
+  const evidence = reviewReport.automated_checks?.find(({ id }) => id === "fact-ledger")?.evidence;
+  if (!evidence) return undefined;
+  return {
+    ledger_revision: evidence.ledger_revision,
+    evaluated_at: evidence.evaluated_at,
+    status: evidence.status,
+    summary: evidence.summary,
+    blocker_claim_ids: evidence.blocker_claim_ids,
+    claims: evidence.claims
+  };
 }
 
 function accessibilityHandoff(reviewReport) {
