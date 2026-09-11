@@ -2,12 +2,22 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { runUpdate } from "../update.mjs";
 import { command, buildSystemArchive, latestTestedCommit, snapshot } from "../src/update/distribution.js";
 import { describe } from "../src/update/index.js";
 
 const services = { doctor: async () => ({ ok: true }) };
+
+test("the CLI executes when launched through a symlink path", async (t) => {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-entry-test-"));
+  t.after(() => fs.rm(temporary, { recursive: true, force: true }));
+  const entry = path.join(temporary, "update-link.mjs");
+  await fs.symlink(fileURLToPath(new URL("../update.mjs", import.meta.url)), entry);
+  const { stdout } = await command(process.execPath, [entry, "--help"], temporary);
+  assert.match(stdout, /PPT-Ops system updater/);
+});
 
 test("CLI applies same-version system changes, deletes retired files, preserves private data and rolls back", async (t) => {
   const f = await fixture(t);

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { applyUpdate, assertTargetPath, coded, previewUpdate, restoreBackup, targetDoctor } from "./src/update/index.js";
 import { command, downloadSystemSnapshot, fileManifest, latestTestedCommit, snapshot } from "./src/update/distribution.js";
@@ -149,7 +149,7 @@ async function exists(file) { try { await fs.lstat(file); return true; } catch (
 async function readOptional(file) { try { return JSON.parse(await fs.readFile(file, "utf8")); } catch (error) { if (error.code === "ENOENT") return undefined; throw error; } }
 async function writeJson(file, value) { const temporary = `${file}.tmp`; await fs.writeFile(temporary, JSON.stringify(value, null, 2) + "\n"); await fs.rename(temporary, file); }
 
-if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
+if (process.argv[1] && await fs.realpath(process.argv[1]).catch(() => undefined) === fileURLToPath(import.meta.url)) {
   try {
     const result = await runUpdate(process.argv.slice(2));
     console.log(result.help ?? JSON.stringify(result, null, 2));
