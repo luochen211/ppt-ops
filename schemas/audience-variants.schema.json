@@ -15,6 +15,7 @@
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
           "title": { "type": "string", "minLength": 1 },
+          "archived": { "type": "boolean" },
           "audience": { "type": "string", "minLength": 1 },
           "purpose": { "type": "string", "minLength": 1 },
           "expected_duration_seconds": { "type": "integer", "minimum": 1 },

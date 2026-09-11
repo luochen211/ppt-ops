@@ -72,6 +72,7 @@ export function validateAudienceVariantManifest(manifest, base) {
     if (!isObject(variant.base) || variant.base.project_id !== base?.project?.id || !hasText(variant.base.revision)) errors.push(`${prefix}.base must reference this project and a revision`);
     if (variant.expected_duration_seconds !== undefined && (!Number.isInteger(variant.expected_duration_seconds) || variant.expected_duration_seconds < 1)) errors.push(`${prefix}.expected_duration_seconds must be a positive integer`);
     if (variant.delivery_mode !== undefined && !DELIVERY_MODES.includes(variant.delivery_mode)) errors.push(`${prefix}.delivery_mode is invalid: ${variant.delivery_mode}`);
+    if (variant.archived !== undefined && typeof variant.archived !== "boolean") errors.push(`${prefix}.archived must be a boolean`);
     const pageIds = variant.page_ids;
     if (!Array.isArray(pageIds) || pageIds.length === 0) errors.push(`${prefix}.page_ids must be a non-empty array`);
     else {

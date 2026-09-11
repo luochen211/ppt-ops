@@ -16,6 +16,7 @@ import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
 import { createReviewerFeedbackPackage, importReviewerResponse } from "../reviewer-feedback/index.js";
+import { freezeAudienceVariant, manageAudienceVariants } from "../variants/lifecycle.js";
 import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
@@ -202,19 +203,34 @@ export class ApplicationService {
     return { target: { kind: left.target_kind, id: left.target_id }, left: summarizeCandidate(left), right: summarizeCandidate(right), patch_changed: hashJson(left.patch) !== hashJson(right.patch) };
   }
 
-  async freezeVersion() {
+  async manageAudienceVariants(action, input) { return manageAudienceVariants(this, action, input); }
+
+  async freezeVersion({ variantId } = {}) {
     await this.refresh();
-    const errors = validateProject(this.project);
+    if (variantId) return freezeAudienceVariant(this, variantId);
+    const snapshot = Object.fromEntries(await Promise.all(CONTRACT_FILES.map(async file => [file, JSON.parse(await fs.readFile(path.join(this.project.root, file), "utf8"))])));
+    return this.freezeSnapshot(snapshot);
+  }
+
+  async freezeSnapshot(snapshot, metadata = {}) {
+    const project = this.projectFromSnapshot(snapshot);
+    project.referencedFiles = await Promise.all([
+      ...project.contracts.sources.map(source => ({ kind: "source", file: source.file })),
+      ...project.contracts.assets.map(asset => ({ kind: "asset", id: asset.id, file: asset.file }))
+    ].map(async reference => {
+      try { await fs.access(resolveProjectPath(project.root, reference.file)); return { ...reference, exists: true }; }
+      catch (error) { if (!["ENOENT", "ENOTDIR", "PROJECT_PATH_OUTSIDE_ROOT"].includes(error.code)) throw error; return { ...reference, exists: false }; }
+    }));
+    const errors = validateProject(project);
     if (errors.length) throw new ApplicationError("PROJECT_INVALID", "project cannot be frozen", { errors });
-    await assertBoundaryGeneratedImages(this.project);
-    const snapshot = Object.fromEntries(await Promise.all(CONTRACT_FILES.map(async (file) => [file, JSON.parse(await fs.readFile(path.join(this.project.root, file), "utf8"))])));
+    await assertBoundaryGeneratedImages(project);
     const componentHashes = Object.fromEntries(Object.entries(snapshot).map(([file, value]) => [file, hashJson(value)]));
     const snapshotHash = hashJson(snapshot);
     const existing = this.store.listEntities(this.projectId, "version").find((version) => version.snapshot_hash === snapshotHash && version.state === "frozen");
     if (existing) return { ...existing, reused: true };
     const id = nextId("version", this.store.listEntities(this.projectId, "version"));
     await this.files.writeVersionSnapshot(id, snapshot);
-    let version = this.store.saveEntity(this.projectId, createV1Entity("version", id, { state: "draft", snapshot_hash: snapshotHash, component_hashes: componentHashes }));
+    let version = this.store.saveEntity(this.projectId, createV1Entity("version", id, { state: "draft", snapshot_hash: snapshotHash, component_hashes: componentHashes, ...metadata }));
     for (const state of ["approval_pending", "approved", "frozen"]) version = this.store.saveEntity(this.projectId, { ...stripRevision(version), state });
     await this.files.writeManifest("version", id, stripRevision(version));
     return version;
@@ -225,7 +241,7 @@ export class ApplicationService {
     if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
     await assertBoundaryGeneratedImages(await this.projectFromVersion(versionId));
     const id = nextId("build", this.store.listBuilds(this.projectId));
-    this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: {} }));
+    this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: { ...(version.variant ? { variant: version.variant } : {}) } }));
     return this.runBuild(id);
   }
 
@@ -242,11 +258,12 @@ export class ApplicationService {
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
     const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
+    if (build.config?.variant) report.variant = build.config?.variant;
     await writeReviewReport(frozenProject, report);
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
     const immutableReport = await this.files.writeImmutable(`.pptops/reviews/${id}/review-report.json`, `${JSON.stringify(report, null, 2)}\n`);
     const artifactHashes = await this.buildArtifactHashes(build);
-    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file }));
+    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
     await this.files.writeManifest("review", id, stripRevision(review));
@@ -363,9 +380,9 @@ export class ApplicationService {
       if (!expected || expected.sha256 !== selection.pdf_source.sha256 || expected.file !== selection.pdf_source.file) throw new ApplicationError("PDF_SOURCE_CHANGED", "PDF source is no longer eligible; select again after review");
       sourceFiles.push(await exportPresentationPdf(this.project.root, selection));
     }
-    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages, deliverySelection: selection });
+    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages, deliverySelection: selection, variant: build.config?.variant });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
-    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, state: "preparing", files: packageResult.manifest.outputs }));
+    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
     await this.files.writeManifest("handoff", id, stripRevision(handoff));
     return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
@@ -419,6 +436,10 @@ export class ApplicationService {
 
   async projectFromVersion(versionId) {
     const snapshot = await this.files.readVersionSnapshot(versionId);
+    return this.projectFromSnapshot(snapshot);
+  }
+
+  projectFromSnapshot(snapshot) {
     const contracts = {
       project: snapshot["project.json"], sources: snapshot["sources.json"], outline: snapshot["outline.json"],
       pages: snapshot["pages.json"], theme: snapshot["theme.json"], assets: snapshot["assets.json"], templates: snapshot["templates.json"]
