@@ -124,7 +124,7 @@ export async function printHtmlPdf({ htmlFile, browserPath, timeoutMs, presentat
   });
 }
 
-export async function withHtmlPage({ htmlFile, browserPath, timeoutMs = DEFAULT_TIMEOUT_MS }, operation) {
+export async function withHtmlPage({ htmlFile, browserPath, timeoutMs = DEFAULT_TIMEOUT_MS, isolatedDocument = false }, operation) {
   const file = path.resolve(htmlFile);
   await fs.access(file);
   const executable = browserPath ?? await findBrowser();
@@ -160,6 +160,16 @@ export async function withHtmlPage({ htmlFile, browserPath, timeoutMs = DEFAULT_
     const client = await CdpClient.connect(target.webSocketDebuggerUrl);
     try {
       await client.send("Network.enable");
+      if (isolatedDocument) {
+        await client.send("Network.setBlockedURLs", { urls: ["*"] });
+        await client.send("Emulation.setScriptExecutionDisabled", { value: true });
+        await client.send("Page.enable");
+        const { frameTree } = await client.send("Page.getFrameTree");
+        const html = await fs.readFile(file, "utf8");
+        const policy = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">`;
+        await client.send("Page.setDocumentContent", { frameId: frameTree.frame.id, html: policy + html });
+        return await operation(client, executable, file);
+      }
       await client.send("Network.setBlockedURLs", { urls: ["http://*", "https://*"] });
       const url = `${pathToFileURL(file).href}?static=1`;
       await client.send("Page.navigate", { url });

@@ -11,6 +11,11 @@
         "kind": { "const": "project" },
         "format": { "const": "16:9" },
         "delivery_mode": { "type": "string", "enum": ["live_talk", "workshop", "pitch", "leave_behind", "async"] },
+        "corporate_profile": {
+          "type": "object", "required": ["file", "sha256", "decision_file"],
+          "properties": { "file": { "type": "string", "minLength": 1 }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "decision_file": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        },
         "accessibility_profile": {
           "type": "object",
           "required": ["enabled", "intent", "document_language", "reading_direction", "target_formats"],

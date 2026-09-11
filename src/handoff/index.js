@@ -47,6 +47,7 @@ export async function createHandoff(project, reviewReport, options = {}) {
     },
     delivery_selection: selection,
     ...(options.variant ? { variant: options.variant } : {}),
+    ...(options.corporateProfile ? { corporate_profile: options.corporateProfile } : {}),
     ...(accessibility ? { accessibility } : {}),
     ...(options.boundaryImages ? { boundary_images: options.boundaryImages.boundaries.map(({ boundary, roles, page_id, asset_id, generation_id, sha256 }) => ({ boundary, roles, page_id, asset_id, generation_id, sha256 })) } : {})
   };
