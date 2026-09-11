@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { templateForRelation } from "../layout/catalog.js";
+import { resolveTheme, templateForRelation } from "../layout/catalog.js";
 
 export const ACCESSIBILITY_INTENTS = Object.freeze(["create_accessible", "audit_only", "remediate"]);
 export const ACCESSIBILITY_EVIDENCE_KINDS = Object.freeze([
@@ -10,13 +10,13 @@ export const ACCESSIBILITY_EVIDENCE_KINDS = Object.freeze([
 const FORMAT_CAPABILITIES = Object.freeze({
   html: Object.freeze({
     status: "partial",
-    supported: ["editable_dom", "keyboard_navigation", "visible_focus", "landmarks_and_headings", "reduced_motion", "accessible_control_names"],
-    limitations: ["document language is currently renderer-defined", "page language and authored reading order are not yet mapped to the DOM", "screen-reader behavior requires assistive-technology testing"]
+    supported: ["editable_dom", "keyboard_navigation", "visible_focus", "landmarks_and_headings", "reduced_motion", "accessible_control_names", "document_and_page_language", "declared_direction", "text_scaling", "image_descriptions", "semantic_alternatives"],
+    limitations: ["authored reading order is compared with rendered DOM order; incompatible layouts require a reviewed change", "media caption/transcript playback must be verified in the actual artifact", "screen-reader behavior requires assistive-technology testing"]
   }),
   pptx: Object.freeze({
     status: "partial",
-    supported: ["editable_objects", "image_alt_text"],
-    limitations: ["document and page language are not yet written", "PowerPoint object order is not yet verified or controlled", "real Microsoft PowerPoint Accessibility Checker and assistive-technology testing remain external evidence"]
+    supported: ["editable_objects", "image_alt_text", "document_and_page_language", "declared_direction", "text_scaling", "object_order_inspection"],
+    limitations: ["object order is drawing order; independent assistive reading-order metadata is unsupported", "decorative flags, semantic tables/charts and media alternatives require real PowerPoint checking", "real Microsoft PowerPoint Accessibility Checker and assistive-technology testing remain external evidence"]
   }),
   pdf: Object.freeze({ status: "unavailable", supported: [], limitations: ["no tagged-PDF exporter is available"] }),
   png: Object.freeze({ status: "degraded", supported: [], limitations: ["a raster image does not preserve presentation semantics, links, reading order, or editable text"] })
@@ -28,7 +28,7 @@ export function validateAccessibilityProfile(profile) {
   if (!isObject(profile)) return ["accessibility_profile must be an object"];
   if (profile.enabled !== true) errors.push("accessibility_profile.enabled must be true when a profile is declared");
   if (!ACCESSIBILITY_INTENTS.includes(profile.intent)) errors.push(`accessibility_profile.intent is invalid: ${profile.intent}`);
-  if (!hasText(profile.document_language)) errors.push("accessibility_profile.document_language is required");
+  if (!hasText(profile.document_language) || !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(profile.document_language)) errors.push("accessibility_profile.document_language must be a language tag");
   if (!["ltr", "rtl"].includes(profile.reading_direction)) errors.push(`accessibility_profile.reading_direction is invalid: ${profile.reading_direction}`);
   if (!Array.isArray(profile.target_formats) || profile.target_formats.length === 0 || profile.target_formats.some((format) => !Object.hasOwn(FORMAT_CAPABILITIES, format))) errors.push("accessibility_profile.target_formats must contain html, pptx, pdf, or png");
   if (profile.text_scale !== undefined && (!Number.isFinite(profile.text_scale) || profile.text_scale < 1)) errors.push("accessibility_profile.text_scale must be a number greater than or equal to 1");
@@ -69,6 +69,7 @@ export function auditAccessibility(project, options = {}) {
     validateNonColorCues(findings, page, pageId, semantics);
     validateMedia(findings, page, pageId, project.assets ?? []);
     validateTextCapacity(findings, page, pageId, profile.text_scale ?? 1);
+    validateContrast(findings, page, pageId, project);
   }
 
   const capabilities = capabilityMatrix(profile.target_formats);
@@ -115,6 +116,7 @@ function validateAssets(findings, page, pageId, assets) {
 function validateLinks(findings, page, pageId, links) {
   for (const [index, link] of (Array.isArray(links) ? links : []).entries()) {
     if (!hasText(link?.label) || !hasText(link?.destination)) add(findings, page, pageId, "meaningful-link", "major", `Link ${index + 1} needs a meaningful label and destination.`);
+    else if (!/^(https?:\/\/|mailto:)/i.test(link.destination)) add(findings, page, pageId, "meaningful-link", "major", `Link ${index + 1} has an unsupported destination.`, { destination: link.destination });
     else if (/^https?:\/\//i.test(link.label.trim())) add(findings, page, pageId, "meaningful-link", "major", `Link ${index + 1} uses a raw URL as its label.`, { destination: link.destination });
   }
 }
@@ -143,7 +145,7 @@ function validateMedia(findings, page, pageId, assets) {
   const byId = new Map(assets.map((asset) => [asset.id, asset]));
   for (const slot of page.asset_slots ?? []) {
     const asset = byId.get(slot.asset_id);
-    if (asset?.type !== "video" && !asset?.mime?.startsWith("video/") && !asset?.mime?.startsWith("audio/")) continue;
+    if (!["video", "audio"].includes(asset?.type) && !asset?.mime?.startsWith("video/") && !asset?.mime?.startsWith("audio/")) continue;
     if (!hasText(asset.caption_file)) add(findings, page, pageId, "media-captions", "major", `Media ${asset.id} has no caption file.`);
     if (!hasText(asset.transcript_file)) add(findings, page, pageId, "media-transcript", "major", `Media ${asset.id} has no transcript.`);
     if (asset.autoplay === true || asset.flashing === true) add(findings, page, pageId, "media-motion-risk", "blocking", `Media ${asset.id} declares autoplay or flashing behavior.`);
@@ -178,10 +180,52 @@ function evidenceStates(profile, findings) {
 function add(findings, page, pageId, rule, severity, message, evidence = {}, verification = "automated") { findings.push(finding(rule, severity, { kind: "page", id: pageId, page: page.page }, message, evidence, verification)); }
 function finding(rule, severity, target, message, evidence = {}, verification = "automated") { return Object.freeze({ id: `${rule}-${target.id}`, rule, severity, target: Object.freeze(target), message, verification, evidence: Object.freeze(evidence), remediation: Object.freeze({ kind: "candidate_required", automatically_applied: false }) }); }
 function sourceHash(project) {
-  const source = project?.contracts ? project.contracts : { project: project?.project, pages: project?.pages, theme: project?.theme, assets: project?.assets };
+  const source = { ...(project?.contracts ? { contracts: project.contracts } : {}), project: project?.project, pages: project?.pages, theme: project?.theme, assets: project?.assets };
   return crypto.createHash("sha256").update(stableJson(source)).digest("hex");
 }
 function stableJson(value) { if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`; if (isObject(value)) return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`; return JSON.stringify(value); }
 function isObject(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
 function hasText(value) { return typeof value === "string" && value.trim() !== ""; }
 function isMeaningfulTitle(value) { return hasText(value) && !/^(untitled|slide|page)(\s+\d+)?$/i.test(value.trim()); }
+
+
+// Conservative design checks using the WCAG 2.2 sRGB relative-luminance formula.
+// A passed pair is evidence for that pair only, never a conformance assertion.
+export function contrastRatio(foreground, background) {
+  const a = rgb(foreground), b = rgb(background);
+  if (!a || !b) return null;
+  const luminance = channels => channels.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+  const x = luminance(a), y = luminance(b);
+  return (Math.max(x, y) + .05) / (Math.min(x, y) + .05);
+}
+function rgb(value) {
+  if (typeof value !== "string") return null;
+  let hex = value.trim().replace(/^#/, "");
+  if (/^[a-f0-9]{3}$/i.test(hex)) hex = hex.split("").map(c => c + c).join("");
+  if (/^[a-f0-9]{6}$/i.test(hex)) return [0, 2, 4].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+  const match = value.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+  return match && match.slice(1).every(value => +value <= 255) ? match.slice(1).map(Number) : null;
+}
+function validateContrast(findings, page, pageId, project) {
+  const colors = resolveTheme(project.theme, project.project.theme_override, page.theme_override).colors;
+  const pairs = [{ foreground: colors.text, background: colors.background, role: "theme-text", minimum: 4.5 }];
+  if (page.screen_text?.subtitle || page.diagram) pairs.push({ foreground: colors.accent, background: colors.background, role: "accent-text-or-diagram", minimum: 4.5 });
+  for (const pair of [...pairs, ...(page.accessibility?.contrast_samples ?? [])]) {
+    const ratio = contrastRatio(pair.foreground, pair.background);
+    const minimum = pair.minimum ?? 4.5;
+    if (ratio === null) add(findings, page, pageId, "contrast-unresolved", "major", "A color expression cannot be resolved automatically.", pair, "human_required");
+    else if (ratio < minimum) add(findings, page, pageId, "resolved-theme-contrast", "major", `${pair.role ?? "Declared region"} contrast is ${ratio.toFixed(2)}:1; review against the ${minimum}:1 design threshold.`, { ...pair, ratio });
+  }
+}
+
+export function assertAccessibleTextCapacity(project) {
+  const profile = project.project?.accessibility_profile;
+  if (!profile) return;
+  const errors = validateAccessibilityProfile(profile);
+  for (const page of project.pages) if (page.accessibility?.language !== undefined && !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(page.accessibility.language)) errors.push(`page ${page.page} has an invalid language tag`);
+  if (errors.length) throw Object.assign(new Error(errors.join("; ")), { code: "ACCESSIBILITY_PROFILE_INVALID" });
+  if ((profile.text_scale ?? 1) <= 1) return;
+  const findings = [];
+  for (const page of project.pages) validateTextCapacity(findings, page, page.id ?? String(page.page), profile.text_scale);
+  if (findings.length) throw Object.assign(new Error("Text exceeds the declared accessibility scale; revise content or layout before building."), { code: "ACCESSIBILITY_TEXT_OVERFLOW", findings });
+}

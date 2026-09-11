@@ -89,7 +89,8 @@
             "charts": { "type": "array", "items": { "type": "object" } },
             "tables": { "type": "array", "items": { "type": "object" } },
             "meaning_dependencies": { "type": "array", "items": { "type": "string" } },
-            "text_on_image": { "type": "boolean" }
+            "text_on_image": { "type": "boolean" },
+            "contrast_samples": { "type": "array", "items": { "type": "object", "required": ["foreground", "background", "role"], "properties": { "foreground": { "type": "string" }, "background": { "type": "string" }, "role": { "type": "string" }, "minimum": { "type": "number", "minimum": 1, "maximum": 21 } } } }
           },
           "additionalProperties": false
         }

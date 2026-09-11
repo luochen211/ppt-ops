@@ -251,8 +251,12 @@ function validateDeliveryFields(value, errors) {
 function validateAccessibilityFields(value, errors) {
   if (value.accessibility === undefined) return;
   if (!isObject(value.accessibility)) { errors.push("accessibility must be an object"); return; }
-  if (value.accessibility.language !== undefined && !hasText(value.accessibility.language)) errors.push("accessibility.language must be a non-empty language tag");
+  if (value.accessibility.language !== undefined && (typeof value.accessibility.language !== "string" || !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(value.accessibility.language))) errors.push("accessibility.language must be a language tag");
   if (value.accessibility.reading_order !== undefined && (!Array.isArray(value.accessibility.reading_order) || value.accessibility.reading_order.some((item) => !hasText(item)))) errors.push("accessibility.reading_order must contain non-empty semantic item names");
+  if (value.accessibility.contrast_samples !== undefined) {
+    if (!Array.isArray(value.accessibility.contrast_samples)) errors.push("accessibility.contrast_samples must be an array");
+    else for (const sample of value.accessibility.contrast_samples) if (!hasText(sample?.foreground) || !hasText(sample?.background) || !hasText(sample?.role) || (sample.minimum !== undefined && (!Number.isFinite(sample.minimum) || sample.minimum < 1 || sample.minimum > 21))) errors.push("accessibility.contrast_samples require colors, a role and a valid ratio");
+  }
   for (const field of ["links", "charts", "tables", "meaning_dependencies"]) if (value.accessibility[field] !== undefined && !Array.isArray(value.accessibility[field])) errors.push(`accessibility.${field} must be an array`);
 }
 

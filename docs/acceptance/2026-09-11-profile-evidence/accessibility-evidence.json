@@ -1,0 +1,524 @@
+{
+  "synthetic": true,
+  "user_acceptance": false,
+  "version": {
+    "contract_version": "1.0",
+    "kind": "version",
+    "id": "version-001",
+    "state": "frozen",
+    "snapshot_hash": "d2355eaf8715f19f0821556f5b843a0f8d5cdcded02015fc25d8c23d71f5c5c2",
+    "component_hashes": {
+      "project.json": "515ce6abd40719e9024b6539477e7a0d422366148e57c5fd787bc4ea1b27043b",
+      "sources.json": "b0e6ecc8251efef536bc1ca508d35dce397a58f30f20a7a9de4354a3879c77ad",
+      "outline.json": "6b92d19d8af3870b5f30a4db5025561b883f8e1c8553ade292f94f70145e37e2",
+      "pages.json": "465961a7745ede387e5bfd04b934adde33b5c001539053cc98cc201dfc92d803",
+      "theme.json": "9f8715c96930e8ad6ffcfe7e71da2c5224d53b071464446127f3b136c6ac2d70",
+      "assets.json": "b330f81880c53f203978cdeada7bbc4541753d427cc87d3fdb4153a89e2eb76c",
+      "templates.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "revision": 4
+  },
+  "build": {
+    "contract_version": "1.0",
+    "kind": "build",
+    "id": "build-001",
+    "project_id": "accessibility-golden",
+    "version_id": "version-001",
+    "state": "succeeded",
+    "targets": [
+      "html",
+      "pptx"
+    ],
+    "config": {},
+    "cancel_requested": false,
+    "created_at": "2026-09-11T04:19:24.094Z",
+    "updated_at": "2026-09-11T04:19:24.124Z"
+  },
+  "artifact_hashes": {
+    ".pptops/builds/build-001/html/slides.html": "a20458ec11ed4e1b6516bd4ff2affb6ea4fd30a525aa0f8d5e22ec543dde80bf",
+    ".pptops/builds/build-001/pptx/slides.pptx": "07276e9a289341d00fab60987d6be93a3a101057e0e45ab0956b6ba98b0b1e22"
+  },
+  "audit": {
+    "schema_version": "1.0",
+    "kind": "accessibility_audit",
+    "intent": "audit_only",
+    "mutation_performed": false,
+    "project": "accessibility-golden",
+    "source_revision": "f7dd2bff910c1e9963b73d8fc7b7785a354335a6e20370bd138a2457b9b0a865",
+    "build_revision": "build-001",
+    "declared_profile": {
+      "document_language": "en-CA",
+      "enabled": true,
+      "intent": "create_accessible",
+      "reading_direction": "ltr",
+      "target_formats": [
+        "html",
+        "pptx"
+      ],
+      "text_scale": 1.5
+    },
+    "status": "needs_review",
+    "finding_count": 4,
+    "findings": [
+      {
+        "id": "html-contrast-human-review-page-001",
+        "rule": "html-contrast-human-review",
+        "severity": "major",
+        "target": {
+          "kind": "page",
+          "id": "page-001",
+          "page": 1
+        },
+        "message": "An image, gradient or transparent region needs visual contrast review.",
+        "evidence": {
+          "foreground": "rgb(23, 23, 23)",
+          "background": "rgb(247, 245, 240)",
+          "minimum": 3,
+          "uncertain": true
+        },
+        "verification": "human_required",
+        "remediation": {
+          "kind": "candidate_required",
+          "automatically_applied": false
+        }
+      },
+      {
+        "id": "html-contrast-human-review-page-003",
+        "rule": "html-contrast-human-review",
+        "severity": "major",
+        "target": {
+          "kind": "page",
+          "id": "page-003",
+          "page": 3
+        },
+        "message": "An image, gradient or transparent region needs visual contrast review.",
+        "evidence": {
+          "foreground": "rgb(23, 23, 23)",
+          "background": "rgb(247, 245, 240)",
+          "minimum": 3,
+          "uncertain": true
+        },
+        "verification": "human_required",
+        "remediation": {
+          "kind": "candidate_required",
+          "automatically_applied": false
+        }
+      },
+      {
+        "id": "pptx-reading-order-page-001",
+        "rule": "pptx-reading-order",
+        "severity": "major",
+        "target": {
+          "kind": "page",
+          "id": "page-001",
+          "page": 1
+        },
+        "message": "The rendered reading order differs from the authored semantic order.",
+        "evidence": {
+          "expected": [
+            "title",
+            "assets"
+          ],
+          "actual": [
+            "assets",
+            "title"
+          ]
+        },
+        "verification": "automated",
+        "remediation": {
+          "kind": "candidate_required",
+          "automatically_applied": false
+        }
+      },
+      {
+        "id": "pptx-reading-order-page-003",
+        "rule": "pptx-reading-order",
+        "severity": "major",
+        "target": {
+          "kind": "page",
+          "id": "page-003",
+          "page": 3
+        },
+        "message": "The rendered reading order differs from the authored semantic order.",
+        "evidence": {
+          "expected": [
+            "title",
+            "assets"
+          ],
+          "actual": [
+            "assets",
+            "title"
+          ]
+        },
+        "verification": "automated",
+        "remediation": {
+          "kind": "candidate_required",
+          "automatically_applied": false
+        }
+      }
+    ],
+    "format_capabilities": {
+      "html": {
+        "format": "html",
+        "status": "partial",
+        "supported": [
+          "editable_dom",
+          "keyboard_navigation",
+          "visible_focus",
+          "landmarks_and_headings",
+          "reduced_motion",
+          "accessible_control_names",
+          "document_and_page_language",
+          "declared_direction",
+          "text_scaling",
+          "image_descriptions",
+          "semantic_alternatives"
+        ],
+        "limitations": [
+          "authored reading order is compared with rendered DOM order; incompatible layouts require a reviewed change",
+          "media caption/transcript playback must be verified in the actual artifact",
+          "screen-reader behavior requires assistive-technology testing"
+        ]
+      },
+      "pptx": {
+        "format": "pptx",
+        "status": "partial",
+        "supported": [
+          "editable_objects",
+          "image_alt_text",
+          "document_and_page_language",
+          "declared_direction",
+          "text_scaling",
+          "object_order_inspection"
+        ],
+        "limitations": [
+          "object order is drawing order; independent assistive reading-order metadata is unsupported",
+          "decorative flags, semantic tables/charts and media alternatives require real PowerPoint checking",
+          "real Microsoft PowerPoint Accessibility Checker and assistive-technology testing remain external evidence"
+        ]
+      }
+    },
+    "evidence": [
+      {
+        "kind": "automated",
+        "status": "completed",
+        "finding_count": 4
+      },
+      {
+        "kind": "human_accessibility_review",
+        "status": "pending"
+      },
+      {
+        "kind": "assistive_technology",
+        "status": "pending"
+      },
+      {
+        "kind": "organization_approval",
+        "status": "pending"
+      },
+      {
+        "kind": "powerpoint_accessibility_checker",
+        "status": "pending"
+      },
+      {
+        "kind": "legal_policy_conformance",
+        "status": "not_claimed",
+        "target": null
+      }
+    ],
+    "claims": {
+      "automated_conformance": false,
+      "legal_or_policy_conformance": "not_claimed",
+      "separate_accessible_variant_created": false
+    },
+    "artifacts": [
+      {
+        "format": "html",
+        "sha256": "a20458ec11ed4e1b6516bd4ff2affb6ea4fd30a525aa0f8d5e22ec543dde80bf",
+        "bytes": 12956,
+        "status": "inspected",
+        "reduced_motion": true,
+        "focus_contrast": [
+          {
+            "foreground": "rgb(255, 255, 255)",
+            "background": "rgb(17, 17, 17)",
+            "width": "3px"
+          },
+          {
+            "foreground": "rgb(255, 255, 255)",
+            "background": "rgb(17, 17, 17)",
+            "width": "3px"
+          },
+          {
+            "foreground": "rgb(255, 255, 255)",
+            "background": "rgb(17, 17, 17)",
+            "width": "3px"
+          }
+        ],
+        "language": "en-CA",
+        "direction": "ltr",
+        "pages": [
+          {
+            "page": 1,
+            "languages": [
+              "en-CA"
+            ],
+            "reading_order": [
+              "title",
+              "assets"
+            ],
+            "images": [
+              {
+                "id": "generated-page-001-boundary",
+                "alt": "Generated boundary fixture for page-001",
+                "decorative": false
+              }
+            ],
+            "media": [],
+            "contrast": [
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": true
+              }
+            ]
+          },
+          {
+            "page": 2,
+            "languages": [
+              "en-CA"
+            ],
+            "reading_order": [
+              "title",
+              "message",
+              "body"
+            ],
+            "images": [],
+            "media": [],
+            "contrast": [
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": false
+              },
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": false
+              },
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": false
+              },
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": false
+              },
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": false
+              }
+            ]
+          },
+          {
+            "page": 3,
+            "languages": [
+              "en-CA"
+            ],
+            "reading_order": [
+              "title",
+              "assets"
+            ],
+            "images": [
+              {
+                "id": "generated-page-003-boundary",
+                "alt": "Generated boundary fixture for page-003",
+                "decorative": false
+              }
+            ],
+            "media": [],
+            "contrast": [
+              {
+                "foreground": "rgb(23, 23, 23)",
+                "background": "rgb(247, 245, 240)",
+                "minimum": 3,
+                "uncertain": true
+              }
+            ]
+          }
+        ],
+        "controls": [
+          {
+            "name": "Previous slide",
+            "keyboard_focusable": true
+          },
+          {
+            "name": "Next slide",
+            "keyboard_focusable": true
+          },
+          {
+            "name": "Enter fullscreen",
+            "keyboard_focusable": true
+          }
+        ]
+      },
+      {
+        "format": "pptx",
+        "sha256": "07276e9a289341d00fab60987d6be93a3a101057e0e45ab0956b6ba98b0b1e22",
+        "bytes": 20614,
+        "status": "inspected",
+        "language": "en-CA",
+        "pages": [
+          {
+            "page": 1,
+            "languages": [
+              "en-CA"
+            ],
+            "reading_order": [
+              "assets",
+              "title"
+            ],
+            "images": [
+              {
+                "id": "Asset generated-page-001-boundary",
+                "alt": "Generated boundary fixture for page-001",
+                "decorative": false
+              }
+            ],
+            "objects": [
+              {
+                "name": "Asset generated-page-001-boundary",
+                "type": "pic",
+                "alt": "Generated boundary fixture for page-001",
+                "has_text": false
+              },
+              {
+                "name": "Boundary title support 1",
+                "type": "sp",
+                "alt": "",
+                "has_text": false
+              },
+              {
+                "name": "Boundary slide 1 title",
+                "type": "sp",
+                "alt": "",
+                "has_text": true
+              }
+            ],
+            "shrinking": false
+          },
+          {
+            "page": 2,
+            "languages": [
+              "en-CA"
+            ],
+            "reading_order": [
+              "title",
+              "body"
+            ],
+            "images": [],
+            "objects": [
+              {
+                "name": "Theme accent",
+                "type": "sp",
+                "alt": "",
+                "has_text": false
+              },
+              {
+                "name": "Slide 2 layout-statement title",
+                "type": "sp",
+                "alt": "",
+                "has_text": true
+              },
+              {
+                "name": "Body card 1",
+                "type": "sp",
+                "alt": "",
+                "has_text": false
+              },
+              {
+                "name": "Body text 1",
+                "type": "sp",
+                "alt": "",
+                "has_text": true
+              },
+              {
+                "name": "Footer rule",
+                "type": "sp",
+                "alt": "",
+                "has_text": false
+              },
+              {
+                "name": "Slide 2 number",
+                "type": "sp",
+                "alt": "",
+                "has_text": true
+              }
+            ],
+            "shrinking": false
+          },
+          {
+            "page": 3,
+            "languages": [
+              "en-CA"
+            ],
+            "reading_order": [
+              "assets",
+              "title"
+            ],
+            "images": [
+              {
+                "id": "Asset generated-page-003-boundary",
+                "alt": "Generated boundary fixture for page-003",
+                "decorative": false
+              }
+            ],
+            "objects": [
+              {
+                "name": "Asset generated-page-003-boundary",
+                "type": "pic",
+                "alt": "Generated boundary fixture for page-003",
+                "has_text": false
+              },
+              {
+                "name": "Boundary title support 3",
+                "type": "sp",
+                "alt": "",
+                "has_text": false
+              },
+              {
+                "name": "Boundary slide 3 title",
+                "type": "sp",
+                "alt": "",
+                "has_text": true
+              }
+            ],
+            "shrinking": false
+          }
+        ],
+        "independent_reading_order": "unsupported",
+        "decorative_metadata": "unsupported"
+      }
+    ]
+  },
+  "native": {
+    "status": "rendered",
+    "renderer": "microsoft-powerpoint",
+    "pdf_file": "/tmp/pptops-closeout-20260911/accessibility-golden-final/native/slides.pdf",
+    "page_images": [
+      "/tmp/pptops-closeout-20260911/accessibility-golden-final/native/page-1.png",
+      "/tmp/pptops-closeout-20260911/accessibility-golden-final/native/page-2.png",
+      "/tmp/pptops-closeout-20260911/accessibility-golden-final/native/page-3.png"
+    ],
+    "montage_file": "/tmp/pptops-closeout-20260911/accessibility-golden-final/native/montage.png"
+  }
+}

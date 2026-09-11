@@ -12,7 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "accessibility-remediate", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
@@ -24,7 +24,8 @@ Usage:
   pptops design-context <project-dir> [--repository-root <path>]
   pptops validate <project-dir>
   pptops html-qa <html-file> [--browser <path>] [--timeout <ms>]
-  pptops accessibility-audit <project-dir>
+  pptops accessibility-remediate <project-dir> --payload <json>
+  pptops accessibility-audit <project-dir> [--build <id> | --html-file <file> --pptx-file <file>]
   pptops intake <project-dir>
   pptops outline <project-dir>
   pptops prototype <project-dir> [--pages <list>]
@@ -140,7 +141,7 @@ try {
   } else {
     const project = await readProject(projectDir);
     const errors = validateProject(project);
-    if (!["review", "handoff"].includes(command) && errors.length > 0) failValidation(errors);
+    if (!["review", "handoff", "accessibility-audit"].includes(command) && errors.length > 0) failValidation(errors);
 
     if (command === "import") {
       if (!options.file) throw new Error("import requires --file <markdown|docx|pptx>");
@@ -153,7 +154,11 @@ try {
       } finally { store.close(); }
     } else if (command === "accessibility-audit") {
       const { auditAccessibility } = await import("./accessibility/index.js");
-      console.log(JSON.stringify({ command, ...auditAccessibility(project) }, null, 2));
+      const { auditStoredBuild, auditAccessibilityArtifacts } = await import("./accessibility/artifacts.js");
+      const htmlFile = options["html-file"], pptxFile = options["pptx-file"];
+      if (options.build && (htmlFile || pptxFile)) throw new Error("Choose an immutable Build or explicitly named external artifacts");
+      const audit = options.build ? await auditStoredBuild(project, options.build) : htmlFile || pptxFile ? await auditAccessibilityArtifacts(project, { htmlFile, pptxFile }) : auditAccessibility(project);
+      console.log(JSON.stringify({ command, ...audit }, null, 2));
     } else if (command === "validate") {
       console.log(JSON.stringify({ command, project: project.project.name, valid: true, error_count: 0, page_count: project.pages.length }, null, 2));
     } else if (command === "intake") {
@@ -213,6 +218,7 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "candidate-feedback-show") return service.candidateFeedback(required(options, "candidate"));
     if (command === "candidate-attempts") return service.candidateAttempts({ targetKind: required(options, "target-kind"), targetId: required(options, "target-id") });
     if (command === "candidate-compare") return service.compareCandidates(required(options, "left-candidate"), required(options, "right-candidate"));
+    if (command === "accessibility-remediate") return await service.proposeAccessibilityRemediation(jsonOption(options, "payload"));
     if (command === "corporate-template") return await service.manageCorporateProfile(required(options, "action"), options.payload ? jsonOption(options, "payload") : {});
     if (command === "variant-manage") return await service.manageAudienceVariants(required(options, "action"), options.payload ? jsonOption(options, "payload") : {});
     if (command === "version-freeze") return await service.freezeVersion({ variantId: options.variant });
@@ -320,7 +326,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "accessibility-profile", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "variant", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "accessibility-profile", "html-file", "pptx-file", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "variant", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;

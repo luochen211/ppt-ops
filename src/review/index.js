@@ -5,7 +5,7 @@ import { validateProject } from "../core/validate.js";
 import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
-import { auditAccessibility } from "../accessibility/index.js";
+import { auditAccessibilityArtifacts } from "../accessibility/artifacts.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -41,13 +41,13 @@ export async function reviewProject(project, options = {}) {
   ];
   let accessibility;
   try {
-    accessibility = auditAccessibility(project, { buildRevision: options.buildRevision });
+    accessibility = await auditAccessibilityArtifacts(project, { buildRevision: options.buildRevision, htmlFile: options.htmlFile, pptxFile: options.pptxFile, trustedGeneratedArtifact: Boolean(options.buildRevision) });
   } catch (error) {
     accessibility = {
       schema_version: "1.0", kind: "accessibility_audit", intent: "audit_only", mutation_performed: false,
       project: project.project.name, source_revision: null, build_revision: options.buildRevision ?? null,
       status: "failed", finding_count: 1,
-      findings: [{ id: "invalid-accessibility-profile", rule: "profile-contract", severity: "blocking", target: { kind: "project", id: project.project.name }, message: error.message, verification: "automated", evidence: {}, remediation: { kind: "candidate_required", automatically_applied: false } }],
+      findings: [{ id: "accessibility-audit-error", rule: error instanceof TypeError ? "profile-contract" : "artifact-inspection", severity: "blocking", target: { kind: "project", id: project.project.name }, message: error.message, verification: "automated", evidence: {}, remediation: { kind: "candidate_required", automatically_applied: false } }],
       format_capabilities: {}, evidence: [{ kind: "automated", status: "failed" }, { kind: "legal_policy_conformance", status: "not_claimed" }],
       claims: { automated_conformance: false, legal_or_policy_conformance: "not_claimed", separate_accessible_variant_created: false }
     };

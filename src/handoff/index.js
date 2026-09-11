@@ -66,6 +66,7 @@ function accessibilityHandoff(reviewReport) {
     status: audit.status,
     unresolved_findings: audit.findings,
     format_capabilities: audit.format_capabilities,
+    artifact_audits: audit.artifacts ?? [],
     evidence: audit.evidence,
     claims: audit.claims
   };
