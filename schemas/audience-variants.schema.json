@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/audience-variants.schema.json",
+  "title": "PPT-Ops Audience Variants",
+  "type": "object",
+  "required": ["schema_version", "variants"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "audience", "purpose", "base", "page_ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+          "title": { "type": "string", "minLength": 1 },
+          "audience": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "expected_duration_seconds": { "type": "integer", "minimum": 1 },
+          "delivery_mode": { "enum": ["live_talk", "workshop", "pitch", "leave_behind", "async"] },
+          "base": {
+            "type": "object",
+            "required": ["project_id", "revision"],
+            "properties": {
+              "project_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+              "revision": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          },
+          "page_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" } },
+          "page_overrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["page_id", "patch"],
+              "properties": {
+                "page_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+                "patch": { "type": "object" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "section_overrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["section_id", "title"],
+              "properties": {
+                "section_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+                "title": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
