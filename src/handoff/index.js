@@ -26,6 +26,7 @@ export async function createHandoff(project, reviewReport, options = {}) {
       sha256: createHash("sha256").update(contents).digest("hex")
     });
   }
+  const accessibility = accessibilityHandoff(reviewReport);
 
   const manifest = {
     schema_version: "0.1",
@@ -38,11 +39,27 @@ export async function createHandoff(project, reviewReport, options = {}) {
       passed: reviewReport.passed,
       required_failure_count: reviewReport.required_failure_count
     },
+    ...(accessibility ? { accessibility } : {}),
     ...(options.boundaryImages ? { boundary_images: options.boundaryImages.boundaries.map(({ boundary, roles, page_id, asset_id, generation_id, sha256 }) => ({ boundary, roles, page_id, asset_id, generation_id, sha256 })) } : {})
   };
   const manifestFile = path.join(packageDir, HANDOFF_MANIFEST_FILE);
   await fs.writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, { flag: "wx" });
   return { manifest, manifestFile, packageDir };
+}
+
+function accessibilityHandoff(reviewReport) {
+  const audit = reviewReport.automated_checks?.find(({ id }) => id === "accessibility-audit")?.evidence;
+  if (!audit) return undefined;
+  return {
+    declared_profile: audit.declared_profile,
+    source_revision: audit.source_revision,
+    build_revision: audit.build_revision,
+    status: audit.status,
+    unresolved_findings: audit.findings,
+    format_capabilities: audit.format_capabilities,
+    evidence: audit.evidence,
+    claims: audit.claims
+  };
 }
 
 async function availableOutputFiles(outputs) {

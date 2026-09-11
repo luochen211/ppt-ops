@@ -105,6 +105,7 @@ PPT-Ops 目前处于 **V1.0 发布候选阶段**。
 - [产品说明](docs/product-v1.0-blueprint.md)
 - [使用与排障指南](docs/operations.md)
 - [开发者指南](docs/developer-guide.md)
+- [Accessibility Mode 与证据边界](docs/accessibility-mode.md)
 - [Visual Asset Pipeline 需求](docs/visual-asset-pipeline-requirements.md)
 - [Visual Asset Pipeline 交付 DAG](docs/visual-asset-pipeline-dag.md)
 - [V1 发布候选验收记录](docs/acceptance/v1-release-candidate.md)
