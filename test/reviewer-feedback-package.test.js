@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import vm from "node:vm";
 import { promisify } from "node:util";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
@@ -190,10 +191,16 @@ function reviewBrief() {
   };
 }
 
-async function fixture() {
+async function fixture({ notes = "", title } = {}) {
   const parent = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-reviewer-feedback-"));
   const project = path.join(parent, "project");
   await initializeProject(project, { title: "Reviewer Feedback Package" });
+  const pagesFile = path.join(project, "pages.json");
+  const pages = JSON.parse(await fs.readFile(pagesFile, "utf8"));
+  if (notes) pages[0].speaker_notes = notes;
+  else delete pages[0].speaker_notes;
+  if (title) pages[0].screen_text.title = title;
+  await fs.writeFile(pagesFile, JSON.stringify(pages));
   await seedAcceptedBoundaryImages(project);
   return { project, cleanup: () => fs.rm(parent, { recursive: true, force: true }) };
 }
@@ -207,3 +214,64 @@ async function responseFile(t, value, name) {
 }
 
 function runCli(...args) { return execFileAsync(process.execPath, [cli, ...args], { encoding: "utf8" }); }
+
+test("excluded notes block the whole package without changing the reviewed artifact", async (t) => {
+  const marker = "PRIVATE_REVIEW_TEST_NOTE <client>";
+  const { project, cleanup } = await fixture({ notes: marker });
+  const service = await ApplicationService.open(project);
+  t.after(() => service.close());
+  t.after(cleanup);
+  const { build, review } = await formalReview(service);
+  const artifact = path.join(project, `.pptops/builds/${build.id}/html/slides.html`);
+  const before = await fs.readFile(artifact);
+  await assert.rejects(service.createReviewerPackage(build.id, review.id, reviewBrief()), { code: "REVIEW_PACKAGE_DISCLOSURE_UNSAFE" });
+  await assert.rejects(fs.access(path.join(project, ".pptops/review-packages")));
+  assert.deepEqual(await fs.readFile(artifact), before);
+  const brief = reviewBrief();
+  brief.disclosures.speaker_notes = true;
+  const accepted = await service.createReviewerPackage(build.id, review.id, brief);
+  assert.match(await fs.readFile(path.join(accepted.package_dir, "deck.html"), "utf8"), /PRIVATE_REVIEW_TEST_NOTE/);
+  assert.match(await fs.readFile(accepted.entry_file, "utf8"), /Speaker notes are included/);
+});
+
+test("HTML-safe response data preserves closing-script titles and downloads valid JSON", async (t) => {
+  const title = "Escaping </script> safely";
+  const { project, cleanup } = await fixture({ title });
+  const service = await ApplicationService.open(project);
+  t.after(() => service.close());
+  t.after(cleanup);
+  const { build, review } = await formalReview(service);
+  const result = await service.createReviewerPackage(build.id, review.id, reviewBrief());
+  const entry = await fs.readFile(result.entry_file, "utf8");
+  const scripts = [...entry.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)];
+  assert.equal(scripts.length, 1);
+  let submit, downloaded;
+  const status = {};
+  const link = { click() {} };
+  const fields = new Map([["overall-decision", "approve"]]);
+  vm.runInNewContext(scripts[0][1], {
+    document: {
+      getElementById: id => id === "feedback" ? { addEventListener(type, fn) { assert.equal(type, "submit"); submit = fn; } } : status,
+      createElement: () => link
+    },
+    FormData: class { get(name) { return fields.get(name); } },
+    structuredClone, Blob,
+    URL: { createObjectURL(blob) { downloaded = blob; return "blob:test"; }, revokeObjectURL() {} },
+    setTimeout: fn => fn()
+  });
+  submit({ preventDefault() {}, currentTarget: {} });
+  const response = JSON.parse(await downloaded.text());
+  assert.equal(response.pages[0].title, title);
+  assert.equal(response.overall.decision, "approve");
+  assert.equal(link.download, "review-response.json");
+});
+
+test("a changed Build artifact cannot inherit an earlier Review binding", async (t) => {
+  const { project, cleanup } = await fixture();
+  const service = await ApplicationService.open(project);
+  t.after(() => service.close());
+  t.after(cleanup);
+  const { build, review } = await formalReview(service);
+  await fs.appendFile(path.join(project, `.pptops/builds/${build.id}/html/slides.html`), "<!-- changed -->");
+  await assert.rejects(service.createReviewerPackage(build.id, review.id, reviewBrief()), { code: "REVIEW_SOURCE_CHANGED" });
+});

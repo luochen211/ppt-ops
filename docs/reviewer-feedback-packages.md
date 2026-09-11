@@ -26,6 +26,8 @@ pptops review-package-create <project-dir> \
 
 The first slice intentionally requires the selected Build to contain `html/slides.html`. If it does not, package creation returns `REVIEW_PACKAGE_HTML_BUILD_REQUIRED`; it does not silently render a new presentation from the frozen source.
 
+The HTML bytes must still match the selected Review. Every disclosure choice is checked against the packaged deck before any package files are written. A Build containing excluded speaker notes or other known excluded context returns `REVIEW_PACKAGE_DISCLOSURE_UNSAFE`. Select an already reviewed artifact without that context, or explicitly include it. The packager never removes content from or rebuilds the immutable artifact.
+
 ## Package contents
 
 - `index.html`: the plain-language entry, fixed slide previews, review form, and offline response download;

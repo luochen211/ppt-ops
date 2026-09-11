@@ -12,25 +12,26 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
 Usage:
-  pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>]
+  pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>] [--accessibility-profile <json>]
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops import <project-dir> --file <markdown|docx|pptx>
   pptops visual-preference <repository-root> --action <inspect|nominate|observe|propose|feedback|decide|revise|remove> [--payload <json>]
   pptops design-context <project-dir> [--repository-root <path>]
   pptops validate <project-dir>
   pptops html-qa <html-file> [--browser <path>] [--timeout <ms>]
+  pptops accessibility-audit <project-dir>
   pptops intake <project-dir>
   pptops outline <project-dir>
   pptops prototype <project-dir> [--pages <list>]
   pptops build <project-dir> [--format html|pptx|all]
   pptops review <project-dir>
-  pptops handoff <project-dir>
-  pptops deliver <project-dir>
+  pptops handoff <project-dir> --formats <html,pptx> --actor <user>
+  pptops deliver <project-dir> --formats <html,pptx> --actor <user>
   pptops candidate-propose <project-dir> --target-kind <kind> --target-id <id> --patch <json> --base-revision <n> [--parent-candidate <id>] [--hypothesis <text>]
   pptops candidate-reconstruct-relations <project-dir> --target-kind page_spec --target-id <id> --patch <json> --base-revision <n> --parent-candidate <id> --reconstruction <json>
   pptops candidate-render <project-dir> --candidate <id> --expected-revision <n>
@@ -55,7 +56,11 @@ Usage:
   pptops review-record <project-dir> --review <id> --decision <accepted|rejected> --expected-revision <n> [--evidence <json>]
   pptops review-package-create <project-dir> --build <id> --review <id> --brief <json>
   pptops review-package-import <project-dir> --response <review-response.json>
-  pptops handoff-create <project-dir> --build <id> --review <id>
+  pptops outline-source <project-dir>
+  pptops outline-approve <project-dir> --source-revision <hash> --actor <user> --raw-feedback <text>
+  pptops delivery-capabilities <project-dir> --artifact <presentation|outline> [--build <id>]
+  pptops delivery-select <project-dir> --artifact <presentation|outline> --formats <list> --source <id> --source-revision <id> --actor <id> [--build <id>] [--approval <id>]
+  pptops handoff-create <project-dir> --build <id> --review <id> --selection <id>
   pptops doctor [project-dir]
   pptops reindex <project-dir>
   pptops update-preview <repository-root> --source <update-root> [--data-root <path>]
@@ -113,7 +118,7 @@ try {
     }
     console.log(JSON.stringify({ ok: true, command, data: result }, null, 2));
   } else if (command === "init") {
-    const result = await initializeProject(projectDir, { name: options.name, title: options.title, deliveryMode: options["delivery-mode"] });
+    const result = await initializeProject(projectDir, { name: options.name, title: options.title, deliveryMode: options["delivery-mode"], accessibilityProfile: options["accessibility-profile"] ? jsonOption(options, "accessibility-profile") : undefined });
     console.log(JSON.stringify({ command, ...result }, null, 2));
   } else if (command === "migrate") {
     if (!options.to) throw new Error("migrate requires --to <v1-project-dir>");
@@ -144,6 +149,9 @@ try {
         const result = await new SourceIntake({ projectRoot: project.root, store, projectId: project.project.name }).importFile(options.file);
         console.log(JSON.stringify({ command, project: project.project.name, duplicate: result.duplicate, source: result.source, extracted: result.extracted }, null, 2));
       } finally { store.close(); }
+    } else if (command === "accessibility-audit") {
+      const { auditAccessibility } = await import("./accessibility/index.js");
+      console.log(JSON.stringify({ command, ...auditAccessibility(project) }, null, 2));
     } else if (command === "validate") {
       console.log(JSON.stringify({ command, project: project.project.name, valid: true, error_count: 0, page_count: project.pages.length }, null, 2));
     } else if (command === "intake") {
@@ -156,21 +164,19 @@ try {
       if (options.pages && pages.length === 0) throw new Error("--pages did not match any project pages");
       console.log(JSON.stringify({ command, pages: pages.map(({ page, three_second_message, visual_job }) => ({ page, three_second_message, visual_job })) }, null, 2));
     } else if (command === "build") {
-      console.log(JSON.stringify({ command, project: project.project.name, outputs: await buildFormats(project, resolveFormats(options.format ?? "html")) }, null, 2));
+      console.log(JSON.stringify({ command, project: project.project.name, outputs: await buildFormats(project, resolveFormats(required(options, "format"))) }, null, 2));
     } else if (command === "review") {
       await runReview(project);
     } else if (command === "handoff") {
-      await runHandoff(project);
+      await runHandoff(project, options);
     } else if (command === "deliver") {
-      const configured = project.project.outputs.filter((format) => ["html", "pptx"].includes(format));
-      if (configured.length === 0) throw new Error("project.outputs must include html or pptx for deliver");
-      const boundaryImages = await assertBoundaryGeneratedImages(project);
-      const outputs = await buildFormats(project, configured);
-      const report = await reviewProject(project, { htmlQa: true });
-      const reportFile = await writeReviewReport(project, report);
-      const handoff = await createHandoff(project, report, { boundaryImages });
-      console.log(JSON.stringify({ command, project: project.project.name, outputs, review: { passed: report.passed, report_file: reportFile }, handoff: { manifest_file: handoff.manifestFile, package_dir: handoff.packageDir } }, null, 2));
-      if (!report.passed) process.exitCode = 1;
+      await assertBoundaryGeneratedImages(project);
+      const formats = csvOption(options, "formats");
+      if (formats.some(format => !["html", "pptx"].includes(format))) throw new Error("deliver supports html,pptx; select PDF from an accepted formal Build instead");
+      const { requireUser } = await import("./delivery/outline.js");
+      requireUser(required(options, "actor"));
+      await buildFormats(project, formats);
+      await runHandoff(project, options);
     } else {
       throw new Error(`unknown command: ${command}`);
     }
@@ -212,7 +218,14 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "review-record") return await service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });
     if (command === "review-package-create") return await service.createReviewerPackage(required(options, "build"), required(options, "review"), jsonOption(options, "brief"));
     if (command === "review-package-import") return await service.importReviewerResponse(required(options, "response"));
-    if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"));
+    if (command === "outline-source") return service.outlineSource();
+    if (command === "outline-approve") return service.approveOutline({ sourceRevision: required(options, "source-revision"), actor: required(options, "actor"), rawFeedback: required(options, "raw-feedback") });
+    if (command === "delivery-capabilities") return service.deliveryCapabilities(required(options, "artifact"), options.build);
+    if (command === "delivery-select") return await service.selectDelivery({
+      artifactType: required(options, "artifact"), formats: csvOption(options, "formats"), sourceId: required(options, "source"),
+      sourceRevision: required(options, "source-revision"), actor: required(options, "actor"), selectionSource: options["selection-source"], buildId: options.build, approvalId: options.approval
+    });
+    if (command === "handoff-create") return await service.createHandoff(required(options, "build"), required(options, "review"), { deliverySelectionId: options.selection });
     throw new ApplicationError("COMMAND_UNKNOWN", `unknown application command: ${command}`);
   } finally { service.close(); }
 }
@@ -259,11 +272,27 @@ async function runReview(project) {
   if (!report.passed) process.exitCode = 1;
 }
 
-async function runHandoff(project) {
+async function runHandoff(project, options) {
   const boundaryImages = await assertBoundaryGeneratedImages(project);
+  const { recordDeliverySelection } = await import("./delivery/selection.js");
+  const { hashFile } = await import("./delivery/pdf.js");
+  const { digest } = await import("./delivery/outline.js");
+  const formats = csvOption(options, "formats");
+  const actor = required(options, "actor");
+  const available = [];
+  for (const format of ["html", "pptx"]) {
+    const file = path.join(outputDir(project), `slides.${format}`);
+    try { available.push({ format, name: `slides.${format}`, path: file, sha256: await hashFile(file) }); } catch (error) { if (error.code !== "ENOENT") throw error; }
+  }
+  const selection = await recordDeliverySelection(project.root, {
+    artifact_type: "presentation", formats, available_formats: available.map(item => item.format), actor,
+    source_id: "legacy-output-snapshot", source_revision: digest(available.map(({ format, sha256 }) => ({ format, sha256 }))), selection_source: "explicit_cli_formats"
+  });
   const report = await reviewProject(project, { htmlQa: true });
   const reportFile = await writeReviewReport(project, report);
-  const handoff = await createHandoff(project, report, { boundaryImages });
+  const sourceFiles = available.filter(item => selection.decision.formats.includes(item.format));
+  sourceFiles.push({ name: "review-report.json", path: reportFile });
+  const handoff = await createHandoff(project, report, { sourceFiles, boundaryImages, deliverySelection: selection.decision });
   console.log(JSON.stringify({ ...handoff.manifest, review_report: reportFile, manifest_file: handoff.manifestFile }, null, 2));
   if (!report.passed) process.exitCode = 1;
 }
@@ -287,7 +316,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "accessibility-profile", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;
@@ -302,6 +331,11 @@ function integerOption(options, name) {
   const value = Number(required(options, name));
   if (!Number.isInteger(value) || value < 1) { const error = new Error(`--${name} must be a positive integer`); error.code = "OPTION_INVALID"; throw error; }
   return value;
+}
+function csvOption(options, name) {
+  const values = required(options, name).split(",").map((value) => value.trim()).filter(Boolean);
+  if (values.length === 0) { const error = new Error(`--${name} requires at least one value`); error.code = "OPTION_INVALID"; throw error; }
+  return values;
 }
 function positiveInteger(value, name) {
   const parsed = Number(value);

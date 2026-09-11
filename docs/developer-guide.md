@@ -42,3 +42,9 @@ node scripts/check-release-readiness.js
 ```
 
 The final command is expected to fail while human or target-user evidence is pending. Do not weaken it to make a release pass.
+
+## System distribution
+
+`npm run package:update` creates `dist/ppt-ops-system.tar.gz` and its SHA-256 sidecar from committed `HEAD`. It includes only tracked paths from `SYSTEM_PATHS`; uncommitted changes and user/project files are excluded. CI runs the updater regression suite on Linux and macOS, then builds, extracts, installs, and checks the system package before uploading it as an artifact. GA release attaches the same system package in addition to the full source archive, after the existing acceptance gate passes.
+
+`update.mjs` resolves the latest successful main push CI run through GitHub's API and fetches the exact SHA. It does not move the installation's Git branch, index, or HEAD. File manifests track installed content across repeated updates; initial conflict detection uses the installation's committed System Layer snapshot. See [System updates](system/updates.md).

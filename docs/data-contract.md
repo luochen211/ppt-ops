@@ -8,7 +8,7 @@ The System Layer may be changed by an application update:
 
 - `.agents/skills/ppt-agent/`, `src/`, `schemas/`, `test/`
 - `templates/system/`, `docs/system/`, `.github/`
-- `package.json` and `package-lock.json`
+- `scripts/`, `update.mjs`, `README.md`, `LICENSE`, `package.json`, and `package-lock.json`
 
 The User Layer must never be included in the system update set:
 
@@ -43,3 +43,5 @@ Later layers override earlier layers. Nested objects merge by key; arrays and sc
 ## Update invariant
 
 An updater must validate every proposed target against the System manifest before writing. A target is rejected when it is outside the System manifest or overlaps any User manifest entry. This keeps private templates, profiles, and project data out of an application update even when Data Root configuration changes.
+
+The updater's `.pptops-updates/` directory stores local baselines, locks, and backups. It is ignored by Git, excluded from system archives, and cannot overlap the Data Root. Only tracked System Layer files are distributed. A complete system snapshot also removes previously managed files retired upstream; local-only files remain untouched. Locally edited managed files and incoming paths that collide with local-only files block the update.

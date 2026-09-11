@@ -22,6 +22,9 @@ export async function createReviewerFeedbackPackage({ projectRoot, projectTitle,
     if (error.code === "ENOENT") throw applicationError("REVIEW_PACKAGE_HTML_BUILD_REQUIRED", "the first review-package slice requires an existing HTML Build target; it will not rebuild a preview");
     throw error;
   }
+  const sourceRelative = path.join(".pptops", "builds", build.id, "html", "slides.html");
+  if (review.artifact_hashes?.[sourceRelative] !== hash(deck)) throw applicationError("REVIEW_SOURCE_CHANGED", "the HTML artifact must match the selected Review; run Review again for changed artifacts");
+  assertDisclosureSafe(deck.toString("utf8"), frozenProject, priorFeedback, disclosures);
   const buildHash = hash(buildManifest.bytes);
   const reviewHash = hash(reviewManifest.bytes);
   const packageInput = {
@@ -229,6 +232,21 @@ function stableJson(value) {
 function hasText(value) { return typeof value === "string" && value.trim() !== ""; }
 function applicationError(code, message) { const error = new Error(message); error.code = code; return error; }
 
+function assertDisclosureSafe(html, project, priorFeedback, disclosures) {
+  const excluded = [];
+  if (!disclosures.speaker_notes) {
+    excluded.push(...project.pages.map(page => page.speaker_notes));
+    if (/<aside\b[^>]*\bid\s*=\s*["']speaker-notes["']/i.test(html)) {
+      throw applicationError("REVIEW_PACKAGE_DISCLOSURE_UNSAFE", "the selected HTML Build contains speaker notes; select a reviewed artifact without notes or explicitly include them");
+    }
+  }
+  if (!disclosures.sources) excluded.push(...project.pages.flatMap(page => (page.source_refs ?? []).map(ref => ref.locator)));
+  if (!disclosures.prior_feedback) excluded.push(...priorFeedback.flatMap(item => [item.overall?.comment, ...(item.pages ?? []).map(page => page.comment)]));
+  if (excluded.filter(hasText).some(value => html.includes(value) || html.includes(escapeHtml(value)))) {
+    throw applicationError("REVIEW_PACKAGE_DISCLOSURE_UNSAFE", "the selected HTML Build contains excluded context; select a disclosure-safe reviewed artifact or change the explicit disclosure choices");
+  }
+}
+
 function renderReviewerEntry({ projectTitle, packageId, normalizedBrief: brief, pages, frozenProject, responseTemplate, priorFeedback }) {
   const disclosureSummary = [
     brief.disclosures.speaker_notes ? "Speaker notes are included." : "Speaker notes are not included.",
@@ -252,7 +270,7 @@ function renderReviewerEntry({ projectTitle, packageId, normalizedBrief: brief, 
 }
 
 function decisionInputs(name) { return `<div class="choices"><label><input type="radio" name="${name}-decision" value="approve">Approve</label><label><input type="radio" name="${name}-decision" value="request_changes">Request changes</label><label><input type="radio" name="${name}-decision" value="comment">Comment only</label></div>`; }
-function entryScript(template) { return `const template=${JSON.stringify(template)};document.getElementById('feedback').addEventListener('submit',event=>{event.preventDefault();const form=new FormData(event.currentTarget);const value=name=>form.get(name)||null;const text=name=>String(form.get(name)||'');const response=structuredClone(template);response.reviewer={name:text('reviewer-name'),role:text('reviewer-role'),contact:text('reviewer-contact')};response.decision_time=text('decision-time');response.overall={decision:value('overall-decision'),comment:text('overall-comment')};response.pages=response.pages.map((page,index)=>({...page,decision:value('page-'+index+'-decision'),comment:text('page-comment-'+index)}));const hasFeedback=response.overall.decision||response.overall.comment.trim()||response.pages.some(page=>page.decision||page.comment.trim());const status=document.getElementById('status');if(!hasFeedback){status.textContent='Add an overall or slide-level decision or comment before downloading.';return}const blob=new Blob([JSON.stringify(response,null,2)+'\\n'],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='review-response.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),0);status.textContent='Response downloaded. Return that JSON file to the presentation creator.'});`; }
+function entryScript(template) { return `const template=${JSON.stringify(template).replaceAll("<", "\\u003c")};document.getElementById('feedback').addEventListener('submit',event=>{event.preventDefault();const form=new FormData(event.currentTarget);const value=name=>form.get(name)||null;const text=name=>String(form.get(name)||'');const response=structuredClone(template);response.reviewer={name:text('reviewer-name'),role:text('reviewer-role'),contact:text('reviewer-contact')};response.decision_time=text('decision-time');response.overall={decision:value('overall-decision'),comment:text('overall-comment')};response.pages=response.pages.map((page,index)=>({...page,decision:value('page-'+index+'-decision'),comment:text('page-comment-'+index)}));const hasFeedback=response.overall.decision||response.overall.comment.trim()||response.pages.some(page=>page.decision||page.comment.trim());const status=document.getElementById('status');if(!hasFeedback){status.textContent='Add an overall or slide-level decision or comment before downloading.';return}const blob=new Blob([JSON.stringify(response,null,2)+'\\n'],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='review-response.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),0);status.textContent='Response downloaded. Return that JSON file to the presentation creator.'});`; }
 function entryCss() { return `:root{color-scheme:light;--ink:#172033;--muted:#536071;--line:#cbd5e1;--accent:#174ea6;--surface:#f8fafc}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font:17px/1.6 system-ui,sans-serif}header,main{width:min(1100px,calc(100% - 32px));margin:auto}header{padding:56px 0 28px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:700}h1{font-size:clamp(2rem,5vw,3.75rem);line-height:1.05}h2{margin-top:0}section,.notice{margin:24px 0;padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}dl,.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}dt{font-weight:700}dd{margin:0}.notice{border-left:6px solid var(--accent)}.slide-card iframe{display:block;width:100%;aspect-ratio:16/9;border:1px solid var(--line);background:#111}.choices{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px}label{display:grid;gap:6px}input,textarea,button{font:inherit}input,textarea{width:100%;padding:10px;border:1px solid #8996a8;border-radius:6px}button{padding:12px 18px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}details{margin:12px 0}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}@media print{button{display:none}}`; }
 function escapeHtml(value) { return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;"); }
 function humanizeReference(value) { const match = /^slide-(\d+)$/.exec(value ?? ""); return match ? `Slide ${match[1]}` : "Slide"; }
