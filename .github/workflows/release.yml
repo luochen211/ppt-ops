@@ -39,6 +39,8 @@ jobs:
           mkdir -p dist
           git archive --format=tar.gz --prefix="ppt-ops-${REQUESTED_TAG}/" -o "dist/ppt-ops-${REQUESTED_TAG}.tar.gz" HEAD
           shasum -a 256 "dist/ppt-ops-${REQUESTED_TAG}.tar.gz" > "dist/ppt-ops-${REQUESTED_TAG}.tar.gz.sha256"
+      - name: Build System Layer update archive
+        run: npm run package:update
       - name: Create GA release
         env:
           GH_TOKEN: ${{ github.token }}

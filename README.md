@@ -85,6 +85,29 @@ PPT-Ops 已完成一套 54 页案例的生成与浏览器检查，并分别在 C
 
 内容审查按需使用 `dbs-jtbd` 和 `dbs-theory-grounding`；明确要求把方法制作成 skill 时，再调用 `dbs-skill-maker`。审查结果保存到项目中，演讲者注释以待校对草稿交付。安装与使用边界见[内容审查说明](docs/content-review.md)。
 
+## 安装与更新
+
+首次使用需要 Node.js 22 或更新版本、Git 和 npm：
+
+```sh
+git clone https://github.com/luochen211/ppt-ops.git
+cd ppt-ops
+npm ci
+```
+
+之后在仓库目录中运行：
+
+```sh
+node update.mjs check      # 检查更新
+node update.mjs preview    # 查看变化
+node update.mjs apply      # 备份并更新
+node update.mjs rollback   # 撤回上一次更新
+```
+
+更新来自 main 上最近一次通过 GitHub Actions 检查的提交。更新器保留项目资料和用户模板，遇到本地改过的系统文件会停下来提示。更新后的程序会重新安装依赖并运行检查，失败时恢复原有文件和依赖。
+
+Actions 同时提供带校验文件的系统更新包。这些构建用于体验当前进展，不代表已完成正式版的人工验收。离线更新与恢复方式见[系统更新指南](docs/system/updates.md)。
+
 ## 最终会得到什么
 
 一次完整交付可以包含：

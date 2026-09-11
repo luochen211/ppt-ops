@@ -10,7 +10,12 @@
   },
   "scripts": {
     "test": "node --test --test-concurrency=1 test/*.test.js",
-    "check": "node --test test/boundary-images.test.js test/integration.test.js"
+    "check": "node --test test/boundary-images.test.js test/integration.test.js",
+    "update:check": "node update.mjs check",
+    "update:preview": "node update.mjs preview",
+    "update:apply": "node update.mjs apply",
+    "update:rollback": "node update.mjs rollback",
+    "package:update": "node scripts/build-system-update.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",

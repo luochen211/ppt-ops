@@ -22,19 +22,18 @@ Use a new timestamped backup destination outside the project. Confirm that the c
 
 ## Upgrade
 
-1. Keep the project backup unchanged.
-2. Obtain the trusted release archive and verify its published SHA-256.
-3. Run `update-preview` against the extracted release. Review every changed System Layer path.
-4. Run `update-apply`. User and Project Layer paths are rejected before mutation.
-5. Run `doctor` for each active project, then `npm test` in the installation.
+Keep the project backup unchanged. The updater selects the latest successful `main` push run of CI, fetches that exact commit from the canonical repository, and stages only System Layer files. These are tested development builds, not GA releases.
 
 ```sh
-node src/cli.js update-preview /path/to/current/repository --source /path/to/extracted/release
-node src/cli.js update-apply /path/to/current/repository --source /path/to/extracted/release
+node update.mjs check
+node update.mjs preview
+node update.mjs apply
 node src/cli.js doctor /path/to/project
 ```
 
-The updater creates a backup and rolls back if post-update Doctor fails. Do not manually merge release files into project data.
+The updater backs up changed files and dependencies in `.pptops-updates/`, installs dependencies in staging, and runs the updated installation's Doctor in a fresh process. A failed Doctor restores the old files and dependencies. `node update.mjs rollback` restores the last successful update and refuses to overwrite subsequent local edits. See [System updates](system/updates.md) for offline archives, conflicts, and interrupted operations.
+
+The existing `src/cli.js update-preview` and `update-apply` commands remain lower-level file operations for an extracted **System Layer archive**. A full source archive includes user/project paths and is intentionally rejected. Use `update.mjs` for baseline conflict checks, retired-file cleanup, dependency installation, and persistent rollback.
 
 ## Recovery
 
