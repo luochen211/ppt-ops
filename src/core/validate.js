@@ -1,3 +1,4 @@
+import { validateDiagram } from "../layout/diagram.js";
 import { validateV1Bundle } from "../contracts/v1.js";
 import { DELIVERY_MODES, INTERACTION_KINDS } from "../contracts/delivery.js";
 import { validateAccessibilityProfile } from "../accessibility/index.js";
@@ -37,6 +38,7 @@ export function validatePage(page, assetIds = new Set()) {
     });
   }
   if (!STATUSES.has(page.status)) errors.push(`status is invalid: ${page.status}`);
+  errors.push(...validateDiagram(page.diagram));
   validateDeliveryFields(page, errors);
   return errors;
 }

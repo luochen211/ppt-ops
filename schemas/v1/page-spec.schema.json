@@ -21,6 +21,7 @@
         "renderers"
       ],
       "properties": {
+        "diagram": { "$ref": "../diagram.schema.json" },
         "kind": {
           "const": "page_spec"
         },
