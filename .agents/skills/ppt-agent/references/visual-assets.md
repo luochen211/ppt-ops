@@ -51,3 +51,5 @@ Example reference edit: keep the accepted character identities, posture, lightin
 ## Truth boundary
 
 Deterministic raster checks do not prove anatomy, action, style, cleanliness, or aesthetics. Agent/human visual observation does not prove user or business acceptance. HTML or structural PPTX success does not prove Microsoft PowerPoint acceptance. Report each layer separately and leave unperformed layers pending.
+
+Preserve image proportions in every renderer. Boundary visuals use proportional contain placement with whitespace; visual dominance does not require filling the page or cropping the accepted composition. A compatible overall palette is sufficient—do not stretch images or add decoration merely to occupy empty space.
