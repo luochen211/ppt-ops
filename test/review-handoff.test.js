@@ -53,8 +53,8 @@ test("handoff packages available outputs and never overwrites sources", async (t
   const source = path.join(outputs, "slides.html");
   await fs.writeFile(source, "original artifact");
 
-  const first = JSON.parse((await runCli("handoff", project)).stdout);
-  const second = JSON.parse((await runCli("handoff", project)).stdout);
+  const first = JSON.parse((await runCli("handoff", project, "--formats", "html", "--actor", "user:fixture")).stdout);
+  const second = JSON.parse((await runCli("handoff", project, "--formats", "html", "--actor", "user:fixture")).stdout);
 
   assert.equal(first.source_outputs_preserved, true);
   assert.equal(await fs.readFile(source, "utf8"), "original artifact");
@@ -75,8 +75,8 @@ async function copyDemo(t) {
   return project;
 }
 
-function runCli(command, project) {
-  return execFileAsync(process.execPath, [cli, command, project], { encoding: "utf8" });
+function runCli(command, project, ...args) {
+  return execFileAsync(process.execPath, [cli, command, project, ...args], { encoding: "utf8" });
 }
 
 function stripReportFile(report) {

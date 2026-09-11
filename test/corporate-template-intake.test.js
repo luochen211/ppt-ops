@@ -4,6 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import JSZip from "jszip";
+import { createRequire, syncBuiltinESMExports } from "node:module";
+import zlib from "node:zlib";
+const CompressedObject = createRequire(import.meta.url)("jszip/lib/compressedObject.js");
 import {
   CORPORATE_TEMPLATE_CAPABILITIES,
   CorporateTemplateIntake,
@@ -156,3 +159,56 @@ async function presentationPackage({ macro = false, embedding = false } = {}) {
 function value(profileValue, field) { return profileValue.observations.find((item) => item.field === field)?.value; }
 function observation(field, valueValue, evidenceType) { return { field, value: valueValue, evidence_type: evidenceType, locators: [`/${field}`] }; }
 function profile(id, format, observations) { return { id, source: { format }, observations }; }
+
+test("archive metadata limits reject before CRC or content decompression", async (t) => {
+  const zip = await JSZip.loadAsync(await presentationPackage());
+  zip.file("ppt/media/large.bin", Buffer.alloc(1024 * 1024, 65));
+  const bytes = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+  let workers = 0, inflations = 0;
+  const worker = t.mock.method(CompressedObject.prototype, "getContentWorker", function () { workers++; throw new Error("must not decompress"); });
+  const inflate = t.mock.method(zlib, "inflateRawSync", () => { inflations++; throw new Error("must not inflate"); });
+  syncBuiltinESMExports();
+  t.after(() => { worker.mock.restore(); inflate.mock.restore(); syncBuiltinESMExports(); });
+  for (const [limits, code] of [
+    [{ maxEntryBytes: 65536 }, "CORPORATE_TEMPLATE_ENTRY_TOO_LARGE"],
+    [{ maxExpandedBytes: 65536 }, "CORPORATE_TEMPLATE_EXPANDED_LIMIT"],
+    [{ maxEntries: 2 }, "CORPORATE_TEMPLATE_ENTRY_LIMIT"]
+  ]) {
+    const fixture = await setup(t, limits);
+    const file = path.join(fixture.root, "oversized.pptx");
+    await fs.writeFile(file, bytes);
+    await assert.rejects(fixture.intake.importFile(file), { code });
+    await assert.rejects(fs.access(path.join(fixture.root, ".pptops")));
+  }
+  assert.equal(workers, 0);
+  assert.equal(inflations, 0);
+});
+
+test("forged expansion metadata is still bounded by actual decompressed bytes", async (t) => {
+  const fixture = await setup(t, { maxEntryBytes: 65536 });
+  const zip = await JSZip.loadAsync(await presentationPackage());
+  zip.file("ppt/media/large.bin", Buffer.alloc(1024 * 1024, 65));
+  const bytes = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+  const signature = Buffer.from([0x50, 0x4b, 0x01, 0x02]);
+  for (let offset = bytes.indexOf(signature); offset >= 0; offset = bytes.indexOf(signature, offset + 4)) {
+    const nameLength = bytes.readUInt16LE(offset + 28);
+    const name = bytes.subarray(offset + 46, offset + 46 + nameLength).toString();
+    if (name === "ppt/media/large.bin") bytes.writeUInt32LE(1, offset + 24);
+  }
+  const file = path.join(fixture.root, "forged.pptx");
+  await fs.writeFile(file, bytes);
+  await assert.rejects(fixture.intake.importFile(file), { code: "CORPORATE_TEMPLATE_ENTRY_TOO_LARGE" });
+  await assert.rejects(fs.access(path.join(fixture.root, ".pptops")));
+});
+
+test("bounded extraction retains CRC validation before storing any evidence", async (t) => {
+  const fixture = await setup(t);
+  const bytes = await presentationPackage();
+  const position = bytes.indexOf(Buffer.from('<p:presentation'));
+  assert.ok(position > 0);
+  bytes[position + 3] ^= 1;
+  const file = path.join(fixture.root, "corrupt.pptx");
+  await fs.writeFile(file, bytes);
+  await assert.rejects(fixture.intake.importFile(file), { code: "INVALID_CORPORATE_TEMPLATE_ARCHIVE" });
+  await assert.rejects(fs.access(path.join(fixture.root, ".pptops")));
+});

@@ -3,9 +3,14 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   integration:
@@ -22,3 +27,49 @@ jobs:
       - run: node src/cli.js html-qa projects/ai-delivery-first-order/ppt/index.html
       - run: node src/cli.js validate examples/demo-project
       - run: node --test test/boundary-images.test.js test/integration.test.js
+
+  updater:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify update, data preservation, conflicts, and rollback
+        run: node --test test/update.test.js test/updater-cli.test.js test/data-contract.test.js
+
+  system-package:
+    needs: [integration, updater]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run package:update
+      - name: Verify checksum and boot the extracted system package
+        run: |
+          cd dist
+          sha256sum --check ppt-ops-system.tar.gz.sha256
+          mkdir system
+          tar -xzf ppt-ops-system.tar.gz -C system
+          cd system
+          node update.mjs --help
+          npm ci --ignore-scripts --no-audit --no-fund
+          node src/cli.js doctor
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ppt-ops-system-${{ github.sha }}
+          path: |
+            dist/ppt-ops-system.tar.gz
+            dist/ppt-ops-system.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30

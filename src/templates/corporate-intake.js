@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
+import crc32 from "jszip/lib/crc32.js";
+import { inflateRawSync } from "node:zlib";
 import { resolveProjectPath } from "../core/project.js";
 
 export const CORPORATE_TEMPLATE_PROFILE_VERSION = "1.0";
@@ -114,21 +116,23 @@ export function detectCorporateTemplateConflicts(profiles) {
 
 async function inspectOpenXml(contents, format, limits) {
   let archive;
-  try { archive = await JSZip.loadAsync(contents, { checkCRC32: true, createFolders: false }); }
+  // CRC verification expands entries, so load directory metadata only first.
+  try { archive = await JSZip.loadAsync(contents, { checkCRC32: false, createFolders: false }); }
   catch { throw templateError("INVALID_CORPORATE_TEMPLATE_ARCHIVE", `invalid ${format.toUpperCase()} archive`); }
-  const entries = Object.values(archive.files).filter((entry) => !entry.dir);
-  inspectArchiveEntries(entries, limits);
+  inspectArchiveEntries(Object.values(archive.files), limits);
+  const entries = Object.values(archive.files).filter(entry => !entry.dir);
   if (!archive.file("[Content_Types].xml") || !archive.file("ppt/presentation.xml")) {
     throw templateError("CORPORATE_TEMPLATE_MIME_MISMATCH", `archive is not a ${format.toUpperCase()} presentation package`);
   }
 
-  const presentation = await archive.file("ppt/presentation.xml").async("string");
+  const xmlEntries = readBoundedArchiveEntries(entries, limits);
+  const presentation = xmlEntries.get("ppt/presentation.xml");
   const observations = [];
   const size = extractSlideSize(presentation);
   if (size) observations.push(observation("slide_dimensions", size, "structural", ["/ppt/presentation.xml/p:sldSz"]));
 
   const themeFiles = Object.keys(archive.files).filter((name) => /^ppt\/theme\/theme\d+\.xml$/i.test(name)).sort();
-  const themeXml = themeFiles.length ? await archive.file(themeFiles[0]).async("string") : "";
+  const themeXml = themeFiles.length ? xmlEntries.get(themeFiles[0]) : "";
   const colors = unique([...themeXml.matchAll(/<a:(?:srgbClr|sysClr)\b[^>]*(?:val|lastClr)="([0-9A-Fa-f]{6})"/g)].map((match) => `#${match[1].toUpperCase()}`));
   const fonts = unique([...themeXml.matchAll(/<a:(?:latin|ea|cs)\b[^>]*typeface="([^"]+)"/g)].map((match) => decodeXml(match[1])).filter(Boolean));
   if (colors.length) observations.push(observation("theme_colors", colors, "structural", [themeFiles[0]]));
@@ -137,7 +141,7 @@ async function inspectOpenXml(contents, format, limits) {
   const layoutFiles = Object.keys(archive.files).filter((name) => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/i.test(name)).sort(naturalOrder);
   const layouts = [];
   for (const file of layoutFiles) {
-    const xml = await archive.file(file).async("string");
+    const xml = xmlEntries.get(file);
     layouts.push({
       id: path.basename(file, ".xml").toLowerCase(),
       name: decodeXml(attribute(xml.match(/<p:cSld\b[^>]*>/)?.[0], "name") || attribute(xml.match(/<p:sldLayout\b[^>]*>/)?.[0], "type") || path.basename(file, ".xml")),
@@ -156,7 +160,7 @@ async function inspectOpenXml(contents, format, limits) {
   if (names.some((name) => /vbaProject\.bin$/i.test(name))) findings.push(finding("macro_present", "blocked", "The package contains VBA and it will not be executed or preserved as trusted behavior."));
   if (names.some((name) => /^ppt\/embeddings\//i.test(name))) findings.push(finding("embedded_object_present", "blocked", "The package contains embedded/OLE objects."));
   for (const file of names.filter((name) => name.endsWith(".rels"))) {
-    const xml = await archive.file(file).async("string");
+    const xml = xmlEntries.get(file);
     if (/TargetMode="External"/i.test(xml)) findings.push(finding("external_relationship_present", "warning", `External relationship found in /${file}.`));
   }
   return {
@@ -252,12 +256,41 @@ function inspectArchiveEntries(entries, limits) {
   for (const entry of entries) {
     const original = entry.unsafeOriginalName ?? entry.name;
     if (path.posix.isAbsolute(original) || original.split(/[\\/]+/).includes("..")) throw templateError("CORPORATE_TEMPLATE_ZIP_SLIP", `unsafe archive path: ${original}`);
+    if (entry.dir) continue;
     const size = entry._data?.uncompressedSize;
-    if (!Number.isFinite(size)) continue;
+    if (!Number.isSafeInteger(size) || size < 0) throw templateError("INVALID_CORPORATE_TEMPLATE_ARCHIVE", "archive entry has invalid size metadata");
     if (size > limits.maxEntryBytes) throw templateError("CORPORATE_TEMPLATE_ENTRY_TOO_LARGE", `archive entry is too large: ${entry.name}`);
     expanded += size;
     if (expanded > limits.maxExpandedBytes) throw templateError("CORPORATE_TEMPLATE_EXPANDED_LIMIT", "archive expands beyond the configured limit");
   }
+}
+
+function readBoundedArchiveEntries(entries, limits) {
+  const xml = new Map();
+  let expanded = 0;
+  for (const entry of entries) {
+    const data = entry._data;
+    const budget = Math.min(limits.maxEntryBytes, limits.maxExpandedBytes - expanded);
+    const limitCode = budget < limits.maxEntryBytes ? "CORPORATE_TEMPLATE_EXPANDED_LIMIT" : "CORPORATE_TEMPLATE_ENTRY_TOO_LARGE";
+    let bytes;
+    try {
+      if (data.compression.magic === "\x08\x00") {
+        bytes = inflateRawSync(data.compressedContent, { maxOutputLength: Math.max(1, budget) });
+      } else if (data.compression.magic === "\x00\x00") {
+        bytes = Buffer.from(data.compressedContent);
+      } else throw new Error("unsupported compression");
+    } catch (error) {
+      if (error.code === "ERR_BUFFER_TOO_LARGE") throw templateError(limitCode, `archive entry exceeds the expansion budget: ${entry.name}`);
+      throw templateError("INVALID_CORPORATE_TEMPLATE_ARCHIVE", `invalid compressed entry: ${entry.name}`);
+    }
+    if (bytes.length > budget) throw templateError(limitCode, `archive entry exceeds the expansion budget: ${entry.name}`);
+    if (bytes.length !== data.uncompressedSize || (crc32(bytes) >>> 0) !== (data.crc32 >>> 0)) {
+      throw templateError("INVALID_CORPORATE_TEMPLATE_ARCHIVE", `archive entry size or CRC mismatch: ${entry.name}`);
+    }
+    expanded += bytes.length;
+    if (/\.(?:xml|rels)$/i.test(entry.name)) xml.set(entry.name, bytes.toString("utf8"));
+  }
+  return xml;
 }
 
 function verifySignature(contents, format) {

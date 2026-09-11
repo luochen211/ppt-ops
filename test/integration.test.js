@@ -42,7 +42,7 @@ test("a migrated deck with accepted boundary images builds both formats, reviews
   assert.equal(review.passed, true);
   assert.deepEqual(review.automated_checks[1].evidence.files, ["slides.html", "slides.pptx"]);
 
-  const handoff = JSON.parse((await runCli("handoff", project)).stdout);
+  const handoff = JSON.parse((await runCli("handoff", project, "--formats", "html,pptx", "--actor", "user:fixture")).stdout);
   assert.deepEqual(handoff.outputs.map(({ name }) => name), [
     "review-report.json",
     "slides.html",

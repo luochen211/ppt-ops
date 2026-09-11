@@ -8,6 +8,10 @@ import { normalizeFeedbackFindings, repeatedRootCauseFingerprints } from "../cor
 import { readProject, resolveProjectPath } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { createHandoff } from "../handoff/index.js";
+import { deliveryCapabilities, readDeliverySelection, recordDeliverySelection } from "../delivery/selection.js";
+import { approveOutline, exportOutline, outlineSource, requireOutlineApproval } from "../delivery/outline.js";
+import { exportPresentationPdf, hashFile, pdfCapability } from "../delivery/pdf.js";
+import { findBrowser } from "../qa/html.js";
 import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
@@ -236,10 +240,12 @@ export class ApplicationService {
     await assertBoundaryGeneratedImages(frozenProject);
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
-    const report = await reviewProject(frozenProject, { pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
-    const reportFile = await writeReviewReport(frozenProject, report);
+    const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
+    await writeReviewReport(frozenProject, report);
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
-    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: path.relative(this.project.root, reportFile) }));
+    const immutableReport = await this.files.writeImmutable(`.pptops/reviews/${id}/review-report.json`, `${JSON.stringify(report, null, 2)}\n`);
+    const artifactHashes = await this.buildArtifactHashes(build);
+    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
     await this.files.writeManifest("review", id, stripRevision(review));
@@ -251,18 +257,82 @@ export class ApplicationService {
     if (review.revision !== expectedRevision) throw new ApplicationError("STALE_OBJECT_REVISION", "review revision is stale", { expected: review.revision, received: expectedRevision });
     if (review.state !== "human_pending") throw new ApplicationError("REVIEW_NOT_PENDING", `review is not awaiting a decision: ${review.state}`);
     if (!["accepted", "rejected"].includes(decision)) throw new ApplicationError("REVIEW_DECISION_INVALID", "review decision must be accepted or rejected");
-    const recorded = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
+    const build = this.requireBuild(review.build_id);
+    const artifactHashes = review.artifact_hashes;
+    if (decision === "accepted" && hashJson(artifactHashes ?? {}) !== hashJson(await this.buildArtifactHashes(build))) throw new ApplicationError("REVIEW_SOURCE_CHANGED", "Build artifacts changed after Review; run Review again");
+    const recorded = this.store.saveEntity(this.projectId, { ...stripRevision(review), artifact_hashes: artifactHashes, state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
     return this.replaceManifest("review", review.id, stripRevision(recorded));
   }
 
-  async createHandoff(buildId, reviewId) {
+  async buildArtifactHashes(build) {
+    return Object.fromEntries(await Promise.all(build.targets.map(async format => { const file = `.pptops/builds/${build.id}/${format}/slides.${format}`; return [file, await hashFile(resolveProjectPath(this.project.root, file))]; })));
+  }
+
+  outlineSource() { return outlineSource(this.project); }
+
+  async approveOutline(input) { await this.refresh(); return approveOutline(this.project, input); }
+
+  async deliveryCapabilities(artifactType, buildId) {
+    if (artifactType === "presentation") {
+      const build = this.requireBuild(buildId);
+      const pdfSource = await pdfCapability(build, this.store.listEntities(this.projectId, "review"), this.project.root);
+      return deliveryCapabilities({ artifactType, availableFormats: build.state === "succeeded" ? [...build.targets, ...(pdfSource ? ["pdf"] : [])] : [] });
+    }
+    return deliveryCapabilities({ artifactType, availableFormats: ["markdown", "docx", ...(await findBrowser() ? ["pdf"] : [])] });
+  }
+
+  async selectDelivery({ artifactType, formats, sourceId, sourceRevision, actor, selectionSource, buildId, approvalId }) {
+    await this.refresh();
+    if (Array.isArray(formats)) formats = formats.map(format => String(format).trim().toLowerCase());
+    let availableFormats, approval, pdfSource;
+    if (artifactType === "presentation") {
+      const build = this.requireBuild(buildId);
+      if (build.state !== "succeeded" || sourceId !== build.id || sourceRevision !== build.version_id) throw new ApplicationError("DELIVERY_SELECTION_MISMATCH", "presentation selection must target a succeeded Build and its frozen Version");
+      pdfSource = await pdfCapability(build, this.store.listEntities(this.projectId, "review"), this.project.root);
+      availableFormats = [...build.targets, ...(pdfSource ? ["pdf"] : [])];
+    } else if (artifactType === "outline") {
+      if (sourceId !== this.project.contracts.outline.id) throw new ApplicationError("DELIVERY_SELECTION_MISMATCH", "outline selection must target the accepted Outline");
+      approval = await requireOutlineApproval(this.project, approvalId, sourceRevision);
+      availableFormats = ["markdown", "docx", ...(await findBrowser() ? ["pdf"] : [])];
+    }
+    const recorded = await recordDeliverySelection(this.project.root, {
+      artifact_type: artifactType, formats, source_id: sourceId, source_revision: sourceRevision,
+      actor, selection_source: selectionSource, available_formats: availableFormats,
+      approval_id: approval?.id, ...(formats?.includes("pdf") && pdfSource ? { pdf_source: pdfSource } : {})
+    });
+    try {
+      const artifacts = artifactType === "outline" ? await exportOutline(this.project, recorded.decision, approval) : [];
+      return { ...recorded, artifacts };
+    } catch (error) {
+      await this.files.writeImmutable(`.pptops/delivery-selections/${recorded.decision.id}/failure.json`, JSON.stringify({ code: error.code ?? "EXPORT_FAILED", message: error.message, decided_at: new Date().toISOString() }));
+      throw new ApplicationError("EXPORTER_UNAVAILABLE", "outline export failed; the accepted outline and recorded choice remain available for reselection", { selection_id: recorded.decision.id, cause: error.message });
+    }
+  }
+
+  async createHandoff(buildId, reviewId, options = {}) {
     const review = this.requireEntity("review", reviewId);
     if (review.state !== "accepted" || review.build_id !== buildId) throw new ApplicationError("REVIEW_NOT_ACCEPTED", "handoff requires an accepted review for the selected build");
     const frozenProject = await this.projectFromVersion(this.requireBuild(buildId).version_id);
     const boundaryImages = await assertBoundaryGeneratedImages(frozenProject);
     const report = await reviewProject(frozenProject);
-    const sourceFiles = await this.buildHandoffFiles(buildId, review);
-    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages });
+    const build = this.requireBuild(buildId);
+    if (!options.deliverySelectionId) throw new ApplicationError("DELIVERY_SELECTION_REQUIRED", "choose one or more delivery formats before creating a handoff");
+    const selection = await readDeliverySelection(this.project.root, options.deliverySelectionId);
+    if (selection.artifact_type !== "presentation" || selection.source_id !== buildId || selection.source_revision !== build.version_id) throw new ApplicationError("DELIVERY_SELECTION_MISMATCH", "handoff selection must target the selected Build and frozen Version");
+    if (selection.formats.some((format) => format !== "pdf" && !build.targets.includes(format))) throw new ApplicationError("EXPORTER_UNAVAILABLE", "the selected Build does not contain every requested format", { capabilities: await this.deliveryCapabilities("presentation", buildId) });
+    const selectedFormats = selection.formats;
+    for (const format of selectedFormats.filter(format => format !== "pdf")) {
+      const file = `.pptops/builds/${buildId}/${format}/slides.${format}`;
+      if (review.artifact_hashes?.[file] !== await hashFile(resolveProjectPath(this.project.root, file))) throw new ApplicationError("REVIEW_SOURCE_CHANGED", "selected artifact must match the accepted review; review this Build again");
+    }
+    const sourceFiles = await this.buildHandoffFiles(buildId, review, selectedFormats);
+    if (selectedFormats.includes("pdf")) {
+      if (selection.pdf_source?.review_id !== reviewId) throw new ApplicationError("PDF_SOURCE_REQUIRED", "PDF selection must reference the selected accepted Review");
+      const expected = await pdfCapability(build, [review], this.project.root);
+      if (!expected || expected.sha256 !== selection.pdf_source.sha256 || expected.file !== selection.pdf_source.file) throw new ApplicationError("PDF_SOURCE_CHANGED", "PDF source is no longer eligible; select again after review");
+      sourceFiles.push(await exportPresentationPdf(this.project.root, selection));
+    }
+    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages, deliverySelection: selection });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
     let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
@@ -270,10 +340,10 @@ export class ApplicationService {
     return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
   }
 
-  async buildHandoffFiles(buildId, review) {
+  async buildHandoffFiles(buildId, review, selectedFormats) {
     const build = this.requireBuild(buildId);
     const files = [];
-    for (const target of build.targets) {
+    for (const target of build.targets.filter((value) => !selectedFormats || selectedFormats.includes(value))) {
       const directory = resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, target));
       for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
         if (entry.isFile()) files.push({ name: entry.name, path: path.join(directory, entry.name) });
@@ -325,7 +395,7 @@ export class ApplicationService {
     const sourceById = new Map(contracts.sources.map((source) => [source.id, source]));
     return {
       root: this.project.root,
-      project: { schema_version: "1.0", name: contracts.project.id, title: contracts.project.title, format: contracts.project.format, source_files: contracts.sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contracts.project.outputs, ...(contracts.project.delivery_mode ? { delivery_mode: contracts.project.delivery_mode } : {}) },
+      project: { schema_version: "1.0", name: contracts.project.id, title: contracts.project.title, format: contracts.project.format, source_files: contracts.sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contracts.project.outputs, ...(contracts.project.delivery_mode ? { delivery_mode: contracts.project.delivery_mode } : {}), ...(contracts.project.accessibility_profile ? { accessibility_profile: structuredClone(contracts.project.accessibility_profile) } : {}) },
       pages: contracts.pages.map((page) => {
         const reference = page.source_refs?.[0]; const source = reference ? sourceById.get(reference.source_id) : undefined;
         return { ...page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, html: page.renderers?.html, pptx: page.renderers?.pptx, status: page.content_status };

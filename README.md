@@ -41,9 +41,42 @@ PPT-Ops 把这些容易遗漏的环节整理成一条清晰流程：
 - 企业介绍与产品说明
 - 从长文、逐字稿或旧 PPT 重新整理演示内容
 
+## 核心功能规划
+
+PPT-Ops 的三个功能入口按以下范围规划，具体实现状态与验收边界见[完整规划](docs/core-workflows-plan.md)：
+
+| 入口 | 使用流程 |
+|---|---|
+| 资料生成 PPT | 提供文稿、图片、音频、视频等材料 → 理解材料 → 输出并确认结构 → 生成 PPT |
+| 结构生成 PPT | 提供章节或逐页结构 → 必要时拆页 → 生成 PPT |
+| 已有 PPT 视觉润色 | 提供 PPT → 优化排版、字体、配色、图片与图表样式 → 交付可编辑 PPT 和前后对照 |
+
+资料可以单独或混合提供，类型保持开放，用户无需先整理成完整逐字稿。图片、音频、视频作为主要内容来源的理解与生成流程仍需分别实现和验收。
+
+视觉润色默认保留原文、数据、页序和品牌风格。文字润色和结构优化列入后续规划。旧 PPTX 目前可作为内容真源导入，保留原有页面元素的视觉润色闭环仍待实现与验收。
+
 ## 真实案例
 
 PPT-Ops 已完成一套 54 页案例的生成与浏览器检查，并分别在 Chrome 和 Safari 中完成整套翻页验证。这套案例验证了从第一页到最后一页的完整展示流程。视觉细节、字体和现场播放效果，仍建议在最终使用的电脑与 PowerPoint 中进行人工确认。
+
+## 视觉风格模板（Templates）
+
+### 硬切人
+
+**以低多边形人物和清晰的硬边切面为核心：用几何平面塑造人物，让轮廓、体块与切面边界清楚可见。**
+
+![硬切人风格参考：低多边形人物与清晰的硬边切面](templates/user/hard-cut-people/reference.png)
+
+- **人物**：接近真实的成人比例，面部简化，头发、衣服与身体由有明暗差异的几何切面构成。
+- **切面**：相邻平面边界利落，通过色块或明暗差异呈现体积感。
+- **配色与构图**：颜色按主题自由选择；人物动作、背景和留白位置随页面需要安排。
+- **适用场景**：商务交付、协作沟通、项目提案、职业培训，以及需要用人物关系说明观点的页面。
+
+使用时可以直接说：
+
+> 使用「硬切人」template，表现两位项目成员交接成果的场景，人物放在右侧，左侧留白，图片内不生成文字。
+
+[查看完整模板、参考图与可复用提示词](templates/user/hard-cut-people/README.md)。
 
 ## 快速开始
 
@@ -66,6 +99,29 @@ PPT-Ops 已完成一套 54 页案例的生成与浏览器检查，并分别在 C
 
 内容审查按需使用 `dbs-jtbd` 和 `dbs-theory-grounding`；明确要求把方法制作成 skill 时，再调用 `dbs-skill-maker`。审查结果保存到项目中，演讲者注释以待校对草稿交付。安装与使用边界见[内容审查说明](docs/content-review.md)。
 
+## 安装与更新
+
+首次使用需要 Node.js 22 或更新版本、Git 和 npm：
+
+```sh
+git clone https://github.com/luochen211/ppt-ops.git
+cd ppt-ops
+npm ci
+```
+
+之后在仓库目录中运行：
+
+```sh
+node update.mjs check      # 检查更新
+node update.mjs preview    # 查看变化
+node update.mjs apply      # 备份并更新
+node update.mjs rollback   # 撤回上一次更新
+```
+
+更新来自 main 上最近一次通过 GitHub Actions 检查的提交。更新器保留项目资料和用户模板，遇到本地改过的系统文件会停下来提示。更新后的程序会重新安装依赖并运行检查，失败时恢复原有文件和依赖。
+
+Actions 同时提供带校验文件的系统更新包。这些构建用于体验当前进展，不代表已完成正式版的人工验收。离线更新与恢复方式见[系统更新指南](docs/system/updates.md)。
+
 ## 最终会得到什么
 
 一次完整交付可以包含：
@@ -80,15 +136,6 @@ PPT-Ops 已完成一套 54 页案例的生成与浏览器检查，并分别在 C
 ## 当前进展
 
 PPT-Ops 目前处于 **V1.0 发布候选阶段**。
-
-已经完成：
-
-- 核心制作流程
-- 浏览器演示版本
-- 可编辑 PowerPoint 文件生成
-- 自动检查与交付打包
-- 首页/尾页 ImageGen 证据门禁（缺图、未检查或未接受时禁止正式构建与交付）
-- 54 页真实案例验证
 
 正式发布前仍计划完成：
 
@@ -105,6 +152,7 @@ PPT-Ops 目前处于 **V1.0 发布候选阶段**。
 - [产品说明](docs/product-v1.0-blueprint.md)
 - [使用与排障指南](docs/operations.md)
 - [开发者指南](docs/developer-guide.md)
+- [Accessibility Mode 与证据边界](docs/accessibility-mode.md)
 - [Visual Asset Pipeline 需求](docs/visual-asset-pipeline-requirements.md)
 - [Visual Asset Pipeline 交付 DAG](docs/visual-asset-pipeline-dag.md)
 - [V1 发布候选验收记录](docs/acceptance/v1-release-candidate.md)
