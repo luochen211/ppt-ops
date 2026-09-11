@@ -1,4 +1,5 @@
 import { DELIVERY_MODES, INTERACTION_KINDS } from "./delivery.js";
+import { validateAccessibilityProfile } from "../accessibility/index.js";
 
 export const CONTRACT_VERSION = "1.0";
 export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "layout_composition", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
@@ -61,6 +62,7 @@ const validators = {
     requireIdList(value.asset_ids, "asset_ids", errors, true);
     if (value.outputs !== undefined) requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
     if (value.delivery_mode !== undefined) requireEnum(value, "delivery_mode", DELIVERY_MODES, errors);
+    for (const error of validateAccessibilityProfile(value.accessibility_profile)) errors.push(error);
   },
   source(value, errors) {
     requireText(value, "file", errors); requireHash(value, errors);
@@ -89,6 +91,7 @@ const validators = {
     }
 
     validateDeliveryFields(value, errors);
+    validateAccessibilityFields(value, errors);
   },
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
@@ -232,6 +235,14 @@ function validateDeliveryFields(value, errors) {
       if (value.audience_interaction.expected_response !== undefined && !hasText(value.audience_interaction.expected_response)) errors.push("audience_interaction.expected_response must be a non-empty string");
     }
   }
+}
+
+function validateAccessibilityFields(value, errors) {
+  if (value.accessibility === undefined) return;
+  if (!isObject(value.accessibility)) { errors.push("accessibility must be an object"); return; }
+  if (value.accessibility.language !== undefined && !hasText(value.accessibility.language)) errors.push("accessibility.language must be a non-empty language tag");
+  if (value.accessibility.reading_order !== undefined && (!Array.isArray(value.accessibility.reading_order) || value.accessibility.reading_order.some((item) => !hasText(item)))) errors.push("accessibility.reading_order must contain non-empty semantic item names");
+  for (const field of ["links", "charts", "tables", "meaning_dependencies"]) if (value.accessibility[field] !== undefined && !Array.isArray(value.accessibility[field])) errors.push(`accessibility.${field} must be an array`);
 }
 
 function requireText(value, field, errors, prefix = "") { if (!hasText(value?.[field])) errors.push(`${prefix}${field} is required`); }

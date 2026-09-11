@@ -17,13 +17,14 @@ const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ing
 const HELP = `PPT-Ops 1.0
 
 Usage:
-  pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>]
+  pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>] [--accessibility-profile <json>]
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops import <project-dir> --file <markdown|docx|pptx>
   pptops visual-preference <repository-root> --action <inspect|nominate|observe|propose|feedback|decide|revise|remove> [--payload <json>]
   pptops design-context <project-dir> [--repository-root <path>]
   pptops validate <project-dir>
   pptops html-qa <html-file> [--browser <path>] [--timeout <ms>]
+  pptops accessibility-audit <project-dir>
   pptops intake <project-dir>
   pptops outline <project-dir>
   pptops prototype <project-dir> [--pages <list>]
@@ -115,7 +116,7 @@ try {
     }
     console.log(JSON.stringify({ ok: true, command, data: result }, null, 2));
   } else if (command === "init") {
-    const result = await initializeProject(projectDir, { name: options.name, title: options.title, deliveryMode: options["delivery-mode"] });
+    const result = await initializeProject(projectDir, { name: options.name, title: options.title, deliveryMode: options["delivery-mode"], accessibilityProfile: options["accessibility-profile"] ? jsonOption(options, "accessibility-profile") : undefined });
     console.log(JSON.stringify({ command, ...result }, null, 2));
   } else if (command === "migrate") {
     if (!options.to) throw new Error("migrate requires --to <v1-project-dir>");
@@ -146,6 +147,9 @@ try {
         const result = await new SourceIntake({ projectRoot: project.root, store, projectId: project.project.name }).importFile(options.file);
         console.log(JSON.stringify({ command, project: project.project.name, duplicate: result.duplicate, source: result.source, extracted: result.extracted }, null, 2));
       } finally { store.close(); }
+    } else if (command === "accessibility-audit") {
+      const { auditAccessibility } = await import("./accessibility/index.js");
+      console.log(JSON.stringify({ command, ...auditAccessibility(project) }, null, 2));
     } else if (command === "validate") {
       console.log(JSON.stringify({ command, project: project.project.name, valid: true, error_count: 0, page_count: project.pages.length }, null, 2));
     } else if (command === "intake") {
@@ -308,7 +312,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "accessibility-profile", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;

@@ -5,6 +5,7 @@ import { validateProject } from "../core/validate.js";
 import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
+import { auditAccessibility } from "../accessibility/index.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -38,6 +39,26 @@ export async function reviewProject(project, options = {}) {
       evidence: deliveryModeFit
     }
   ];
+  let accessibility;
+  try {
+    accessibility = auditAccessibility(project, { buildRevision: options.buildRevision });
+  } catch (error) {
+    accessibility = {
+      schema_version: "1.0", kind: "accessibility_audit", intent: "audit_only", mutation_performed: false,
+      project: project.project.name, source_revision: null, build_revision: options.buildRevision ?? null,
+      status: "failed", finding_count: 1,
+      findings: [{ id: "invalid-accessibility-profile", rule: "profile-contract", severity: "blocking", target: { kind: "project", id: project.project.name }, message: error.message, verification: "automated", evidence: {}, remediation: { kind: "candidate_required", automatically_applied: false } }],
+      format_capabilities: {}, evidence: [{ kind: "automated", status: "failed" }, { kind: "legal_policy_conformance", status: "not_claimed" }],
+      claims: { automated_conformance: false, legal_or_policy_conformance: "not_claimed", separate_accessible_variant_created: false }
+    };
+  }
+  if (accessibility.status !== "not_requested") automatedChecks.push({
+    id: "accessibility-audit",
+    kind: "automated",
+    required: project.project.accessibility_profile?.intent !== "audit_only",
+    status: accessibility.status === "failed" ? "failed" : accessibility.status === "passed" ? "passed" : "pending",
+    evidence: accessibility
+  });
   const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");
   try {
     await fs.access(pptxFile);
@@ -75,6 +96,11 @@ export async function reviewProject(project, options = {}) {
     pendingAcceptance("visual-acceptance", "visual", "Requires human visual inspection of rendered slides."),
     pendingAcceptance("real-powerpoint-acceptance", "real_powerpoint", "Requires opening and presenting the PPTX in Microsoft PowerPoint.")
   ];
+  if (accessibility.status !== "not_requested") acceptance.push(
+    pendingAcceptance("human-accessibility-review", "human_accessibility_review", "Requires a human accessibility review."),
+    pendingAcceptance("assistive-technology-testing", "assistive_technology", "Requires testing with the declared assistive technology."),
+    pendingAcceptance("powerpoint-accessibility-checker", "powerpoint_accessibility_checker", "Requires a real Microsoft PowerPoint Accessibility Checker result when PPTX is requested.")
+  );
   const requiredFailures = automatedChecks.filter((check) => check.required && check.status === "failed");
 
   return {
