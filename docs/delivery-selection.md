@@ -1,17 +1,25 @@
 # User-selected delivery formats
 
-Export format is a user decision made after the relevant artifact is accepted. It is not a design input and no format is selected implicitly.
+New projects omit `Project.outputs`. Outline and Design can proceed before any export choice. Older project files with `outputs` remain readable, but that field never authorizes a new delivery. No format is silently selected.
 
-Presentation choices are self-contained HTML, editable PPTX, and PDF. Approved-outline choices are Markdown, DOCX, and PDF. The capability response must mark formats as available or unavailable; an unavailable request returns `EXPORTER_UNAVAILABLE` and preserves all accepted work.
+At Handoff, offer the available self-contained HTML, editable PowerPoint and PDF choices. At Outline acceptance, independently offer Markdown, Word and PDF; the user can also continue without exporting the outline. Use plain language and keep commands out of the conversation.
 
-Each explicit decision is written immutably under `.pptops/delivery-selections/<id>/manifest.json` with artifact type, selected formats, source build or outline identity, source revision, actor, conversation/API source, and decision time. Reselection creates another decision instead of editing the prior record. A Handoff references that immutable selection by ID, packages only the selected build targets, and embeds the stored decision in its manifest. Renderer outputs and frozen Versions are never overwritten.
+## Presentation delivery
 
-The current first phase supports HTML/PPTX presentation artifacts already present in an eligible Build and native Markdown outline export. PDF and DOCX are advertised as unavailable until dedicated, traceable exporters are wired in; no renderer is converted into another renderer's source.
+Create explicit immutable Build targets from a Frozen Version and review the exact Build. `delivery-capabilities` reports which artifacts are available. HTML and PPTX are independent renderers; neither is a conversion source for the other. A format absent from the Build requires another explicitly requested Build from the same Frozen Version and its own Review.
 
-Agent wording should stay user-facing:
+Use `delivery-select --artifact presentation --formats pptx --source <build> --source-revision <version> --build <build> --actor user`, then pass its stored ID to `handoff-create --selection <id>`. Handoff requires the accepted Review, matching source hashes and an explicit stored user decision. It packages only selected files plus the Review report and manifest. Caller-supplied selection JSON cannot replace the stored evidence.
 
-> Your presentation is ready. Which formats do you want: HTML, editable PowerPoint, PDF, or more than one?
+PDF becomes available only when a reviewed source and exporter exist. A reviewed HTML source uses Chromium printing with one page per slide and notes/navigation hidden; otherwise a reviewed PPTX can use the native presentation converter. The derivative records the source file hash, Build/Version, Review, exporter and output hash. PDF-only delivery does not add the unselected source file to the package. Failed exporters report `EXPORTER_UNAVAILABLE`, preserve accepted work and allow reselection; they never silently switch formats. Existing immutable derivatives are reused only after their hashes are verified.
 
-> Do you want the approved outline as Markdown, Word, PDF, or more than one?
+## Outline delivery
 
-Do not mention internal renderer names or silently fall back. If a choice is unavailable, say which one and offer the remaining choices without rerunning content or design.
+`outline-source` returns the outline identity and hash of its title, sections and referenced page content. After explicit acceptance, `outline-approve --source-revision <hash> --actor user --raw-feedback <text>` preserves the exact accepted snapshot. A later change requires a new acceptance.
+
+`delivery-select --artifact outline --formats markdown,docx --source <outline> --source-revision <hash> --approval <id> --actor user` exports only the selected formats. Markdown and editable DOCX are produced directly from the accepted snapshot. PDF uses an internal print document derived from that snapshot, with its hash and approval preserved in `pdf-source.json`. Chromium availability is reported before selection; its failure cannot discard accepted content. Outline exports do not create a presentation Build or pretend to satisfy presentation Review.
+
+## Durable evidence and reselection
+
+Each choice is a new immutable `.pptops/delivery-selections/<id>/manifest.json` containing artifact type, formats, source identity/revision, user actor, decision time and choice source. Outline choices also reference an immutable `.pptops/outline-approvals/<id>/manifest.json`. These files survive database reindexing. Reselection does not modify previous choices, accepted content, PageSpecs, frozen Versions or Builds. Export manifests include output hashes and errors retain the selection ID.
+
+The older `handoff` and `deliver` convenience commands now require `--formats html,pptx --actor user`. They record an explicit choice and a hash of the current output snapshot, and package only selected outputs. Their separate visual/PowerPoint acceptance remains pending unless independently performed; use formal Build/Review/Handoff commands for an accepted delivery. Existing packages remain untouched. The former implicit `Project.outputs` default is removed.

@@ -25,7 +25,7 @@ export async function initializeProject(projectDir, options = {}) {
   });
   const outline = entity("outline", "outline-main", { sections: [{ id: "section-main", title, page_ids: [page.id] }] });
   const theme = entity("theme", "theme-default", { tokens: defaultTheme() });
-  const project = entity("project", name, { title, format: "16:9", outputs: ["html", "pptx"], source_ids: [source.id], outline_id: outline.id, theme_id: theme.id, asset_ids: [], ...(options.deliveryMode ? { delivery_mode: options.deliveryMode } : {}) });
+  const project = entity("project", name, { title, format: "16:9", source_ids: [source.id], outline_id: outline.id, theme_id: theme.id, asset_ids: [], ...(options.deliveryMode ? { delivery_mode: options.deliveryMode } : {}) });
   const bundle = { project, sources: [source], outline, pages: [page], theme, assets: [], templates: [], candidates: [], approvals: [], versions: [], builds: [], reviews: [], handoffs: [] };
   const errors = validateV1Bundle(bundle);
   if (errors.length) throw new Error(`starter project is invalid:\n${errors.map((error) => `- ${error}`).join("\n")}`);

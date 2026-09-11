@@ -59,7 +59,7 @@ const validators = {
     requireId(value, "outline_id", errors);
     requireId(value, "theme_id", errors);
     requireIdList(value.asset_ids, "asset_ids", errors, true);
-    requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
+    if (value.outputs !== undefined) requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
     if (value.delivery_mode !== undefined) requireEnum(value, "delivery_mode", DELIVERY_MODES, errors);
   },
   source(value, errors) {

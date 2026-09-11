@@ -49,7 +49,8 @@ test("reindex restores portable Version, Build, Review, and Handoff truth determ
   const { build } = await service.createBuild({ versionId: version.id, targets: ["pptx"] });
   const { review } = await service.runReview(build.id);
   const accepted = await service.recordReview(review.id, { decision: "accepted", expectedRevision: review.revision, evidence: { reviewer: "fixture" } });
-  const { handoff } = await service.createHandoff(build.id, accepted.id);
+  const selection = await service.selectDelivery({ artifactType: "presentation", formats: ["pptx"], sourceId: build.id, sourceRevision: version.id, actor: "user:fixture", buildId: build.id });
+  const { handoff } = await service.createHandoff(build.id, accepted.id, { deliverySelectionId: selection.decision.id });
   service.close();
 
   const database = path.join(project, ".pptops", "metadata.sqlite");
