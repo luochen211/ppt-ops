@@ -1,3 +1,4 @@
+import { renderHtmlDiagram } from "./diagram.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { compileProjectLayout } from "../layout/catalog.js";
@@ -54,6 +55,7 @@ figure{width:100%;height:100%;max-height:650px;margin:0;display:grid;place-items
 figure img,figure video{display:block;width:100%;height:100%;object-fit:var(--fit,contain)}
 .asset-link{display:inline-flex;align-items:center;justify-content:center;padding:24px 32px;border:3px solid var(--accent);border-radius:999px;color:var(--text);font-size:28px;text-decoration:none}
 .slide-footer{display:flex;justify-content:space-between;gap:40px;font-size:21px;letter-spacing:.04em;opacity:.56}
+.relation-diagram{position:relative;width:100%;height:650px;align-self:center}.diagram-connectors{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:var(--accent);stroke:none}.diagram-connectors line{stroke:var(--accent);stroke-width:2}.diagram-connectors text{font-size:17px;font-family:var(--body)}.diagram-node{position:absolute;display:grid;place-items:center;text-align:center;font-size:31px;line-height:1.45;white-space:pre-line;padding:10px}.diagram-node:after{content:"";position:absolute;left:15%;right:15%;bottom:0;border-bottom:1px solid var(--accent);opacity:.5}.diagram-input,.diagram-output,.diagram-condition{font-weight:700}.diagram-output:after{border-width:3px}.diagram-condition{padding:20px;background:color-mix(in srgb,var(--accent) 8%,transparent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.diagram-condition span{max-width:64%}.diagram-condition:after{display:none}.slide-content:has(.relation-diagram){display:block}
 .boundary-slide{display:block;padding:0;isolation:isolate}
 .boundary-slide::before{display:none}
 .boundary-title{position:absolute;z-index:2;left:4.2%;top:50%;width:44%;margin:0;padding:54px 84px 54px 0;transform:translateY(-50%);font-size:88px;line-height:1.04;background:linear-gradient(90deg,var(--bg) 0%,var(--bg) 70%,transparent 100%)}
@@ -103,7 +105,7 @@ function renderSlide(page, plan, index, count, assets) {
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
   return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
   <header class="slide-header" data-qa-id="page-${page.page}-header" data-qa-role="content"><h1 id="slide-title-${page.page}">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
-  <div class="slide-content"><div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message">${escapeHtml(page.three_second_message)}</p>${body}</div><div class="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
+  <div class="slide-content">${page.diagram ? renderHtmlDiagram(page.diagram, page.page) : `<div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message">${escapeHtml(page.three_second_message)}</p>${body}</div>`}<div class="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
   <footer class="slide-footer" data-qa-id="page-${page.page}-footer" data-qa-role="content"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
 </section>`;
 }

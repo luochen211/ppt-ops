@@ -1,3 +1,4 @@
+import { validateDiagram } from "../layout/diagram.js";
 import { DELIVERY_MODES, INTERACTION_KINDS } from "./delivery.js";
 import { validateAccessibilityProfile } from "../accessibility/index.js";
 
@@ -90,6 +91,7 @@ const validators = {
       if (slot?.evidence_purpose !== undefined && !hasText(slot.evidence_purpose)) errors.push(`asset_slots[${index}].evidence_purpose must be non-empty`);
     }
 
+    errors.push(...validateDiagram(value.diagram));
     validateDeliveryFields(value, errors);
     validateAccessibilityFields(value, errors);
   },

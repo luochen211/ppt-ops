@@ -6,7 +6,7 @@ import { transition } from "../core/state-machines.js";
 export const AI_TASKS = Object.freeze({
   material_summary: { targetKind: "source", allowedPaths: ["/summary"] },
   outline: { targetKind: "outline", allowedPaths: ["/sections"] },
-  page_spec: { targetKind: "page_spec", allowedPaths: ["/task", "/three_second_message", "/screen_text", "/visual_job", "/relation", "/template_id", "/speaker_notes", "/speaker_note_intent", "/estimated_duration_seconds", "/audience_interaction"] },
+  page_spec: { targetKind: "page_spec", allowedPaths: ["/task", "/three_second_message", "/screen_text", "/diagram", "/visual_job", "/relation", "/template_id", "/speaker_notes", "/speaker_note_intent", "/estimated_duration_seconds", "/audience_interaction"] },
   copy_compression: { targetKind: "page_spec", allowedPaths: ["/screen_text"] },
   relation_recommendation: { targetKind: "page_spec", allowedPaths: ["/relation"] },
   template_recommendation: { targetKind: "page_spec", allowedPaths: ["/template_id"] }

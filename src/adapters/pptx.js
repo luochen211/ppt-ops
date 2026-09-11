@@ -3,6 +3,7 @@ import path from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { resolveProjectPath } from "../core/project.js";
+import { renderNativeDiagram } from "./diagram.js";
 import { compileProjectLayout } from "../layout/catalog.js";
 
 import { detectRaster } from "../visual-assets/raster.js";
@@ -134,7 +135,8 @@ function renderSlide(pptx, page, plan, project, index, count) {
 
   const contentBox = contentGeometry(theme, assets.length > 0);
   const body = bodyLines(page.screen_text);
-  if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
+  if (page.diagram) renderNativeDiagram(slide, page.diagram, contentBox.copy, theme, colors);
+  else if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
   else renderMessage(slide, pptx, page.three_second_message, theme, colors, bodyFont, contentBox.copy);
   if (assets.length > 0) renderAssets(slide, assets, contentBox.assets, bodyFont);
 
