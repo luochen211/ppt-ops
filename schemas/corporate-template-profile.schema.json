@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/corporate-template-profile.schema.json",
+  "title": "PPT-Ops Corporate Template Profile Candidate",
+  "type": "object",
+  "required": ["schema_version", "kind", "id", "state", "inspected_at", "source", "capabilities", "observations", "layouts", "assets", "findings", "limitations"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "kind": { "const": "corporate_template_profile_candidate" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "state": { "const": "proposed" },
+    "inspected_at": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "required": ["file", "original_name", "bytes", "mime", "sha256", "format", "inspector"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "original_name": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "mime": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "format": { "enum": ["pptx", "potx", "html", "pdf"] },
+        "inspector": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": { "name": { "type": "string", "minLength": 1 }, "version": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "required": ["structure", "theme", "layouts", "editable_master"],
+      "properties": {
+        "structure": { "type": "string", "minLength": 1 },
+        "theme": { "type": "string", "minLength": 1 },
+        "layouts": { "type": "string", "minLength": 1 },
+        "editable_master": { "enum": ["candidate", "none"] }
+      },
+      "additionalProperties": false
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "value", "evidence_type", "locators"],
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "value": {},
+          "evidence_type": { "enum": ["structural", "visual", "observed", "inferred"] },
+          "locators": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "layouts": { "type": "array", "items": { "type": "object" } },
+    "assets": { "type": "array", "items": { "type": "object" } },
+    "findings": { "type": "array", "items": { "type": "object", "required": ["code", "severity", "message"] } },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "additionalProperties": false
+}

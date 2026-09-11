@@ -97,7 +97,7 @@ test("project references cannot escape the project root", () => {
 });
 
 test("all shared contract schemas are valid JSON", async () => {
-  for (const file of ["project.schema.json", "theme.schema.json", "assets.schema.json", "page-spec.schema.json", "audience-variants.schema.json"]) {
+  for (const file of ["project.schema.json", "theme.schema.json", "assets.schema.json", "page-spec.schema.json", "audience-variants.schema.json", "corporate-template-profile.schema.json"]) {
     const schema = JSON.parse(await fs.readFile(path.join("schemas", file), "utf8"));
     assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
   }
