@@ -1,0 +1,189 @@
+{
+  "synthetic": true,
+  "user_acceptance": false,
+  "reference": {
+    "status": "rendered",
+    "renderer": "microsoft-powerpoint",
+    "pdf_file": "/tmp/pptops-closeout-20260911/corporate-golden/reference-native/slides.pdf",
+    "page_images": [
+      "/tmp/pptops-closeout-20260911/corporate-golden/reference-native/page-1.png",
+      "/tmp/pptops-closeout-20260911/corporate-golden/reference-native/page-2.png",
+      "/tmp/pptops-closeout-20260911/corporate-golden/reference-native/page-3.png"
+    ],
+    "montage_file": "/tmp/pptops-closeout-20260911/corporate-golden/reference-native/montage.png"
+  },
+  "workflows": [
+    {
+      "format": "pptx",
+      "version_id": "version-001",
+      "build_id": "build-001",
+      "profile_sha256": "e166531b3d614b4cae7de3fcab9fd31fb277747594addefc4c4dfe9e44d1b87f",
+      "source_sha256": "e8136efa02bef601a50d04164f398ff1831d9812f1c1a52eb5ec7591d26d4125",
+      "html_screenshot": "/tmp/pptops-closeout-20260911/corporate-golden/pptx-html.png",
+      "reference_preview": {
+        "source_sha256": "e8136efa02bef601a50d04164f398ff1831d9812f1c1a52eb5ec7591d26d4125",
+        "inspection_sha256": "70cc612c6934e2a69d61a336d97cddbadc401797215c21ec6a8cfa45e2ad5bac",
+        "status": "degraded",
+        "reason": "Native template preview requires separately recorded PowerPoint inspection. This command does not open untrusted packages in an application.",
+        "observations": [],
+        "evidence_type": "visual",
+        "real_powerpoint": "pending",
+        "report_file": ".pptops/templates/corporate/previews/70cc612c6934e2a69d61a336d97cddbadc401797215c21ec6a8cfa45e2ad5bac/96bb41c4-fdcf-4b01-8890-6d535b1b5551/report-54871b7675e205da17f1862213258125f57d38d007e3850e6427781459c0b024.json"
+      },
+      "native": {
+        "status": "rendered",
+        "renderer": "microsoft-powerpoint",
+        "pdf_file": "/tmp/pptops-closeout-20260911/corporate-golden/pptx-native/slides.pdf",
+        "page_images": [
+          "/tmp/pptops-closeout-20260911/corporate-golden/pptx-native/page-1.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/pptx-native/page-2.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/pptx-native/page-3.png"
+        ],
+        "montage_file": "/tmp/pptops-closeout-20260911/corporate-golden/pptx-native/montage.png"
+      },
+      "artifact_hashes": {
+        ".pptops/builds/build-001/html/slides.html": "7d4b45f3e224fad16f486893e2125cad5f6c179aa51495542e01b6642a95665f",
+        ".pptops/builds/build-001/pptx/slides.pptx": "29c9da86c56da7142358b5f962b7e5088cd1e4ef70dcbecdf50bf88777a39e0d"
+      },
+      "human_font_brand_acceptance": "pending"
+    },
+    {
+      "format": "potx",
+      "version_id": "version-001",
+      "build_id": "build-001",
+      "profile_sha256": "833de733aba3165ab75d73c3e53a177dacceaa397dba0026b0083d4c110a705a",
+      "source_sha256": "6ffee1e70692ad9a566a27cbf8d2ce14881ef4912e1abb8c0d066af78c601395",
+      "html_screenshot": "/tmp/pptops-closeout-20260911/corporate-golden/potx-html.png",
+      "reference_preview": {
+        "source_sha256": "6ffee1e70692ad9a566a27cbf8d2ce14881ef4912e1abb8c0d066af78c601395",
+        "inspection_sha256": "ea65cf777a99923d269fe0826d3560b126cb1f9de403e225c37a5e41151e7e6e",
+        "status": "degraded",
+        "reason": "Native template preview requires separately recorded PowerPoint inspection. This command does not open untrusted packages in an application.",
+        "observations": [],
+        "evidence_type": "visual",
+        "real_powerpoint": "pending",
+        "report_file": ".pptops/templates/corporate/previews/ea65cf777a99923d269fe0826d3560b126cb1f9de403e225c37a5e41151e7e6e/d9d29206-f48e-4d87-b5dd-15cf5191ab05/report-4f924161909e8f466cfcf10c3bc4138690cbd3f253ed6fc5ed42f0711ab780f7.json"
+      },
+      "native": {
+        "status": "rendered",
+        "renderer": "microsoft-powerpoint",
+        "pdf_file": "/tmp/pptops-closeout-20260911/corporate-golden/potx-native/slides.pdf",
+        "page_images": [
+          "/tmp/pptops-closeout-20260911/corporate-golden/potx-native/page-1.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/potx-native/page-2.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/potx-native/page-3.png"
+        ],
+        "montage_file": "/tmp/pptops-closeout-20260911/corporate-golden/potx-native/montage.png"
+      },
+      "artifact_hashes": {
+        ".pptops/builds/build-001/html/slides.html": "7d4b45f3e224fad16f486893e2125cad5f6c179aa51495542e01b6642a95665f",
+        ".pptops/builds/build-001/pptx/slides.pptx": "e43da4707b63ba637a9948ddd2e0751badbdc653e819608e035046b5b311a90a"
+      },
+      "human_font_brand_acceptance": "pending"
+    },
+    {
+      "format": "html",
+      "version_id": "version-001",
+      "build_id": "build-001",
+      "profile_sha256": "c0f57246c44f1691fcad16e8f2258d4bb0cc60afb442905fac430d7542c20b3c",
+      "source_sha256": "2908783d22ab67240a52db67a8c8ab8ce4de964a930ab4eefc5d47e63fe5d197",
+      "html_screenshot": "/tmp/pptops-closeout-20260911/corporate-golden/html-html.png",
+      "reference_preview": {
+        "source_sha256": "2908783d22ab67240a52db67a8c8ab8ce4de964a930ab4eefc5d47e63fe5d197",
+        "inspection_sha256": "526e21fb9543dad0790d3b961d8713a16c920840eff9579884eef424cf689c18",
+        "status": "rendered",
+        "reason": "Scripts, network and local subresources are blocked. This is a contained static viewport, with computed section styles; missing external/local assets may change the reference appearance.",
+        "observations": {
+          "pages": [
+            {
+              "page": 1,
+              "font_family": "Arial, sans-serif",
+              "color": "rgb(18, 52, 86)",
+              "background": "rgb(247, 245, 240)",
+              "width": 1920,
+              "height": 1080
+            },
+            {
+              "page": 2,
+              "font_family": "Arial, sans-serif",
+              "color": "rgb(18, 52, 86)",
+              "background": "rgb(247, 245, 240)",
+              "width": 1920,
+              "height": 1080
+            },
+            {
+              "page": 3,
+              "font_family": "Arial, sans-serif",
+              "color": "rgb(18, 52, 86)",
+              "background": "rgb(247, 245, 240)",
+              "width": 1920,
+              "height": 1080
+            }
+          ],
+          "blocked_images": 2
+        },
+        "screenshot": {
+          "file": ".pptops/templates/corporate/previews/526e21fb9543dad0790d3b961d8713a16c920840eff9579884eef424cf689c18/18d1c9dd-2810-487a-9492-d331e106b398/reference.png",
+          "sha256": "915325727454ad9c20213ed8c7024d09694f2a1318d3ec72b838c877efc4fe8a"
+        },
+        "evidence_type": "visual",
+        "real_powerpoint": "pending",
+        "report_file": ".pptops/templates/corporate/previews/526e21fb9543dad0790d3b961d8713a16c920840eff9579884eef424cf689c18/18d1c9dd-2810-487a-9492-d331e106b398/report-4a3bfebeeac18ecc5146195f6caf46ed73becacd6d3a1d11e60b02c42def0f5a.json"
+      },
+      "native": {
+        "status": "rendered",
+        "renderer": "microsoft-powerpoint",
+        "pdf_file": "/tmp/pptops-closeout-20260911/corporate-golden/html-native/slides.pdf",
+        "page_images": [
+          "/tmp/pptops-closeout-20260911/corporate-golden/html-native/page-1.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/html-native/page-2.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/html-native/page-3.png"
+        ],
+        "montage_file": "/tmp/pptops-closeout-20260911/corporate-golden/html-native/montage.png"
+      },
+      "artifact_hashes": {
+        ".pptops/builds/build-001/html/slides.html": "eb83248d9fb456e16ba922dd0fe69557f126ce6b5501c0a2d2d298f11dcd556f",
+        ".pptops/builds/build-001/pptx/slides.pptx": "e7e0c6c3470474d02cbdfdabc47d6c4564e1d7e2c654e7183022f784016fe600"
+      },
+      "human_font_brand_acceptance": "pending"
+    },
+    {
+      "format": "pdf",
+      "version_id": "version-001",
+      "build_id": "build-001",
+      "profile_sha256": "8e6f5fe162fe9b15d76b2ba7c5435750210a85103da875bf1daa50eb0838b901",
+      "source_sha256": "d0a9e0c94c7dfcf90e7a76509a01f1c2ba81d2190d4d3bfc9f97eb584d28f169",
+      "html_screenshot": "/tmp/pptops-closeout-20260911/corporate-golden/pdf-html.png",
+      "reference_preview": {
+        "source_sha256": "d0a9e0c94c7dfcf90e7a76509a01f1c2ba81d2190d4d3bfc9f97eb584d28f169",
+        "inspection_sha256": "7ebfe174dcd959609a5f5ec8c3dc456f2926462e95b18f397b3834abb0a14fad",
+        "status": "rendered",
+        "reason": "Rendered first-page visual reference; no editable master or placeholder inference.",
+        "observations": [],
+        "screenshot": {
+          "file": ".pptops/templates/corporate/previews/7ebfe174dcd959609a5f5ec8c3dc456f2926462e95b18f397b3834abb0a14fad/cd928e1b-b622-4a00-9eef-4a33ec634200/reference.png",
+          "sha256": "fc0e7800f760157ffe86077f5b142621fee0fa707c7a839e494fff7b7aa079f8"
+        },
+        "evidence_type": "visual",
+        "real_powerpoint": "pending",
+        "report_file": ".pptops/templates/corporate/previews/7ebfe174dcd959609a5f5ec8c3dc456f2926462e95b18f397b3834abb0a14fad/cd928e1b-b622-4a00-9eef-4a33ec634200/report-ffbd96a807a1e59732898312662079ce19cbfa1e0c3857e251431e95b2661547.json"
+      },
+      "native": {
+        "status": "rendered",
+        "renderer": "microsoft-powerpoint",
+        "pdf_file": "/tmp/pptops-closeout-20260911/corporate-golden/pdf-native/slides.pdf",
+        "page_images": [
+          "/tmp/pptops-closeout-20260911/corporate-golden/pdf-native/page-1.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/pdf-native/page-2.png",
+          "/tmp/pptops-closeout-20260911/corporate-golden/pdf-native/page-3.png"
+        ],
+        "montage_file": "/tmp/pptops-closeout-20260911/corporate-golden/pdf-native/montage.png"
+      },
+      "artifact_hashes": {
+        ".pptops/builds/build-001/html/slides.html": "8fe529c89f46fe712d96f53571702357b600532d5bafa3e26b81aff0bdb1906b",
+        ".pptops/builds/build-001/pptx/slides.pptx": "840d3aff29875acb13aab1f1c8e12474892bb83dd0c24a005b727e0f1856ae2c"
+      },
+      "human_font_brand_acceptance": "pending"
+    }
+  ]
+}

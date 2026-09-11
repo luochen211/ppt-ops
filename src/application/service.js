@@ -5,6 +5,7 @@ import { buildHtml } from "../adapters/html.js";
 import { buildPptx } from "../adapters/pptx.js";
 import { createV1Entity } from "../contracts/v1.js";
 import { normalizeFeedbackFindings, repeatedRootCauseFingerprints } from "../core/feedback.js";
+import { normalizeSnapshot } from "../core/snapshot.js";
 import { readProject, resolveProjectPath } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
 import { createHandoff } from "../handoff/index.js";
@@ -16,6 +17,7 @@ import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
 import { createReviewerFeedbackPackage, importReviewerResponse } from "../reviewer-feedback/index.js";
+import { proposeAccessibilityRemediation } from "../accessibility/remediation.js";
 import { manageCorporateProfile, materializeCorporateProfile } from "../templates/corporate-profile.js";
 import { freezeAudienceVariant, manageAudienceVariants } from "../variants/lifecycle.js";
 import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
@@ -204,6 +206,8 @@ export class ApplicationService {
     return { target: { kind: left.target_kind, id: left.target_id }, left: summarizeCandidate(left), right: summarizeCandidate(right), patch_changed: hashJson(left.patch) !== hashJson(right.patch) };
   }
 
+  async proposeAccessibilityRemediation(input) { return proposeAccessibilityRemediation(this, input); }
+
   async manageCorporateProfile(action, input) { return manageCorporateProfile(this, action, input); }
 
   async manageAudienceVariants(action, input) { return manageAudienceVariants(this, action, input); }
@@ -269,7 +273,7 @@ export class ApplicationService {
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
     const immutableReport = await this.files.writeImmutable(`.pptops/reviews/${id}/review-report.json`, `${JSON.stringify(report, null, 2)}\n`);
     const artifactHashes = await this.buildArtifactHashes(build);
-    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file }));
+    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file, report_sha256: immutableReport.sha256 }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
     await this.files.writeManifest("review", id, stripRevision(review));
@@ -369,7 +373,10 @@ export class ApplicationService {
     if (review.state !== "accepted" || review.build_id !== buildId) throw new ApplicationError("REVIEW_NOT_ACCEPTED", "handoff requires an accepted review for the selected build");
     const frozenProject = await this.projectFromVersion(this.requireBuild(buildId).version_id);
     const boundaryImages = await assertBoundaryGeneratedImages(frozenProject);
-    const report = await reviewProject(frozenProject);
+    if (!review.report_file) throw new ApplicationError("REVIEW_REPORT_REQUIRED", "handoff requires the selected immutable Review report");
+    const reportBytes = await fs.readFile(resolveProjectPath(this.project.root, review.report_file));
+    const report = JSON.parse(reportBytes);
+    if ((review.report_sha256 && crypto.createHash("sha256").update(reportBytes).digest("hex") !== review.report_sha256) || hashJson(report.automated_checks) !== hashJson(review.automated)) throw new ApplicationError("REVIEW_REPORT_CHANGED", "the selected Review evidence changed; run Review again");
     const build = this.requireBuild(buildId);
     if (!options.deliverySelectionId) throw new ApplicationError("DELIVERY_SELECTION_REQUIRED", "choose one or more delivery formats before creating a handoff");
     const selection = await readDeliverySelection(this.project.root, options.deliverySelectionId);
@@ -446,24 +453,7 @@ export class ApplicationService {
     return this.projectFromSnapshot(snapshot);
   }
 
-  projectFromSnapshot(snapshot) {
-    const contracts = {
-      project: snapshot["project.json"], sources: snapshot["sources.json"], outline: snapshot["outline.json"],
-      pages: snapshot["pages.json"], theme: snapshot["theme.json"], assets: snapshot["assets.json"], templates: snapshot["templates.json"]
-    };
-    const sourceById = new Map(contracts.sources.map((source) => [source.id, source]));
-    return {
-      root: this.project.root,
-      project: { schema_version: "1.0", name: contracts.project.id, title: contracts.project.title, format: contracts.project.format, source_files: contracts.sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contracts.project.outputs, ...(contracts.project.corporate_profile ? { corporate_profile: contracts.project.corporate_profile } : {}), ...(contracts.project.theme_override ? { theme_override: contracts.project.theme_override } : {}), ...(contracts.project.delivery_mode ? { delivery_mode: contracts.project.delivery_mode } : {}), ...(contracts.project.accessibility_profile ? { accessibility_profile: structuredClone(contracts.project.accessibility_profile) } : {}) },
-      pages: contracts.pages.map((page) => {
-        const reference = page.source_refs?.[0]; const source = reference ? sourceById.get(reference.source_id) : undefined;
-        return { ...page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, html: page.renderers?.html, pptx: page.renderers?.pptx, status: page.content_status };
-      }),
-      theme: contracts.theme.tokens,
-      assets: contracts.assets.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset),
-      contractModel: "v1", contracts
-    };
-  }
+  projectFromSnapshot(snapshot) { return normalizeSnapshot(this.project.root, snapshot); }
 
   findTarget(kind, id) {
     const collection = COLLECTIONS[kind];

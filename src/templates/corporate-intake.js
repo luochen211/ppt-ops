@@ -119,6 +119,16 @@ export function detectCorporateTemplateConflicts(profiles) {
   });
 }
 
+/** Read bounded Open XML for read-only artifact audits without storing an import. */
+export async function readBoundedPresentationXml(contents, configuredLimits = {}) {
+  const limits = { ...DEFAULT_LIMITS, ...configuredLimits };
+  if (contents.length > limits.maxFileBytes) throw templateError("CORPORATE_TEMPLATE_TOO_LARGE", "presentation exceeds the inspection byte limit");
+  const archive = await JSZip.loadAsync(contents, { checkCRC32: false, createFolders: false });
+  inspectArchiveEntries(Object.values(archive.files), limits);
+  if (!archive.file("ppt/presentation.xml") || !archive.file("[Content_Types].xml")) throw templateError("CORPORATE_TEMPLATE_MIME_MISMATCH", "archive is not a presentation package");
+  return readBoundedArchiveEntries(Object.values(archive.files).filter(entry => !entry.dir), limits);
+}
+
 async function inspectOpenXml(contents, format, limits) {
   let archive;
   // CRC verification expands entries, so load directory metadata only first.

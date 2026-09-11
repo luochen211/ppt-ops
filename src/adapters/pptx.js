@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { resolveProjectPath } from "../core/project.js";
 import { renderNativeDiagram } from "./diagram.js";
+import { assertAccessibleTextCapacity } from "../accessibility/index.js";
 import { compileProjectLayout } from "../layout/catalog.js";
 
 import { detectRaster } from "../visual-assets/raster.js";
@@ -20,6 +21,7 @@ export async function buildPptx(project, outputFile) {
     throw new TypeError("buildPptx requires an output file");
   }
 
+  assertAccessibleTextCapacity(project);
   project = { ...project, assets: await Promise.all(project.assets.map(async (asset) => {
     if (!(asset.mime?.startsWith("image/") || [".png", ".jpg", ".jpeg", ".svg"].includes(path.extname(asset.file).toLowerCase()))) return asset;
     const bytes = await fs.readFile(resolveProjectPath(project.root, asset.file));
@@ -39,6 +41,13 @@ export async function buildPptx(project, outputFile) {
   await fs.mkdir(path.dirname(resolvedOutput), { recursive: true });
   await pptx.writeFile({ fileName: resolvedOutput, compression: true });
 
+  if (project.project.accessibility_profile?.enabled) {
+    const archive = await JSZip.loadAsync(await fs.readFile(resolvedOutput));
+    const core = await archive.file("docProps/core.xml").async("string");
+    const language = String(project.project.accessibility_profile.document_language);
+    archive.file("docProps/core.xml", core.replace("</cp:coreProperties>", `<dc:language>${language}</dc:language></cp:coreProperties>`));
+    await fs.writeFile(resolvedOutput, await archive.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
+  }
   const validation = await validatePptx(resolvedOutput, project.pages.length);
   return {
     format: "pptx",
@@ -99,8 +108,10 @@ function createPresentation(project) {
   pptx.subject = project.project.title;
   pptx.title = project.project.title;
   pptx.company = "PPT-Ops";
-  pptx.lang = "zh-CN";
+  pptx.lang = project.project.accessibility_profile?.document_language ?? "zh-CN";
+  if (project.project.accessibility_profile?.enabled) pptx.rtlMode = project.project.accessibility_profile.reading_direction === "rtl";
   pptx.theme = {
+    ...(project.project.accessibility_profile?.enabled ? { lang: project.project.accessibility_profile.document_language } : {}),
     headFontFace: project.theme.typography.heading_font,
     bodyFontFace: project.theme.typography.body_font
   };
@@ -110,6 +121,14 @@ function createPresentation(project) {
 function renderSlide(pptx, page, plan, project, index, count) {
   const theme = plan.theme;
   const slide = pptx.addSlide();
+  const profile = project.project.accessibility_profile;
+  if (profile?.enabled) {
+    const originalAddText = slide.addText.bind(slide);
+    slide.addText = (text, options = {}) => {
+      const size = options.objectName?.startsWith("Diagram ") && !options.objectName.startsWith("Diagram connector") ? 21 : options.fontSize ?? 18;
+      return originalAddText(text, { ...options, lang: page.accessibility?.language ?? profile.document_language, rtlMode: profile.reading_direction === "rtl", fontSize: size * (profile.text_scale ?? 1), transparency: 0, fit: "none", shrinkText: false, autoFit: false });
+    };
+  }
   if (page.speaker_notes) slide.addNotes(page.speaker_notes);
   const { width, height } = theme.dimensions;
   const margin = theme.spacing.page_margin;
@@ -240,7 +259,7 @@ function resolveSlideAssets(page, project) {
     if (!asset) throw new Error(`unknown PPTX asset: ${slot.asset_id}`);
     const extension = path.extname(asset.file).toLowerCase();
     if (!(asset.mime?.startsWith("image/") || [".png", ".jpg", ".jpeg", ".svg"].includes(extension))) throw new Error(`PPTX asset is not a supported image: ${asset.id}`);
-    return { ...slot, asset, path: resolveProjectPath(project.root, asset.file) };
+    return { ...slot, asset: { ...asset, alt: slot.alt ?? asset.alt, long_description: slot.long_description ?? asset.long_description, decorative: slot.decorative ?? asset.decorative }, path: resolveProjectPath(project.root, asset.file) };
   });
 }
 
@@ -258,7 +277,7 @@ function renderAssets(slide, assets, bounds, fontFace) {
       if (annotated && geometry.h < 1.3) throw new Error(`insufficient space for annotated screenshot ${asset.id}`);
       const imageBounds = { ...geometry, h: geometry.h - (annotated ? 0.9 : 0) };
       const { image, placement } = screenshotPlacement(asset.image_dimensions.width, asset.image_dimensions.height, imageBounds, fit);
-      slide.addImage({ path: imagePath, ...image, altText: asset.alt ?? asset.id, objectName: `Asset ${asset.id}` });
+      slide.addImage({ path: imagePath, ...image, altText: accessibleAssetDescription(asset), objectName: `Asset ${asset.id}` });
       if (annotated) {
         const region = visibleScreenshotRegion(semantics.focal_region, placement);
         if (!(region.width > 0 && region.height > 0)) throw new Error(`screenshot ${asset.id} focal region is cropped out; use contain or revise the focal region`);
@@ -272,7 +291,7 @@ function renderAssets(slide, assets, bounds, fontFace) {
     const { image } = screenshotPlacement(asset.image_dimensions.width, asset.image_dimensions.height, geometry, fit);
     slide.addImage({
       path: imagePath, ...image,
-      altText: asset.alt ?? asset.id,
+      altText: accessibleAssetDescription(asset),
       objectName: `Asset ${asset.id}`
     });
   });
@@ -328,3 +347,5 @@ function assertNonNegativeGeometry(xml, entry) {
     }
   }
 }
+
+function accessibleAssetDescription(asset) { return asset.decorative ? "" : [...new Set([asset.alt, asset.long_description].filter(value => typeof value === "string" && value.trim()))].join(" — ") || asset.id; }

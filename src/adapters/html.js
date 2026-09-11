@@ -1,3 +1,5 @@
+import { assertAccessibleTextCapacity } from "../accessibility/index.js";
+import { applyAccessibilityHtml } from "../accessibility/html.js";
 import { renderHtmlDiagram } from "./diagram.js";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -12,6 +14,7 @@ const MIME_TYPES = new Map([
 
 /** Build a deterministic, directly openable HTML presentation. */
 export async function buildHtml(project) {
+  assertAccessibleTextCapacity(project);
   const embeddedAssets = await embedAssets(project);
   const plans = compileProjectLayout(project);
   const slides = project.pages.map((page, index) => renderSlide(page, plans[index], index, project.pages.length, embeddedAssets)).join("\n");
@@ -23,8 +26,8 @@ export async function buildHtml(project) {
   const bodyFont = cssString(theme.typography.body_font);
   const margin = Math.round((theme.spacing.page_margin / theme.dimensions.width) * 1920);
 
-  return `<!doctype html>
-<html lang="en">
+  const result = `<!doctype html>
+<html lang="${escapeAttribute(project.project.accessibility_profile?.document_language ?? "en")}" dir="${escapeAttribute(project.project.accessibility_profile?.reading_direction ?? "ltr")}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -73,14 +76,15 @@ body.notes-view{display:block;overflow:auto;background:var(--bg)}.notes-view .vi
 </head>
 <body>
 <div class="viewport"><main class="stage" aria-label="${title}">${slides}</main></div>
-<nav class="controls" aria-label="Slide navigation"><button type="button" data-nav="previous" aria-label="Previous slide">&#8592;</button><progress value="1" max="${project.pages.length}" aria-label="Presentation progress"></progress><output aria-live="polite">1 / ${project.pages.length}</output><button type="button" data-nav="next" aria-label="Next slide">&#8594;</button><button type="button" data-nav="fullscreen" aria-label="Enter fullscreen" title="Fullscreen (F)">&#x26F6;</button></nav>
+<nav class="controls" lang="en" aria-label="Slide navigation"><button type="button" data-nav="previous" aria-label="Previous slide">&#8592;</button><progress value="1" max="${project.pages.length}" aria-label="Presentation progress"></progress><output aria-live="polite">1 / ${project.pages.length}</output><button type="button" data-nav="next" aria-label="Next slide">&#8594;</button><button type="button" data-nav="fullscreen" aria-label="Enter fullscreen" title="Fullscreen (F)">&#x26F6;</button></nav>
 ${notes}
 ${hasNotes ? '<a class="notes-link" href="?view=notes" target="_blank" rel="noopener">Speaker notes ↗</a>' : ""}
 <script>
-(()=>{const notes=document.getElementById('speaker-notes');if(notes&&new URLSearchParams(location.search).get('view')==='notes'){document.body.classList.add('notes-view');notes.hidden=false;return}const slides=[...document.querySelectorAll('.slide')],stage=document.querySelector('.stage'),progress=document.querySelector('progress'),output=document.querySelector('output'),fullscreen=document.querySelector('[data-nav="fullscreen"]');let current=0;function scale(){stage.style.transform='translate(-50%,-50%) scale('+Math.min(innerWidth/1920,innerHeight/1080)+')'}function show(index){current=Math.max(0,Math.min(slides.length-1,index));slides.forEach((slide,i)=>{const active=i===current;slide.setAttribute('aria-hidden',String(!active));slide.toggleAttribute('inert',!active)});document.body.classList.toggle('boundary-active',current===0||current===slides.length-1);progress.value=current+1;output.value=(current+1)+' / '+slides.length;location.hash='slide-'+slides[current].dataset.page}function move(delta){show(current+delta)}function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement}async function toggleFullscreen(){if(fullscreenElement()){const exit=document.exitFullscreen||document.webkitExitFullscreen;await exit.call(document)}else{const enter=document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen;if(!enter)throw new Error('Fullscreen API unavailable');await enter.call(document.documentElement)}}function syncFullscreen(){const active=Boolean(fullscreenElement());fullscreen.setAttribute('aria-label',active?'Exit fullscreen':'Enter fullscreen');fullscreen.textContent=active?'×':'⛶';scale()}addEventListener('resize',scale);addEventListener('keydown',event=>{if(['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(event.key)){event.preventDefault();move(1)}else if(['ArrowLeft','ArrowUp','PageUp'].includes(event.key)){event.preventDefault();move(-1)}else if(event.key==='Home'){event.preventDefault();show(0)}else if(event.key==='End'){event.preventDefault();show(slides.length-1)}else if(event.key.toLowerCase()==='f'){event.preventDefault();toggleFullscreen()}});document.addEventListener('fullscreenchange',syncFullscreen);document.addEventListener('webkitfullscreenchange',syncFullscreen);document.querySelector('[data-nav="previous"]').addEventListener('click',()=>move(-1));document.querySelector('[data-nav="next"]').addEventListener('click',()=>move(1));fullscreen.addEventListener('click',toggleFullscreen);const requested=slides.findIndex(slide=>'slide-'+slide.dataset.page===location.hash.slice(1));scale();show(requested<0?0:requested);syncFullscreen()})();
+(()=>{const notes=document.getElementById('speaker-notes');if(notes&&new URLSearchParams(location.search).get('view')==='notes'){document.body.classList.add('notes-view');notes.hidden=false;return}const slides=[...document.querySelectorAll('.slide')],stage=document.querySelector('.stage'),progress=document.querySelector('progress'),output=document.querySelector('output'),fullscreen=document.querySelector('[data-nav="fullscreen"]');let current=0;function scale(){stage.style.transform='translate(-50%,-50%) scale('+Math.min(innerWidth/1920,innerHeight/1080)+')'}function show(index){current=Math.max(0,Math.min(slides.length-1,index));slides.forEach((slide,i)=>{const active=i===current;slide.setAttribute('aria-hidden',String(!active));slide.toggleAttribute('inert',!active)});document.body.classList.toggle('boundary-active',current===0||current===slides.length-1);progress.value=current+1;output.value=(current+1)+' / '+slides.length;location.hash='slide-'+slides[current].dataset.page}function move(delta){show(current+delta)}function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement}async function toggleFullscreen(){if(fullscreenElement()){const exit=document.exitFullscreen||document.webkitExitFullscreen;await exit.call(document)}else{const enter=document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen;if(!enter)throw new Error('Fullscreen API unavailable');await enter.call(document.documentElement)}}function syncFullscreen(){const active=Boolean(fullscreenElement());fullscreen.setAttribute('aria-label',active?'Exit fullscreen':'Enter fullscreen');fullscreen.textContent=active?'×':'⛶';scale()}addEventListener('resize',scale);addEventListener('keydown',event=>{if(['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName)||event.target.isContentEditable)return;if([' ','Enter'].includes(event.key)&&event.target.closest('button,a,summary,[role=button]'))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(event.key)){event.preventDefault();move(1)}else if(['ArrowLeft','ArrowUp','PageUp'].includes(event.key)){event.preventDefault();move(-1)}else if(event.key==='Home'){event.preventDefault();show(0)}else if(event.key==='End'){event.preventDefault();show(slides.length-1)}else if(event.key.toLowerCase()==='f'){event.preventDefault();toggleFullscreen()}});document.addEventListener('fullscreenchange',syncFullscreen);document.addEventListener('webkitfullscreenchange',syncFullscreen);document.querySelector('[data-nav="previous"]').addEventListener('click',()=>move(-1));document.querySelector('[data-nav="next"]').addEventListener('click',()=>move(1));fullscreen.addEventListener('click',toggleFullscreen);const requested=slides.findIndex(slide=>'slide-'+slide.dataset.page===location.hash.slice(1));scale();show(requested<0?0:requested);syncFullscreen()})();
 </script>
 </body>
 </html>\n`;
+  return applyAccessibilityHtml(result, project);
 }
 
 async function embedAssets(project) {
@@ -99,32 +103,34 @@ function renderSlide(page, plan, index, count, assets) {
   const screen = page.screen_text;
   const boundary = index === 0 || index === count - 1;
   if (boundary) return renderBoundarySlide(page, plan, index, assets);
-  const subtitle = screen.subtitle ? `<p class="subtitle">${escapeHtml(screen.subtitle)}</p>` : "";
-  const body = screen.body?.length ? `<ul class="body-copy">${screen.body.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
-  const figures = page.asset_slots.map((slot) => renderAsset(slot, assets.get(slot.asset_id))).join("");
+  const subtitle = screen.subtitle ? `<p class="subtitle" data-reading-key="subtitle">${escapeHtml(screen.subtitle)}</p>` : "";
+  const body = screen.body?.length ? `<ul class="body-copy" data-reading-key="body">${screen.body.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
+  const figures = page.asset_slots.map((slot) => renderAsset(slot, assets.get(slot.asset_id), page.page)).join("");
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
-  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
-  <header class="slide-header" data-qa-id="page-${page.page}-header" data-qa-role="content"><h1 id="slide-title-${page.page}">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
-  <div class="slide-content">${page.diagram ? renderHtmlDiagram(page.diagram, page.page) : `<div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message">${escapeHtml(page.three_second_message)}</p>${body}</div>`}<div class="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
+  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" lang="${escapeAttribute(page.accessibility?.language ?? "")}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
+  <header class="slide-header" data-qa-id="page-${page.page}-header" data-qa-role="content"><h1 id="slide-title-${page.page}" data-reading-key="title">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
+  <div class="slide-content">${page.diagram ? renderHtmlDiagram(page.diagram, page.page) : `<div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message" data-reading-key="message">${escapeHtml(page.three_second_message)}</p>${body}</div>`}<div class="assets" data-reading-key="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
   <footer class="slide-footer" data-qa-id="page-${page.page}-footer" data-qa-role="content"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
 </section>`;
 }
 
 function renderBoundarySlide(page, plan, index, assets) {
-  const figures = page.asset_slots.map((slot) => renderAsset({ ...slot, fit: "contain" }, assets.get(slot.asset_id))).join("");
+  const figures = page.asset_slots.map((slot) => renderAsset({ ...slot, fit: "contain" }, assets.get(slot.asset_id), page.page)).join("");
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
-  return `<section class="slide boundary-slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" data-html-layout="boundary-image-dominant" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
-  <div class="boundary-assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div>
-  <h1 class="boundary-title" id="slide-title-${page.page}" data-qa-id="page-${page.page}-title" data-qa-role="content">${escapeHtml(page.screen_text.title)}</h1>
+  return `<section class="slide boundary-slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" lang="${escapeAttribute(page.accessibility?.language ?? "")}" data-html-layout="boundary-image-dominant" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
+  <div class="boundary-assets" data-reading-key="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div>
+  <h1 class="boundary-title" data-reading-key="title" id="slide-title-${page.page}" data-qa-id="page-${page.page}-title" data-qa-role="content">${escapeHtml(page.screen_text.title)}</h1>
 </section>`;
 }
 
-function renderAsset(slot, asset) {
+function renderAsset(slot, asset, pageNumber) {
   if (!asset) throw new Error(`unknown asset: ${slot.asset_id}`);
-  const label = escapeAttribute(asset.alt ?? slot.role);
+  const decorative = slot.decorative ?? asset.decorative ?? false;
+  const description = slot.long_description ?? asset.long_description;
+  const label = escapeAttribute(decorative ? "" : slot.alt ?? asset.alt ?? description ?? slot.role);
   const assetId = escapeAttribute(asset.id);
   const style = `--fit:${slot.fit === "cover" ? "cover" : "contain"}`;
-  if (asset.mime.startsWith("image/")) return `<figure aria-label="${label}" style="${style}"><img data-asset-id="${assetId}" src="${asset.uri}" alt="${label}"></figure>`;
+  if (asset.mime.startsWith("image/")) return `<figure ${decorative ? 'aria-hidden="true"' : 'role="group"'} style="${style}"><img data-asset-id="${assetId}" src="${asset.uri}" alt="${label}"${description && !decorative ? ` aria-describedby="description-${assetId}-${pageNumber}"` : ""}>${description && !decorative ? `<figcaption class="a11y-description" id="description-${assetId}-${pageNumber}">${escapeHtml(description)}</figcaption>` : ""}</figure>`;
   if (asset.mime.startsWith("video/")) return `<figure aria-label="${label}" style="${style}"><video data-asset-id="${assetId}" controls preload="metadata" src="${asset.uri}"></video></figure>`;
   return `<a class="asset-link" href="${asset.uri}" download="${escapeAttribute(path.basename(asset.file))}">${label}</a>`;
 }
