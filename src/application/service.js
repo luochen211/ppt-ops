@@ -16,6 +16,7 @@ import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
 import { reviewProject, writeReviewReport } from "../review/index.js";
 import { createReviewerFeedbackPackage, importReviewerResponse } from "../reviewer-feedback/index.js";
+import { manageCorporateProfile, materializeCorporateProfile } from "../templates/corporate-profile.js";
 import { freezeAudienceVariant, manageAudienceVariants } from "../variants/lifecycle.js";
 import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
 
@@ -203,6 +204,8 @@ export class ApplicationService {
     return { target: { kind: left.target_kind, id: left.target_id }, left: summarizeCandidate(left), right: summarizeCandidate(right), patch_changed: hashJson(left.patch) !== hashJson(right.patch) };
   }
 
+  async manageCorporateProfile(action, input) { return manageCorporateProfile(this, action, input); }
+
   async manageAudienceVariants(action, input) { return manageAudienceVariants(this, action, input); }
 
   async freezeVersion({ variantId } = {}) {
@@ -213,6 +216,8 @@ export class ApplicationService {
   }
 
   async freezeSnapshot(snapshot, metadata = {}) {
+    snapshot = await materializeCorporateProfile(this.project.root, snapshot);
+    if (snapshot["project.json"].corporate_profile) metadata = { ...metadata, corporate_profile: snapshot["project.json"].corporate_profile };
     const project = this.projectFromSnapshot(snapshot);
     project.referencedFiles = await Promise.all([
       ...project.contracts.sources.map(source => ({ kind: "source", file: source.file })),
@@ -241,7 +246,7 @@ export class ApplicationService {
     if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
     await assertBoundaryGeneratedImages(await this.projectFromVersion(versionId));
     const id = nextId("build", this.store.listBuilds(this.projectId));
-    this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: { ...(version.variant ? { variant: version.variant } : {}) } }));
+    this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: { ...(version.variant ? { variant: version.variant } : {}), ...(version.corporate_profile ? { corporate_profile: version.corporate_profile } : {}) } }));
     return this.runBuild(id);
   }
 
@@ -259,11 +264,12 @@ export class ApplicationService {
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
     const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
     if (build.config?.variant) report.variant = build.config?.variant;
+    if (build.config?.corporate_profile) report.corporate_profile = build.config.corporate_profile;
     await writeReviewReport(frozenProject, report);
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
     const immutableReport = await this.files.writeImmutable(`.pptops/reviews/${id}/review-report.json`, `${JSON.stringify(report, null, 2)}\n`);
     const artifactHashes = await this.buildArtifactHashes(build);
-    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file }));
+    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
     await this.files.writeManifest("review", id, stripRevision(review));
@@ -381,9 +387,9 @@ export class ApplicationService {
       if (!expected || expected.sha256 !== selection.pdf_source.sha256 || expected.file !== selection.pdf_source.file) throw new ApplicationError("PDF_SOURCE_CHANGED", "PDF source is no longer eligible; select again after review");
       sourceFiles.push(await exportPresentationPdf(this.project.root, selection));
     }
-    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages, deliverySelection: selection, variant: build.config?.variant });
+    const packageResult = await createHandoff(frozenProject, report, { sourceFiles, boundaryImages, deliverySelection: selection, variant: build.config?.variant, corporateProfile: build.config?.corporate_profile });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
-    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), state: "preparing", files: packageResult.manifest.outputs }));
+    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
     await this.files.writeManifest("handoff", id, stripRevision(handoff));
     return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
@@ -448,7 +454,7 @@ export class ApplicationService {
     const sourceById = new Map(contracts.sources.map((source) => [source.id, source]));
     return {
       root: this.project.root,
-      project: { schema_version: "1.0", name: contracts.project.id, title: contracts.project.title, format: contracts.project.format, source_files: contracts.sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contracts.project.outputs, ...(contracts.project.delivery_mode ? { delivery_mode: contracts.project.delivery_mode } : {}), ...(contracts.project.accessibility_profile ? { accessibility_profile: structuredClone(contracts.project.accessibility_profile) } : {}) },
+      project: { schema_version: "1.0", name: contracts.project.id, title: contracts.project.title, format: contracts.project.format, source_files: contracts.sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contracts.project.outputs, ...(contracts.project.corporate_profile ? { corporate_profile: contracts.project.corporate_profile } : {}), ...(contracts.project.theme_override ? { theme_override: contracts.project.theme_override } : {}), ...(contracts.project.delivery_mode ? { delivery_mode: contracts.project.delivery_mode } : {}), ...(contracts.project.accessibility_profile ? { accessibility_profile: structuredClone(contracts.project.accessibility_profile) } : {}) },
       pages: contracts.pages.map((page) => {
         const reference = page.source_refs?.[0]; const source = reference ? sourceById.get(reference.source_id) : undefined;
         return { ...page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, html: page.renderers?.html, pptx: page.renderers?.pptx, status: page.content_status };

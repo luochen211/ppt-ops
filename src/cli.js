@@ -12,7 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
@@ -49,6 +49,7 @@ Usage:
   pptops visual-asset-observe <project-dir> --generation <id> --actor <agent|human> --verdict <pass|fail> --checks <json> [--notes <text>]
   pptops visual-asset-decide <project-dir> --generation <id> --decision <accept|continue_iteration|reject> --raw-feedback <text>
   pptops visual-asset-register <project-dir> --generation <id> --asset-id <id> --page-id <id> --slot-role <id> --alt <text> [--fit <contain|cover>]
+  pptops corporate-template <project-dir> --action <import|status|compare|preview|accept|apply> [--payload <json>]
   pptops variant-manage <project-dir> --action <list|save|resolve|impact|compare|rebase|archive> [--payload <json>]
   pptops version-freeze <project-dir> [--variant <id>]
   pptops build-create <project-dir> --version <id> --targets <html,pptx>
@@ -212,6 +213,7 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "candidate-feedback-show") return service.candidateFeedback(required(options, "candidate"));
     if (command === "candidate-attempts") return service.candidateAttempts({ targetKind: required(options, "target-kind"), targetId: required(options, "target-id") });
     if (command === "candidate-compare") return service.compareCandidates(required(options, "left-candidate"), required(options, "right-candidate"));
+    if (command === "corporate-template") return await service.manageCorporateProfile(required(options, "action"), options.payload ? jsonOption(options, "payload") : {});
     if (command === "variant-manage") return await service.manageAudienceVariants(required(options, "action"), options.payload ? jsonOption(options, "payload") : {});
     if (command === "version-freeze") return await service.freezeVersion({ variantId: options.variant });
     if (command === "build-create") return await service.createBuild({ versionId: required(options, "version"), targets: required(options, "targets").split(",").map((item) => item.trim()).filter(Boolean) });

@@ -1,10 +1,15 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import JSZip from "jszip";
 import crc32 from "jszip/lib/crc32.js";
 import { inflateRawSync } from "node:zlib";
 import { resolveProjectPath } from "../core/project.js";
+
+const exec = promisify(execFile);
 
 export const CORPORATE_TEMPLATE_PROFILE_VERSION = "1.0";
 
@@ -64,7 +69,7 @@ export class CorporateTemplateIntake {
     const details = definition.format === "html"
       ? inspectHtml(contents)
       : definition.format === "pdf"
-        ? inspectPdf(contents)
+        ? await inspectPdf(contents)
         : await inspectOpenXml(contents, definition.format, this.limits);
     const profile = {
       schema_version: CORPORATE_TEMPLATE_PROFILE_VERSION,
@@ -165,7 +170,7 @@ async function inspectOpenXml(contents, format, limits) {
   }
   return {
     observations, layouts, assets, findings,
-    limitations: ["Import is a proposed profile; masters and layouts are not yet applied to a renderer.", "Package inspection does not prove visual fidelity in Microsoft PowerPoint."]
+    limitations: ["Import is a proposed profile; select and accept individual rules and semantic mappings before applying it.", "Package inspection does not prove visual fidelity in Microsoft PowerPoint."]
   };
 }
 
@@ -198,17 +203,28 @@ function inspectHtml(contents) {
   if (remote.length) findings.push({ ...finding("remote_resource_present", "warning", "Remote resources are not fetched during inspection."), evidence: remote });
   return {
     observations, layouts: [], assets, findings,
-    limitations: ["HTML DOM and CSS are not native PowerPoint masters or placeholders.", "No scripts or remote resources were executed or fetched.", "Rendered visual comparison is not part of this first inspection slice."]
+    limitations: ["HTML DOM and CSS are not native PowerPoint masters or placeholders.", "No scripts or remote resources were executed or fetched.", "Use the preview action for contained computed styles and a static viewport; local subresources remain blocked."]
   };
 }
 
-function inspectPdf(contents) {
+async function inspectPdf(contents) {
   const source = contents.toString("latin1");
   const observations = [];
-  const pageCount = (source.match(/\/Type\s*\/Page(?!s)\b/g) ?? []).length;
+  let parsedInfo;
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-pdf-info-"));
+  try {
+    const file = path.join(temporary, "source.pdf"); await fs.writeFile(file, contents);
+    parsedInfo = (await exec("pdfinfo", [file], { timeout: 10000, maxBuffer: 1024 * 1024 })).stdout;
+  } catch { /* Static extraction remains available with an explicit limitation. */ }
+  finally { await fs.rm(temporary, { recursive: true, force: true }); }
+  const pageCount = Number(parsedInfo?.match(/^Pages:\s+(\d+)/m)?.[1]) || (source.match(/\/Type\s*\/Page(?!s)\b/g) ?? []).length;
   if (pageCount < 1) throw templateError("CORPORATE_TEMPLATE_PDF_INVALID", "PDF template/reference does not contain a page object");
   observations.push(observation("page_count", pageCount, "structural", ["/pdf/catalog/pages"]));
   const mediaBoxes = unique([...source.matchAll(/\/MediaBox\s*\[\s*(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s*\]/g)].map((match) => ({ x1: Number(match[1]), y1: Number(match[2]), x2: Number(match[3]), y2: Number(match[4]), unit: "pt" })));
+  if (!mediaBoxes.length && parsedInfo) {
+    const dimensions = parsedInfo.match(/^Page size:\s+([\d.]+) x ([\d.]+) pts/m);
+    if (dimensions) mediaBoxes.push({ x1: 0, y1: 0, x2: Number(dimensions[1]), y2: Number(dimensions[2]), unit: "pt" });
+  }
   if (mediaBoxes.length) observations.push(observation("page_dimensions", mediaBoxes, "structural", ["/pdf/pages/MediaBox"]));
   const fonts = unique([...source.matchAll(/\/BaseFont\s*\/([^\s/<>{}\[\]()]+)/g)].map((match) => match[1]));
   if (fonts.length) observations.push(observation("font_names", fonts, "structural", ["/pdf/resources/font"]));
@@ -219,7 +235,7 @@ function inspectPdf(contents) {
   if (/\/URI\b/.test(source)) findings.push(finding("pdf_external_uri_present", "warning", "External PDF links are not opened."));
   return {
     observations, layouts: [], assets: [], findings,
-    limitations: ["PDF is fixed-page reference evidence and cannot prove editable placeholders, semantic layout intent, or PowerPoint master identity.", "No rendered visual comparison is performed in this first inspection slice."]
+    limitations: ["PDF is fixed-page reference evidence and cannot prove editable placeholders, semantic layout intent, or PowerPoint master identity.", "Use the preview action for bounded first-page visual evidence; real PowerPoint inspection remains separate.", ...(parsedInfo ? [] : ["pdfinfo was unavailable or rejected the input; page/font extraction is limited to uncompressed source objects."])]
   };
 }
 
