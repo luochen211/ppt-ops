@@ -294,21 +294,22 @@ export class ApplicationService {
       frozenProject,
       fileStore: this.files,
       priorFeedback: this.store.listEntities(this.projectId, "reviewer_feedback"),
+      currentBuild: this.store.listBuilds(this.projectId).filter(item => item.state === "succeeded" && (item.config?.variant?.variant_id ?? "default") === (build.config?.variant?.variant_id ?? "default")).sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id))[0],
       brief
     });
   }
 
   async importReviewerResponse(responseFile) {
-    const currentBuild = this.store.listBuilds(this.projectId)
+    const currentBuilds = this.store.listBuilds(this.projectId)
       .filter((build) => build.state === "succeeded")
-      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))[0];
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id));
     return importReviewerResponse({
       projectRoot: this.project.root,
       responseFile,
       fileStore: this.files,
       store: this.store,
       projectId: this.projectId,
-      currentBuild
+      currentBuilds
     });
   }
 

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
+import { withHtmlPage, findBrowser } from "../src/qa/html.js";
 import { promisify } from "node:util";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
@@ -274,4 +275,72 @@ test("a changed Build artifact cannot inherit an earlier Review binding", async 
   const { build, review } = await formalReview(service);
   await fs.appendFile(path.join(project, `.pptops/builds/${build.id}/html/slides.html`), "<!-- changed -->");
   await assert.rejects(service.createReviewerPackage(build.id, review.id, reviewBrief()), { code: "REVIEW_SOURCE_CHANGED" });
+});
+
+test("a newer sibling audience build does not make this review stale", async t => {
+  const { project, cleanup } = await fixture();
+  t.after(cleanup);
+  const service = await ApplicationService.open(project);
+  t.after(() => service.close());
+  const base = await service.freezeVersion();
+  for (const id of ["executive", "workshop"]) {
+    const state = await service.manageAudienceVariants("list");
+    await service.manageAudienceVariants("save", { expected_revision: state.revision, actor: "user", raw_feedback: "Synthetic acceptance for workflow testing", variant: { id, title: id, audience: id, purpose: "Review the story", base: { project_id: service.projectId, revision: base.id }, page_ids: ["page-001"] } });
+  }
+  const executive = await service.freezeVersion({ variantId: "executive" });
+  const workshop = await service.freezeVersion({ variantId: "workshop" });
+  const { build } = await service.createBuild({ versionId: executive.id, targets: ["html"] });
+  const { review } = await service.runReview(build.id);
+  const packet = await service.createReviewerPackage(build.id, review.id, reviewBrief());
+  assert.equal(packet.manifest.build.variant.variant_id, "executive");
+  await service.createBuild({ versionId: workshop.id, targets: ["html"] });
+  const template = JSON.parse(await fs.readFile(path.join(packet.package_dir, "response-template.json")));
+  const response = await responseFile(t, { ...template, overall: { decision: "approve", comment: "Executive approval" } }, "executive.json");
+  assert.equal((await service.importReviewerResponse(response)).stale, false);
+  await service.createBuild({ versionId: executive.id, targets: ["html"] });
+  const repeated = await service.importReviewerResponse(response);
+  assert.equal(repeated.reused, true);
+  assert.equal(repeated.stale, true);
+  assert.equal(repeated.feedback.stale, false); // Immutable evidence retains its original import status.
+  const updatedBrief = { ...reviewBrief(), change_summary: ["Reviewing the old executive copy"] };
+  const oldPacket = await service.createReviewerPackage(build.id, review.id, updatedBrief);
+  assert.equal(oldPacket.manifest.version_status.newer_build_known, true);
+  assert.match(await fs.readFile(oldPacket.entry_file, "utf8"), /A newer version was already available/);
+  assert.equal(oldPacket.manifest.accessibility.status, "degraded");
+});
+
+test("a real offline browser loads the preview and downloads a page-addressable response", async t => {
+  if (!await findBrowser()) { t.skip("Chromium unavailable"); return; }
+  const { project, cleanup } = await fixture({ title: "Browser </script> check" });
+  t.after(cleanup);
+  const service = await ApplicationService.open(project);
+  t.after(() => service.close());
+  const { build, review } = await formalReview(service);
+  const packet = await service.createReviewerPackage(build.id, review.id, reviewBrief());
+  const downloads = path.join(project, "returned");
+  await fs.mkdir(downloads);
+  await withHtmlPage({ htmlFile: packet.entry_file }, async client => {
+    await client.send("Page.setDownloadBehavior", { behavior: "allow", downloadPath: downloads });
+    const tree = await client.send("Page.getFrameTree");
+    assert.equal(tree.frameTree.childFrames.length, 1);
+    assert.match(tree.frameTree.childFrames[0].frame.url, /deck\.html/);
+    const preview = await client.send("Page.createIsolatedWorld", { frameId: tree.frameTree.childFrames[0].frame.id, worldName: "review-test" });
+    const shown = await client.send("Runtime.evaluate", { contextId: preview.executionContextId, expression: `document.querySelector('.slide[aria-hidden="false"] h1').textContent`, returnByValue: true });
+    assert.equal(shown.result.value, "Browser </script> check");
+    const result = await client.send("Runtime.evaluate", { expression: `(() => { document.querySelector('[name="reviewer-name"]').value='Browser Reviewer'; document.querySelector('[name="overall-decision"][value="approve"]').checked=true; document.querySelector('[name="page-comment-0"]').value='Keep this wording.'; document.getElementById('feedback').requestSubmit(); return {status:document.getElementById('status').textContent,overflow:document.documentElement.scrollWidth>innerWidth}; })()`, returnByValue: true });
+    assert.equal(result.result.value.overflow, false);
+    assert.match(result.result.value.status, /Response downloaded/);
+    const file = path.join(downloads, "review-response.json");
+    let downloaded;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      try { downloaded = JSON.parse(await fs.readFile(file, "utf8")); break; } catch (error) { if (error.code !== "ENOENT" && !(error instanceof SyntaxError)) throw error; await new Promise(resolve => setTimeout(resolve, 100)); }
+    }
+    assert.ok(downloaded);
+    assert.equal(downloaded.overall.decision, "approve");
+    assert.equal(downloaded.pages[0].comment, "Keep this wording.");
+    assert.equal(downloaded.pages[0].title, "Browser </script> check");
+    const imported = await service.importReviewerResponse(file);
+    assert.equal(imported.feedback.pages[0].page_spec_id, "page-001");
+    assert.equal(imported.feedback.identity_verified, false);
+  });
 });
