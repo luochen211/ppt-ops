@@ -1,3 +1,4 @@
+import { validateDiagram } from "./diagram.js";
 const baseCapacity = { title_chars: 90, message_chars: 180, body_items: 6, body_item_chars: 180, total_body_chars: 720, asset_slots: 2 };
 
 export const TEMPLATE_CATALOG = Object.freeze([
@@ -22,6 +23,9 @@ export function compileProjectLayout(project) {
 }
 
 export function compilePageLayout(page, theme, options = {}) {
+  const diagramErrors = validateDiagram(page.diagram);
+  if (page.diagram && (page.screen_text.body?.length || page.asset_slots?.length)) diagramErrors.push("diagram pages use their authored nodes instead of body cards or asset slots");
+  if (diagramErrors.length) throw Object.assign(new Error(diagramErrors.join("; ")), { code: "DIAGRAM_INVALID" });
   const templateId = options.templateId ?? page.template_id ?? templateForRelation(page.relation).id;
   const selected = byId.get(templateId);
   if (!selected) throw new Error(`unknown template: ${templateId}`);

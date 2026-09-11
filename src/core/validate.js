@@ -1,5 +1,7 @@
+import { validateDiagram } from "../layout/diagram.js";
 import { validateV1Bundle } from "../contracts/v1.js";
 import { DELIVERY_MODES, INTERACTION_KINDS } from "../contracts/delivery.js";
+import { validateAccessibilityProfile } from "../accessibility/index.js";
 
 const RELATIONS = new Set(["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]);
 const STATUSES = new Set(["draft", "prototype", "approved", "built", "reviewed"]);
@@ -36,6 +38,7 @@ export function validatePage(page, assetIds = new Set()) {
     });
   }
   if (!STATUSES.has(page.status)) errors.push(`status is invalid: ${page.status}`);
+  errors.push(...validateDiagram(page.diagram));
   validateDeliveryFields(page, errors);
   return errors;
 }
@@ -55,8 +58,9 @@ export function validateProject(loaded) {
   validateUniqueTextList(project.source_files, "project.source_files", errors, true);
   if (!hasText(project.theme_file)) errors.push("project.theme_file is required");
   if (!hasText(project.assets_file)) errors.push("project.assets_file is required");
-  validateEnumList(project.outputs, "project.outputs", OUTPUTS, errors);
+  if (loaded.contractModel !== "v1" || project.outputs !== undefined) validateEnumList(project.outputs, "project.outputs", OUTPUTS, errors);
   if (project.delivery_mode !== undefined && !DELIVERY_MODES.includes(project.delivery_mode)) errors.push(`project.delivery_mode is invalid: ${project.delivery_mode}`);
+  for (const error of validateAccessibilityProfile(project.accessibility_profile)) errors.push(`project: ${error}`);
 
   for (const error of validateTheme(loaded.theme)) errors.push(`theme: ${error}`);
   const assetIds = validateAssets(loaded.assets, errors);

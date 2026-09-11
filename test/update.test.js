@@ -62,3 +62,38 @@ async function setup(t) {
   return { repositoryRoot: repository, repository, sourceRoot: source, source, dataRoot: path.join(repository, "projects") };
 }
 async function write(root, relative, contents) { const file = path.join(root, relative); await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, contents); }
+
+test("target symlink ancestors cannot redirect an update into private data", async (t) => {
+  const fixture = await setup(t);
+  await write(fixture.source, "package.json", JSON.stringify({ name: "ppt-ops", version: "1.0.1" }));
+  await write(fixture.source, "src/private.js", "overwrite\n");
+  const privateRoot = path.join(fixture.repository, "projects/private");
+  await write(privateRoot, "private.js", "private\n");
+  await fs.rm(path.join(fixture.repository, "src"), { recursive: true });
+  await fs.symlink(privateRoot, path.join(fixture.repository, "src"));
+  await assert.rejects(applyUpdate({ ...fixture, doctor: async () => ({ ok: true }) }), { code: "UPDATE_SYMLINK_FORBIDDEN" });
+  assert.equal(await fs.readFile(path.join(privateRoot, "private.js"), "utf8"), "private\n");
+});
+
+test("update honors marker data root and preserves executable modes through rollback", async (t) => {
+  const fixture = await setup(t);
+  await write(fixture.repository, ".ppt-ops-data", "src/private\n");
+  await write(fixture.source, "package.json", JSON.stringify({ name: "ppt-ops", version: "1.0.1" }));
+  await assert.rejects(previewUpdate({ repositoryRoot: fixture.repository, sourceRoot: fixture.source }), { code: "PPT_OPS_LAYER_OVERLAP" });
+  await fs.rm(path.join(fixture.repository, ".ppt-ops-data"));
+  await write(fixture.source, "src/core.js", "#!/usr/bin/env node\n");
+  await fs.chmod(path.join(fixture.source, "src/core.js"), 0o755);
+  const applied = await applyUpdate({ ...fixture, doctor: async () => ({ ok: true }) });
+  assert.equal((await fs.stat(path.join(fixture.repository, "src/core.js"))).mode & 0o777, 0o755);
+  const { restoreBackup } = await import("../src/update/index.js");
+  await restoreBackup({ repositoryRoot: fixture.repository, backupRoot: applied.backup_root });
+  assert.equal((await fs.stat(path.join(fixture.repository, "src/core.js"))).mode & 0o777, 0o644);
+});
+
+test("default post-update Doctor executes the updated target, not the invoking checkout", async (t) => {
+  const fixture = await setup(t);
+  await write(fixture.source, "package.json", JSON.stringify({ name: "ppt-ops", version: "1.0.1" }));
+  await write(fixture.source, "src/cli.js", 'console.log(JSON.stringify({ ok: false, from: "updated-target" }));\n');
+  await assert.rejects(applyUpdate(fixture), (error) => error.code === "POST_UPDATE_DOCTOR_FAILED" && error.details.doctor.from === "updated-target" && error.rolledBack);
+  await assert.rejects(fs.access(path.join(fixture.repository, "src/cli.js")), { code: "ENOENT" });
+});

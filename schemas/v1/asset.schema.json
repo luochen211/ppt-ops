@@ -10,6 +10,13 @@
       "properties": {
         "kind": { "const": "asset" },
         "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "alt": { "type": "string" },
+        "long_description": { "type": "string", "minLength": 1 },
+        "decorative": { "type": "boolean" },
+        "caption_file": { "type": "string", "minLength": 1 },
+        "transcript_file": { "type": "string", "minLength": 1 },
+        "autoplay": { "type": "boolean" },
+        "flashing": { "type": "boolean" },
         "screenshot_evidence": { "$ref": "#/$defs/screenshotEvidence" }
       }
     }

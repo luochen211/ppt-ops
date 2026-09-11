@@ -1,4 +1,6 @@
+import { validateDiagram } from "../layout/diagram.js";
 import { DELIVERY_MODES, INTERACTION_KINDS } from "./delivery.js";
+import { validateAccessibilityProfile } from "../accessibility/index.js";
 
 export const CONTRACT_VERSION = "1.0";
 export const EVAL_CATEGORIES = Object.freeze(["content_fidelity", "cognitive_clarity", "semantic_accuracy", "visual_hierarchy", "layout_composition", "aesthetic_brand", "powerpoint_fidelity", "editability", "cross_page_continuity", "evidence_provenance", "user_acceptance"]);
@@ -11,7 +13,7 @@ export function pageSpecId(page) { return `page-${String(page).padStart(3, "0")}
 export const ENTITY_KINDS = Object.freeze([
   "project", "source", "outline", "page_spec", "theme", "template", "asset",
   "candidate", "candidate_feedback", "powerpoint_observation", "visual_asset_brief", "visual_asset_generation",
-  "visual_asset_observation", "visual_asset_decision", "approval", "version", "build", "review", "handoff"
+  "visual_asset_observation", "visual_asset_decision", "approval", "version", "build", "review", "reviewer_feedback", "handoff"
 ]);
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
@@ -59,8 +61,9 @@ const validators = {
     requireId(value, "outline_id", errors);
     requireId(value, "theme_id", errors);
     requireIdList(value.asset_ids, "asset_ids", errors, true);
-    requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
+    if (value.outputs !== undefined) requireEnumList(value.outputs, "outputs", ["html", "pptx", "pdf", "png"], errors);
     if (value.delivery_mode !== undefined) requireEnum(value, "delivery_mode", DELIVERY_MODES, errors);
+    for (const error of validateAccessibilityProfile(value.accessibility_profile)) errors.push(error);
   },
   source(value, errors) {
     requireText(value, "file", errors); requireHash(value, errors);
@@ -88,7 +91,9 @@ const validators = {
       if (slot?.evidence_purpose !== undefined && !hasText(slot.evidence_purpose)) errors.push(`asset_slots[${index}].evidence_purpose must be non-empty`);
     }
 
+    errors.push(...validateDiagram(value.diagram));
     validateDeliveryFields(value, errors);
+    validateAccessibilityFields(value, errors);
   },
   theme(value, errors) { if (!isObject(value.tokens)) errors.push("tokens must be an object"); },
   template(value, errors) { requireText(value, "name", errors); if (!isObject(value.slots)) errors.push("slots must be an object"); if (!isObject(value.renderers)) errors.push("renderers must be an object"); },
@@ -154,6 +159,15 @@ const validators = {
   version(value, errors) { requireEnum(value, "state", ["draft", "approval_pending", "approved", "changes_requested", "frozen"], errors); requireHashField(value, "snapshot_hash", errors); },
   build(value, errors) { requireId(value, "version_id", errors); requireEnum(value, "state", ["queued", "preparing", "rendering", "validating", "succeeded", "failed", "cancelled"], errors); requireEnumList(value.targets, "targets", ["html", "pptx", "pdf", "png"], errors); },
   review(value, errors) { requireId(value, "build_id", errors); requireEnum(value, "state", ["automated_pending", "automated_complete", "human_pending", "accepted", "rejected"], errors); },
+  reviewer_feedback(value, errors) {
+    requireId(value, "package_id", errors); requireId(value, "build_id", errors); requireId(value, "review_id", errors);
+    requireHashField(value, "build_sha256", errors); requireHashField(value, "review_sha256", errors); requireHashField(value, "response_sha256", errors);
+    if (value.identity_verified !== false) errors.push("identity_verified must be false unless a future verifier supplies evidence");
+    if (typeof value.stale !== "boolean") errors.push("stale must be boolean");
+    if (!isObject(value.overall)) errors.push("overall must be an object");
+    if (!Array.isArray(value.pages)) errors.push("pages must be an array");
+    if (!Array.isArray(value.conflicts)) errors.push("conflicts must be an array");
+  },
   handoff(value, errors) { requireId(value, "build_id", errors); requireId(value, "review_id", errors); requireEnum(value, "state", ["preparing", "packaged", "verified", "delivered", "archived"], errors); }
 };
 
@@ -232,6 +246,14 @@ function validateDeliveryFields(value, errors) {
       if (value.audience_interaction.expected_response !== undefined && !hasText(value.audience_interaction.expected_response)) errors.push("audience_interaction.expected_response must be a non-empty string");
     }
   }
+}
+
+function validateAccessibilityFields(value, errors) {
+  if (value.accessibility === undefined) return;
+  if (!isObject(value.accessibility)) { errors.push("accessibility must be an object"); return; }
+  if (value.accessibility.language !== undefined && !hasText(value.accessibility.language)) errors.push("accessibility.language must be a non-empty language tag");
+  if (value.accessibility.reading_order !== undefined && (!Array.isArray(value.accessibility.reading_order) || value.accessibility.reading_order.some((item) => !hasText(item)))) errors.push("accessibility.reading_order must contain non-empty semantic item names");
+  for (const field of ["links", "charts", "tables", "meaning_dependencies"]) if (value.accessibility[field] !== undefined && !Array.isArray(value.accessibility[field])) errors.push(`accessibility.${field} must be an array`);
 }
 
 function requireText(value, field, errors, prefix = "") { if (!hasText(value?.[field])) errors.push(`${prefix}${field} is required`); }

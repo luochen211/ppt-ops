@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/reviewer-feedback.schema.json",
+  "title": "V1 Reviewer Feedback",
+  "allOf": [
+    { "$ref": "entity.schema.json" },
+    {
+      "type": "object",
+      "required": ["package_id", "build_id", "build_sha256", "review_id", "review_revision", "review_sha256", "response_sha256", "response_file", "reviewer", "identity_verified", "overall", "pages", "stale", "conflicts"],
+      "properties": { "kind": { "const": "reviewer_feedback" }, "identity_verified": { "const": false } }
+    }
+  ]
+}

@@ -6,6 +6,7 @@
   "type": "object",
   "required": ["page", "task", "three_second_message", "relation", "screen_text", "visual_job", "asset_slots", "status"],
   "properties": {
+    "diagram": {"$ref": "diagram.schema.json"},
     "page": { "type": "integer", "minimum": 1 },
     "source": { "type": "string", "minLength": 1, "description": "Project-relative source file, optionally followed by a #fragment." },
     "task": { "type": "string", "minLength": 1 },

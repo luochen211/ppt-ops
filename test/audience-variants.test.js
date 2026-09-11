@@ -79,7 +79,7 @@ test("reports shared changes without mutating accepted or frozen variants", () =
   assert.deepEqual(impact.variants[0].page_impacts, [{
     page_id: "page-001",
     changed_fields: ["three_second_message"],
-    override_fields: ["screen_text"],
+    override_fields: ["screen_text.title"],
     inherited_changed_fields: ["three_second_message"],
     overridden_changed_fields: []
   }]);
@@ -104,3 +104,39 @@ function page(id, number, title, message) {
     relation: "hero", screen_text: { title }, visual_job: "focus", source_refs: [], asset_slots: [], content_status: "approved", renderers: { html: {}, pptx: {} }
   };
 }
+
+test("nested sparse overrides distinguish inherited body and renderer changes", () => {
+  const before = base();
+  before.pages[0].screen_text.body = ["Revenue was 10"];
+  before.pages[0].renderers.html = { layout: "hero", accent: "blue" };
+  const after = structuredClone(before);
+  after.pages[0].screen_text.body = ["Revenue was 20"];
+  after.pages[0].screen_text.title = "Updated shared title";
+  after.pages[0].renderers.html.accent = "green";
+  after.pages[0].renderers.html.layout = "comparison";
+  const variant = executive();
+  variant.page_overrides[0].patch.renderers = { html: { layout: "custom" } };
+  const manifest = { schema_version: "1.0", variants: [variant, workshop()] };
+  const original = structuredClone(manifest);
+  const impact = reportAudienceVariantImpact(before, after, manifest).variants[0];
+  assert.deepEqual(impact.inherited_page_ids, ["page-001"]);
+  assert.deepEqual(impact.page_impacts[0].inherited_changed_fields, ["screen_text.body", "renderers.html.accent"]);
+  assert.deepEqual(impact.page_impacts[0].overridden_changed_fields, ["screen_text.title", "renderers.html.layout"]);
+  const resolved = resolveAudienceVariant(after, variant);
+  assert.deepEqual(resolved.pages[0].screen_text, { title: "Decision required", body: ["Revenue was 20"] });
+  assert.deepEqual(resolved.pages[0].renderers.html, { layout: "custom", accent: "green" });
+  assert.deepEqual(manifest, original);
+});
+
+test("array replacements cover the whole array while empty object patches inherit fields", () => {
+  const before = base();
+  before.pages[0].screen_text.body = ["old"];
+  const after = structuredClone(before);
+  after.pages[0].screen_text.body = ["new"];
+  after.pages[0].renderers.html.layout = "hero";
+  const variant = executive();
+  variant.page_overrides[0].patch = { screen_text: { body: ["custom"] }, renderers: { html: {} } };
+  const impact = reportAudienceVariantImpact(before, after, { schema_version: "1.0", variants: [variant] }).variants[0].page_impacts[0];
+  assert.deepEqual(impact.inherited_changed_fields, ["renderers.html.layout"]);
+  assert.deepEqual(impact.overridden_changed_fields, ["screen_text.body"]);
+});

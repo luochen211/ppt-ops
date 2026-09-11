@@ -11,6 +11,10 @@ export const SYSTEM_PATHS = Object.freeze([
   "templates/system",
   "docs/system",
   ".github",
+  "scripts",
+  "update.mjs",
+  "README.md",
+  "LICENSE",
   "package.json",
   "package-lock.json"
 ]);

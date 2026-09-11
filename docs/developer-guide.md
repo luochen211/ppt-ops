@@ -2,13 +2,15 @@
 
 ## Contract and state boundaries
 
-V1 contracts live in `schemas/v1/` and runtime semantic validation lives in `src/contracts/v1.js`. Project, Source, Outline, PageSpec, Theme, Template, Asset, Candidate, Approval, Version, Build, Review, and Handoff entities carry `contract_version`, `kind`, and stable `id`. State transitions are centralized in `src/core/state-machines.js`.
+V1 contracts live in `schemas/v1/` and runtime semantic validation lives in `src/contracts/v1.js`. Project, Source, Outline, PageSpec, Theme, Template, Asset, Candidate, Approval, Version, Build, Review, ReviewerFeedback, and Handoff entities carry `contract_version`, `kind`, and stable `id`. State transitions are centralized in `src/core/state-machines.js`.
 
 JSON contracts and project files are portable truth. SQLite stores rebuildable indexes, revisions, queue state, attempts, and events. Application commands must go through `ApplicationService`; Skills and adapters must not patch SQLite directly.
 
 ## Application and local API
 
-`src/application/service.js` owns candidate proposal, isolated Candidate preview rendering, PowerPoint observation, explicit accept/continue/reject decisions, feedback and attempt inspection, forced semantic reconstruction, Version freeze, Build creation/retry, Review run/record, and Handoff creation. `candidate-render` writes an immutable preview under `.pptops/candidates/` from an in-memory patched snapshot and leaves the Draft unchanged; PowerPoint evidence must match its artifact hash and pages. Candidate feedback stores raw language plus atomic `findings[]`; every finding separates `eval_category` from `root_cause` and carries target, evidence, severity, and a root-cause fingerprint. `layout_composition` covers spatial integrity independently from hierarchy and brand fit. A second user rejection with any matching finding fingerprint forces reconstruction. Automated QA rejection is evidence-bearing but never counts as user feedback. Commands use stable JSON success/error envelopes. The loopback-only API in `src/infrastructure/local-api.js` exposes project and task evidence without becoming a Web product interface.
+`src/application/service.js` owns candidate proposal, isolated Candidate preview rendering, PowerPoint observation, explicit accept/continue/reject decisions, feedback and attempt inspection, forced semantic reconstruction, Version freeze, Build creation/retry, Review run/record, reviewer-package creation/import, and Handoff creation. `candidate-render` writes an immutable preview under `.pptops/candidates/` from an in-memory patched snapshot and leaves the Draft unchanged; PowerPoint evidence must match its artifact hash and pages. Candidate feedback stores raw language plus atomic `findings[]`; every finding separates `eval_category` from `root_cause` and carries target, evidence, severity, and a root-cause fingerprint. `layout_composition` covers spatial integrity independently from hierarchy and brand fit. A second user rejection with any matching finding fingerprint forces reconstruction. Automated QA rejection is evidence-bearing but never counts as user feedback. Commands use stable JSON success/error envelopes. The loopback-only API in `src/infrastructure/local-api.js` exposes project and task evidence without becoming a Web product interface.
+
+`src/reviewer-feedback/index.js` packages an already-built HTML target; it must never invoke a renderer. The technical manifest binds the package to exact Build and Review hashes while the entry page shows only a short package fingerprint. Returned JSON is normalized into append-only `reviewer_feedback` evidence with a portable manifest that `reindex` restores. Import preserves supplied language and identity fields, records identity as unverified, flags a response when a newer succeeded Build exists, and reports opposing decisions without merging reviewers or changing Review state.
 
 ## Templates and renderers
 
@@ -40,3 +42,9 @@ node scripts/check-release-readiness.js
 ```
 
 The final command is expected to fail while human or target-user evidence is pending. Do not weaken it to make a release pass.
+
+## System distribution
+
+`npm run package:update` creates `dist/ppt-ops-system.tar.gz` and its SHA-256 sidecar from committed `HEAD`. It includes only tracked paths from `SYSTEM_PATHS`; uncommitted changes and user/project files are excluded. CI runs the updater regression suite on Linux and macOS, then builds, extracts, installs, and checks the system package before uploading it as an artifact. GA release attaches the same system package in addition to the full source archive, after the existing acceptance gate passes.
+
+`update.mjs` resolves the latest successful main push CI run through GitHub's API and fetches the exact SHA. It does not move the installation's Git branch, index, or HEAD. File manifests track installed content across repeated updates; initial conflict detection uses the installation's committed System Layer snapshot. See [System updates](system/updates.md).

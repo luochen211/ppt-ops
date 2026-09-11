@@ -12,3 +12,6 @@ references/
 # Project-generated deliverables.
 examples/*/outputs/
 **/.pptops/
+
+# Local updater baselines, locks, and recoverable system/dependency backups.
+.pptops-updates/

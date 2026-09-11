@@ -176,7 +176,8 @@ test("formal build, review, and handoff commands require a frozen version and ac
   assert.ok(report.acceptance.every(({ status }) => status === "pending"));
   await assert.rejects(service.createHandoff(build.id, review.id), { code: "REVIEW_NOT_ACCEPTED" });
   const accepted = await service.recordReview(review.id, { decision: "accepted", expectedRevision: review.revision, evidence: { reviewer: "test" } });
-  const handoff = await service.createHandoff(build.id, accepted.id);
+  const selection = await service.selectDelivery({ artifactType: "presentation", formats: ["pptx"], sourceId: build.id, sourceRevision: version.id, actor: "user:fixture", buildId: build.id });
+  const handoff = await service.createHandoff(build.id, accepted.id, { deliverySelectionId: selection.decision.id });
   assert.equal(handoff.handoff.state, "verified");
   const manifest = JSON.parse(await fs.readFile(handoff.manifest_file, "utf8"));
   assert.deepEqual(manifest.outputs.map(({ name }) => name), ["review-report.json", "slides.pptx"]);

@@ -30,3 +30,5 @@ Create one Markdown record per participant outside the repository while it conta
 After the record is reviewed, update the corresponding slot in `docs/acceptance/v1.0-matrix.json` to `passed`, set `code_modified` to `false`, add the completion timestamp, and link the committed redacted evidence. All three participant IDs must be distinct.
 
 Run `node scripts/check-release-readiness.js`. A zero exit code means the recorded gates are structurally complete; it does not verify that evidence is truthful. The maintainer must review the underlying records before dispatching the GA workflow.
+
+Use [the copyable trial record](acceptance/target-user-trial-template.md) for each participant. Delivery selection is explicit: record presentation/outline formats; an outline requires approval of its exact current revision, and a presentation handoff requires review bound to the exact artifact. Keep user decisions separate from Agent-operated application observations.

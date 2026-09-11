@@ -3,6 +3,7 @@ import path from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { resolveProjectPath } from "../core/project.js";
+import { renderNativeDiagram } from "./diagram.js";
 import { compileProjectLayout } from "../layout/catalog.js";
 
 import { detectRaster } from "../visual-assets/raster.js";
@@ -20,15 +21,15 @@ export async function buildPptx(project, outputFile) {
   }
 
   project = { ...project, assets: await Promise.all(project.assets.map(async (asset) => {
-    if (!asset.screenshot_evidence) return asset;
+    if (!(asset.mime?.startsWith("image/") || [".png", ".jpg", ".jpeg", ".svg"].includes(path.extname(asset.file).toLowerCase()))) return asset;
     const bytes = await fs.readFile(resolveProjectPath(project.root, asset.file));
     let dimensions = detectRaster(bytes);
     if (!dimensions.supported && path.extname(asset.file).toLowerCase() === ".svg") {
       const viewBox = bytes.toString().match(/viewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)["']/);
       if (viewBox) dimensions = { width: Number(viewBox[1]), height: Number(viewBox[2]) };
     }
-    if (!(dimensions.width > 0 && dimensions.height > 0)) throw new Error(`cannot measure screenshot: ${asset.id}`);
-    return { ...asset, screenshot_dimensions: dimensions };
+    if (!(dimensions.width > 0 && dimensions.height > 0)) throw new Error(`cannot measure image: ${asset.id}`);
+    return { ...asset, image_dimensions: dimensions };
   })) };
   const pptx = createPresentation(project);
   const plans = compileProjectLayout(project);
@@ -134,7 +135,8 @@ function renderSlide(pptx, page, plan, project, index, count) {
 
   const contentBox = contentGeometry(theme, assets.length > 0);
   const body = bodyLines(page.screen_text);
-  if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
+  if (page.diagram) renderNativeDiagram(slide, page.diagram, contentBox.copy, theme, colors);
+  else if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
   else renderMessage(slide, pptx, page.three_second_message, theme, colors, bodyFont, contentBox.copy);
   if (assets.length > 0) renderAssets(slide, assets, contentBox.assets, bodyFont);
 
@@ -153,7 +155,7 @@ function renderBoundarySlide(slide, pptx, page, assets, theme, colors, headingFo
   const { width, height } = theme.dimensions;
   const margin = theme.spacing.page_margin;
   if (assets.length > 0) {
-    renderAssets(slide, assets, { x: width * 0.36, y: 0.08, w: width * 0.64, h: height - 0.16 }, headingFont);
+    renderAssets(slide, assets.map((entry) => ({ ...entry, fit: "contain" })), { x: width * 0.36, y: 0.08, w: width * 0.64, h: height - 0.16 }, headingFont);
   }
   addShape(slide, pptx.ShapeType.rect, {
     x: 0, y: height * 0.2, w: width * 0.49, h: height * 0.6,
@@ -255,7 +257,7 @@ function renderAssets(slide, assets, bounds, fontFace) {
       if (annotated && (typeof caption !== "string" || !caption.trim() || caption.length > 80)) throw new Error(`screenshot ${asset.id} needs annotation_text of 1–80 characters`);
       if (annotated && geometry.h < 1.3) throw new Error(`insufficient space for annotated screenshot ${asset.id}`);
       const imageBounds = { ...geometry, h: geometry.h - (annotated ? 0.9 : 0) };
-      const { image, placement } = screenshotPlacement(asset.screenshot_dimensions.width, asset.screenshot_dimensions.height, imageBounds, fit);
+      const { image, placement } = screenshotPlacement(asset.image_dimensions.width, asset.image_dimensions.height, imageBounds, fit);
       slide.addImage({ path: imagePath, ...image, altText: asset.alt ?? asset.id, objectName: `Asset ${asset.id}` });
       if (annotated) {
         const region = visibleScreenshotRegion(semantics.focal_region, placement);
@@ -267,9 +269,9 @@ function renderAssets(slide, assets, bounds, fontFace) {
       }
       return;
     }
+    const { image } = screenshotPlacement(asset.image_dimensions.width, asset.image_dimensions.height, geometry, fit);
     slide.addImage({
-      path: imagePath, ...geometry,
-      sizing: { type: fit === "cover" ? "cover" : "contain", w: geometry.w, h: geometry.h },
+      path: imagePath, ...image,
       altText: asset.alt ?? asset.id,
       objectName: `Asset ${asset.id}`
     });

@@ -141,14 +141,15 @@ export function reportAudienceVariantImpact(before, after, manifest, options = {
       const overrides = new Map((variant.page_overrides ?? []).map(({ page_id, patch }) => [page_id, patch]));
       const affected = variant.page_ids.filter((id) => changed.has(id));
       const pageImpacts = affected.map((pageId) => {
-        const changedFields = changedTopLevelFields(beforePages.get(pageId), afterPages.get(pageId));
-        const overrideFields = Object.keys(overrides.get(pageId) ?? {});
+        const changedFields = changedLeafFields(beforePages.get(pageId), afterPages.get(pageId));
+        const overrideFields = patchLeafFields(overrides.get(pageId) ?? {});
+        const covered = field => overrideFields.some(override => field === override || field.startsWith(`${override}.`));
         return {
           page_id: pageId,
           changed_fields: changedFields,
           override_fields: overrideFields,
-          inherited_changed_fields: changedFields.filter((field) => !overrideFields.includes(field)),
-          overridden_changed_fields: changedFields.filter((field) => overrideFields.includes(field))
+          inherited_changed_fields: changedFields.filter(field => !covered(field)),
+          overridden_changed_fields: changedFields.filter(covered)
         };
       });
       return {
@@ -218,10 +219,15 @@ function deepMerge(base, patch) {
   for (const [key, value] of Object.entries(patch)) result[key] = isObject(value) && isObject(result[key]) ? deepMerge(result[key], value) : structuredClone(value);
   return result;
 }
-function changedTopLevelFields(before, after) {
-  if (!isObject(before) || !isObject(after)) return [before === undefined ? "$added" : "$removed"];
+function changedLeafFields(before, after, prefix = "") {
+  if (stableJson(before) === stableJson(after)) return [];
+  if (!isObject(before) || !isObject(after)) return [prefix || (before === undefined ? "$added" : "$removed")];
   const fields = [...new Set([...Object.keys(before), ...Object.keys(after)])];
-  return fields.filter((field) => stableJson(before[field]) !== stableJson(after[field]));
+  return fields.flatMap(field => changedLeafFields(before[field], after[field], prefix ? `${prefix}.${field}` : field));
+}
+function patchLeafFields(patch, prefix = "") {
+  if (!isObject(patch)) return [prefix];
+  return Object.entries(patch).flatMap(([key, value]) => patchLeafFields(value, prefix ? `${prefix}.${key}` : key));
 }
 function stableJson(value) {
   if (value === undefined) return "undefined";

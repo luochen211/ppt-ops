@@ -2,17 +2,23 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import { constants } from "node:fs";
 import path from "node:path";
+import { readDeliverySelection } from "../delivery/selection.js";
 import { outputDir } from "../core/project.js";
 
 export const HANDOFF_DIR = "handoff";
 export const HANDOFF_MANIFEST_FILE = "manifest.json";
 
 export async function createHandoff(project, reviewReport, options = {}) {
+  if (!options.deliverySelection?.id) throw Object.assign(new Error("handoff requires an explicit stored delivery selection"), { code: "DELIVERY_SELECTION_REQUIRED" });
+  const selection = await readDeliverySelection(project.root, options.deliverySelection.id);
+  if (selection.artifact_type !== "presentation") throw Object.assign(new Error("handoff requires a presentation selection"), { code: "DELIVERY_SELECTION_MISMATCH" });
   const outputs = outputDir(project);
+
+  const sourceFiles = (options.sourceFiles ?? await availableOutputFiles(outputs)).filter(source => source.name === "review-report.json" || selection.formats.some(format => source.name === `slides.${format}`));
+  if (selection.formats.some(format => !sourceFiles.some(source => source.name === `slides.${format}`))) throw Object.assign(new Error("a selected artifact is missing"), { code: "EXPORTER_UNAVAILABLE" });
   const packageDir = await nextPackageDirectory(outputs);
   await fs.mkdir(packageDir, { recursive: true });
-
-  const sourceFiles = options.sourceFiles ?? await availableOutputFiles(outputs);
+  sourceFiles.sort((left, right) => left.name.localeCompare(right.name));
   const packagedOutputs = [];
   for (const source of sourceFiles) {
     const destination = path.join(packageDir, source.name);
@@ -26,6 +32,7 @@ export async function createHandoff(project, reviewReport, options = {}) {
       sha256: createHash("sha256").update(contents).digest("hex")
     });
   }
+  const accessibility = accessibilityHandoff(reviewReport);
 
   const manifest = {
     schema_version: "0.1",
@@ -38,11 +45,28 @@ export async function createHandoff(project, reviewReport, options = {}) {
       passed: reviewReport.passed,
       required_failure_count: reviewReport.required_failure_count
     },
+    delivery_selection: selection,
+    ...(accessibility ? { accessibility } : {}),
     ...(options.boundaryImages ? { boundary_images: options.boundaryImages.boundaries.map(({ boundary, roles, page_id, asset_id, generation_id, sha256 }) => ({ boundary, roles, page_id, asset_id, generation_id, sha256 })) } : {})
   };
   const manifestFile = path.join(packageDir, HANDOFF_MANIFEST_FILE);
   await fs.writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, { flag: "wx" });
   return { manifest, manifestFile, packageDir };
+}
+
+function accessibilityHandoff(reviewReport) {
+  const audit = reviewReport.automated_checks?.find(({ id }) => id === "accessibility-audit")?.evidence;
+  if (!audit) return undefined;
+  return {
+    declared_profile: audit.declared_profile,
+    source_revision: audit.source_revision,
+    build_revision: audit.build_revision,
+    status: audit.status,
+    unresolved_findings: audit.findings,
+    format_capabilities: audit.format_capabilities,
+    evidence: audit.evidence,
+    claims: audit.claims
+  };
 }
 
 async function availableOutputFiles(outputs) {

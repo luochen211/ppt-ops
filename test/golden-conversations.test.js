@@ -84,7 +84,8 @@ test("formal Review and Handoff preserve separate unresolved acceptance", async 
     { kind: "real_powerpoint", status: "pending" }
   ]);
   const accepted = await service.recordReview(review.id, { decision: "accepted", expectedRevision: review.revision, evidence: { kind: "golden-fixture", note: "Workflow gate only; business acceptance remains unresolved." } });
-  const handoff = await service.createHandoff(build.id, accepted.id);
+  const selection = await service.selectDelivery({ artifactType: "presentation", formats: ["pptx"], sourceId: build.id, sourceRevision: version.id, actor: "user:fixture", buildId: build.id });
+  const handoff = await service.createHandoff(build.id, accepted.id, { deliverySelectionId: selection.decision.id });
   assert.equal(handoff.handoff.state, "verified");
   const manifest = JSON.parse(await fs.readFile(handoff.manifest_file, "utf8"));
   assert.equal(manifest.acceptance.visual.pending, 1);
