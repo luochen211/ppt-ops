@@ -11,11 +11,19 @@ node update.mjs apply
 node update.mjs rollback
 ```
 
-Equivalent npm commands are `npm run update:check`, `update:preview`, `update:apply`, and `update:rollback`. Commands work from another directory: `node /path/to/ppt-ops/update.mjs check`. Use `--root /path/to/installation` for another installation and `--data-root /path/to/projects` when needed. Otherwise data-root selection follows `PPT_OPS_ROOT`, `.ppt-ops-data`, then `projects/`.
+Equivalent npm commands are `npm run update:check`, `update:agent-check`, `update:preview`, `update:apply`, and `update:rollback`. Commands work from another directory: `node /path/to/ppt-ops/update.mjs check`. Use `--root /path/to/installation` for another installation and `--data-root /path/to/projects` when needed. Otherwise data-root selection follows `PPT_OPS_ROOT`, `.ppt-ops-data`, then `projects/`.
 
 Online updates use the latest successful main push run of `.github/workflows/ci.yml`, then fetch that exact commit from `luochen211/ppt-ops`. SHA selection and file hashes detect updates even if the package version has not changed. A newer pending or failed run is not selected. GitHub API errors stop the command; there is no fallback to an untested commit. An optional `GH_TOKEN` or `GITHUB_TOKEN` raises API rate limits; neither is needed for normal public access.
 
 These are tested main builds. The separate GA release workflow still requires human and target-user acceptance evidence. No scheduled job changes a user's local installation.
+
+## PPT Agent availability reminder
+
+On its first invocation in a local Codex session, the PPT Agent runs `node update.mjs agent-check` separately from presentation commands. This read-only command reuses the ordinary tested-main `check` comparison, including file hashes that detect same-version changes, and caches a successful result for 24 hours in `.pptops-updates/agent-check.json`.
+
+The JSON result has one of four statuses: `no-update`, `update-available`, `offline-or-degraded`, or `invalid-cache`. A fresh cached result has `cache: "fresh"`; a remote refresh has `cache: "refreshed"`. `node update.mjs agent-check --force` explicitly bypasses a fresh or invalid cache without applying anything. Cache contents are a small whitelist of versions, the tested commit, timestamp, and availability status; response headers, authorization values, raw command errors, and full change manifests are not stored.
+
+Only `update-available` produces a conversational advisory. It names the tested commit and offers three choices: inspect with `preview`, apply after explicit user approval, or dismiss for the current session. Offline, GitHub API, invalid-cache, and unavailable-tool failures are non-blocking diagnostics; normal PPT Agent routing continues. The reminder is never appended to stdout from `pptops` or any existing JSON command, and it never runs `apply`, installs dependencies, creates a daemon, or schedules work.
 
 ## What changes
 
