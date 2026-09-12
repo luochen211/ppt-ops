@@ -1,7 +1,7 @@
 export function normalizeSnapshot(projectRoot, snapshot) {
   const contracts = {
     project: snapshot["project.json"], sources: snapshot["sources.json"], outline: snapshot["outline.json"],
-    pages: snapshot["pages.json"], theme: snapshot["theme.json"], assets: snapshot["assets.json"], templates: snapshot["templates.json"]
+    pages: snapshot["pages.json"], theme: snapshot["theme.json"], assets: snapshot["assets.json"], templates: snapshot["templates.json"], ...(snapshot["fact-ledger.json"] ? { factLedger: snapshot["fact-ledger.json"] } : {})
   };
   const sourceById = new Map(contracts.sources.map((source) => [source.id, source]));
   return {
@@ -13,6 +13,6 @@ export function normalizeSnapshot(projectRoot, snapshot) {
     }),
     theme: contracts.theme.tokens,
     assets: contracts.assets.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset),
-    contractModel: "v1", contracts
+    contractModel: "v1", ...(contracts.factLedger ? { factLedger: contracts.factLedger } : {}), contracts
   };
 }

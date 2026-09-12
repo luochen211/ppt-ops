@@ -6,6 +6,8 @@ import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
 import { auditAccessibilityArtifacts } from "../accessibility/artifacts.js";
+import { evaluateFactLedger } from "../facts/ledger.js";
+import { citationReviewEvidence } from "../citations/manifest.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -39,6 +41,26 @@ export async function reviewProject(project, options = {}) {
       evidence: deliveryModeFit
     }
   ];
+  if (project.factLedger) {
+    const evidence = evaluateFactLedger(project.factLedger, {
+      at: options.factLedgerEvaluatedAt ?? new Date().toISOString(),
+      projectId: project.project.name,
+      sources: project.contracts?.sources,
+      pages: project.contracts?.pages,
+      policy: options.factPolicy
+    });
+    automatedChecks.push({
+      id: "fact-ledger",
+      kind: "automated",
+      required: !evidence.valid || evidence.blocker_claim_ids.length > 0,
+      status: evidence.status === "failed" ? "failed" : evidence.status === "passed" ? "passed" : "pending",
+      evidence
+    });
+  }
+  if (project.citationManifest) {
+    const evidence = citationReviewEvidence(project.citationManifest);
+    automatedChecks.push({ id: "citation-manifest", kind: "automated", required: false, status: evidence.status === "passed" ? "passed" : "pending", evidence });
+  }
   let accessibility;
   try {
     accessibility = await auditAccessibilityArtifacts(project, { buildRevision: options.buildRevision, htmlFile: options.htmlFile, pptxFile: options.pptxFile, trustedGeneratedArtifact: Boolean(options.buildRevision) });

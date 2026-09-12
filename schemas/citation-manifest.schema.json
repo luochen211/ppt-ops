@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/citation-manifest.schema.json",
+  "title": "PPT-Ops governed citation manifest",
+  "type": "object",
+  "required": ["schema_version", "kind", "fact_ledger_revision", "decision", "citations", "pages", "unresolved", "revision"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "kind": { "const": "citation_manifest" },
+    "intent": { "const": "rendering_input" },
+    "fact_ledger_revision": { "$ref": "#/$defs/sha256" },
+    "revision": { "$ref": "#/$defs/sha256" },
+    "decision": { "type": "object" },
+    "citations": { "type": "array", "items": { "type": "object" } },
+    "pages": { "type": "object" },
+    "unresolved": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": false,
+  "$defs": { "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+}
