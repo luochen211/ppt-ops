@@ -10,6 +10,7 @@ const routingUrl = new URL("references/routing-contract.json", skillRoot);
 const dataContractUrl = new URL("references/data-contract.md", skillRoot);
 const visualQualityUrl = new URL("references/visual-quality.md", skillRoot);
 const visualAssetsUrl = new URL("references/visual-assets.md", skillRoot);
+const updateRemindersUrl = new URL("references/update-reminders.md", skillRoot);
 const expectedModes = ["discovery", "new", "intake", "outline", "design", "prototype", "revise", "build", "review", "handoff", "archive", "doctor"];
 
 test("repository exposes one conversation-native PPT agent router", async () => {
@@ -30,6 +31,21 @@ test("repository exposes one conversation-native PPT agent router", async () => 
   assert.match(metadata, /display_name: "PPT Agent"/);
   assert.match(tooling, /gitbrent\/PptxGenJS/);
   assert.match(tooling, /microsoft\/markitdown/);
+});
+
+test("the first local PPT Agent invocation checks updates without changing command output or applying", async () => {
+  const [skill, reminders] = await Promise.all([
+    fs.readFile(skillUrl, "utf8"),
+    fs.readFile(updateRemindersUrl, "utf8")
+  ]);
+  assert.match(skill, /First invocation in a local session/);
+  assert.match(skill, /references\/update-reminders\.md/);
+  assert.match(reminders, /node update\.mjs agent-check/);
+  assert.match(reminders, /24 hours/);
+  assert.match(reminders, /no-update.*update-available.*offline-or-degraded.*invalid-cache/s);
+  assert.match(reminders, /Never concatenate.*stdout.*JSON contract/s);
+  assert.match(reminders, /requires an explicit user instruction/);
+  assert.match(reminders, /Do not create a daemon, scheduler, or background installer/);
 });
 
 test("every route has one progressive Mode reference and bounded context", async () => {
