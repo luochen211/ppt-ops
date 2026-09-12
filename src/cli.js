@@ -222,7 +222,7 @@ async function runApplicationCommand(command, projectDir, options) {
     if (command === "corporate-template") return await service.manageCorporateProfile(required(options, "action"), options.payload ? jsonOption(options, "payload") : {});
     if (command === "variant-manage") return await service.manageAudienceVariants(required(options, "action"), options.payload ? jsonOption(options, "payload") : {});
     if (command === "version-freeze") return await service.freezeVersion({ variantId: options.variant });
-    if (command === "build-create") return await service.createBuild({ versionId: required(options, "version"), targets: required(options, "targets").split(",").map((item) => item.trim()).filter(Boolean) });
+    if (command === "build-create") return await service.createBuild({ versionId: required(options, "version"), targets: required(options, "targets").split(",").map((item) => item.trim()).filter(Boolean), citations: options.citations ? jsonOption(options, "citations") : undefined });
     if (command === "build-retry") return await service.retryBuild(required(options, "build"));
     if (command === "review-run") return await service.runReview(required(options, "build"));
     if (command === "review-record") return await service.recordReview(required(options, "review"), { decision: required(options, "decision"), expectedRevision: integerOption(options, "expected-revision"), evidence: options.evidence ? jsonOption(options, "evidence") : {} });

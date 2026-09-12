@@ -21,6 +21,7 @@ import { proposeAccessibilityRemediation } from "../accessibility/remediation.js
 import { manageCorporateProfile, materializeCorporateProfile } from "../templates/corporate-profile.js";
 import { freezeAudienceVariant, manageAudienceVariants } from "../variants/lifecycle.js";
 import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
+import { buildCitationManifest } from "../citations/manifest.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -246,12 +247,14 @@ export class ApplicationService {
     return version;
   }
 
-  async createBuild({ versionId, targets }) {
+  async createBuild({ versionId, targets, citations }) {
     const version = this.requireEntity("version", versionId);
     if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
-    await assertBoundaryGeneratedImages(await this.projectFromVersion(versionId));
+    const frozenProject = await this.projectFromVersion(versionId);
+    await assertBoundaryGeneratedImages(frozenProject);
+    const citationManifest = citations ? buildCitationManifest({ ledger: frozenProject.factLedger, sources: frozenProject.contracts.sources, pages: frozenProject.contracts.pages, decision: citations.decision, metadata: citations.metadata }) : undefined;
     const id = nextId("build", this.store.listBuilds(this.projectId));
-    this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: { ...(version.variant ? { variant: version.variant } : {}), ...(version.corporate_profile ? { corporate_profile: version.corporate_profile } : {}) } }));
+    this.store.enqueueBuild(createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets, attempts: [], config: { ...(version.variant ? { variant: version.variant } : {}), ...(version.corporate_profile ? { corporate_profile: version.corporate_profile } : {}), ...(citationManifest ? { citation_manifest: citationManifest } : {}) } }));
     return this.runBuild(id);
   }
 
@@ -264,6 +267,7 @@ export class ApplicationService {
     const build = this.requireBuild(buildId);
     if (build.state !== "succeeded") throw new ApplicationError("BUILD_NOT_SUCCEEDED", "review requires a succeeded build");
     const frozenProject = await this.projectFromVersion(build.version_id);
+    if (build.config?.citation_manifest) frozenProject.citationManifest = build.config.citation_manifest;
     await assertBoundaryGeneratedImages(frozenProject);
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
@@ -424,6 +428,7 @@ export class ApplicationService {
     if (!claimed || claimed.id !== buildId) throw new ApplicationError("BUILD_NOT_CLAIMED", `build could not be claimed: ${buildId}`);
     try {
       const project = await this.projectFromVersion(claimed.version_id);
+      if (claimed.config?.citation_manifest) project.citationManifest = claimed.config.citation_manifest;
       await assertBoundaryGeneratedImages(project);
       this.store.transitionBuild(buildId, "rendering");
       const artifacts = [];

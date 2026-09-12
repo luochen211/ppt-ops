@@ -7,6 +7,7 @@ import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
 import { auditAccessibilityArtifacts } from "../accessibility/artifacts.js";
 import { evaluateFactLedger } from "../facts/ledger.js";
+import { citationReviewEvidence } from "../citations/manifest.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -55,6 +56,10 @@ export async function reviewProject(project, options = {}) {
       status: evidence.status === "failed" ? "failed" : evidence.status === "passed" ? "passed" : "pending",
       evidence
     });
+  }
+  if (project.citationManifest) {
+    const evidence = citationReviewEvidence(project.citationManifest);
+    automatedChecks.push({ id: "citation-manifest", kind: "automated", required: false, status: evidence.status === "passed" ? "passed" : "pending", evidence });
   }
   let accessibility;
   try {

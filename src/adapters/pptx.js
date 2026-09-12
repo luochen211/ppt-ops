@@ -6,6 +6,7 @@ import { resolveProjectPath } from "../core/project.js";
 import { renderNativeDiagram } from "./diagram.js";
 import { assertAccessibleTextCapacity } from "../accessibility/index.js";
 import { compileProjectLayout } from "../layout/catalog.js";
+import { applyCitationManifest } from "../citations/manifest.js";
 
 import { detectRaster } from "../visual-assets/raster.js";
 import { screenshotPlacement, visibleScreenshotRegion } from "../layout/screenshot.js";
@@ -21,6 +22,7 @@ export async function buildPptx(project, outputFile) {
     throw new TypeError("buildPptx requires an output file");
   }
 
+  project = applyCitationManifest(project);
   assertAccessibleTextCapacity(project);
   project = { ...project, assets: await Promise.all(project.assets.map(async (asset) => {
     if (!(asset.mime?.startsWith("image/") || [".png", ".jpg", ".jpeg", ".svg"].includes(path.extname(asset.file).toLowerCase()))) return asset;
@@ -140,6 +142,7 @@ function renderSlide(pptx, page, plan, project, index, count) {
   const assets = resolveSlideAssets(page, project);
   if (index === 0 || index === count - 1) {
     renderBoundarySlide(slide, pptx, page, assets, theme, colors, headingFont);
+    renderCitationRegion(slide, page, theme, colors, bodyFont);
     return;
   }
   addShape(slide, pptx.ShapeType.rect, {
@@ -158,6 +161,7 @@ function renderSlide(pptx, page, plan, project, index, count) {
   else if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
   else renderMessage(slide, pptx, page.three_second_message, theme, colors, bodyFont, contentBox.copy);
   if (assets.length > 0) renderAssets(slide, assets, contentBox.assets, bodyFont);
+  renderCitationRegion(slide, page, theme, colors, bodyFont);
 
   addShape(slide, pptx.ShapeType.line, {
     x: margin, y: height - margin - 0.18, w: width - (margin * 2), h: 0,
@@ -167,6 +171,18 @@ function renderSlide(pptx, page, plan, project, index, count) {
     x: width - margin - 0.42, y: height - margin - 0.15, w: 0.42, h: 0.2,
     fontFace: bodyFont, fontSize: 9, color: colors.text, transparency: 25,
     margin: 0, align: "right", objectName: `Slide ${page.page} number`
+  });
+}
+
+function renderCitationRegion(slide, page, theme, colors, bodyFont) {
+  if (!page.citation_entries?.length) return;
+  const { width, height } = theme.dimensions;
+  const margin = theme.spacing.page_margin;
+  addText(slide, page.citation_entries.map((entry) => `[${entry.number}] ${entry.public_label || entry.title || "Citation metadata pending"}`).join("  "), {
+    x: margin, y: height - margin - 0.48, w: width - (margin * 2) - 0.55, h: 0.24,
+    fontFace: bodyFont, fontSize: 8, color: colors.text, transparency: 12,
+    margin: 0, valign: "mid", fit: "none", shrinkText: false, autoFit: false,
+    objectName: `Slide ${page.page} citations`
   });
 }
 
