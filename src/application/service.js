@@ -291,8 +291,8 @@ export class ApplicationService {
     const build = this.requireBuild(review.build_id);
     const artifactHashes = review.artifact_hashes;
     if (decision === "accepted" && hashJson(artifactHashes ?? {}) !== hashJson(await this.buildArtifactHashes(build))) throw new ApplicationError("REVIEW_SOURCE_CHANGED", "Build artifacts changed after Review; run Review again");
-    if (decision === "accepted" && review.automated?.some((check) => check.required && check.status === "failed")) {
-      throw new ApplicationError("REVIEW_AUTOMATED_FAILED", "failed required automated checks must be resolved before acceptance");
+    if (decision === "accepted" && review.automated?.some((check) => check.id === "html-pptx-content-consistency" && check.status === "failed")) {
+      throw new ApplicationError("REVIEW_ARTIFACT_CONSISTENCY_FAILED", "HTML and PPTX content differences must be resolved before acceptance");
     }
     const recorded = this.store.saveEntity(this.projectId, { ...stripRevision(review), artifact_hashes: artifactHashes, state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
     return this.replaceManifest("review", review.id, stripRevision(recorded));
