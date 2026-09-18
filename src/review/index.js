@@ -6,6 +6,7 @@ import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
 import { auditAccessibilityArtifacts } from "../accessibility/artifacts.js";
+import { inspectArtifactConsistency } from "./artifact-consistency.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -59,8 +60,18 @@ export async function reviewProject(project, options = {}) {
     status: accessibility.status === "failed" ? "failed" : accessibility.status === "passed" ? "passed" : "pending",
     evidence: accessibility
   });
-  const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");
+  const pptxFile = options.pptxFile ?? (options.htmlFile ? undefined : path.join(directory, "slides.pptx"));
+  const htmlArtifact = options.htmlFile ?? (options.pptxFile ? undefined : path.join(directory, "slides.html"));
+  if (htmlArtifact && pptxFile && await firstExisting([pptxFile]) && await firstExisting([htmlArtifact])) {
+    const consistency = await inspectArtifactConsistency({ htmlFile: htmlArtifact, pptxFile,
+      versionId: options.versionId, buildId: options.buildId });
+    automatedChecks.push({ id: "html-pptx-content-consistency", kind: "automated", required: true, ...consistency });
+  } else if (options.requireArtifactConsistency) {
+    automatedChecks.push({ id: "html-pptx-content-consistency", kind: "automated", required: true,
+      status: "failed", evidence: { reason: "Both HTML and PPTX build artifacts are required for content consistency." } });
+  }
   try {
+    if (!pptxFile) throw Object.assign(new Error("No PPTX build selected"), { code: "ENOENT" });
     await fs.access(pptxFile);
     const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0" });
     automatedChecks.push({

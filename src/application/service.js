@@ -266,7 +266,10 @@ export class ApplicationService {
     await assertBoundaryGeneratedImages(frozenProject);
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
-    const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
+    const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile),
+      requireArtifactConsistency: build.targets.includes("html") && build.targets.includes("pptx"),
+      versionId: build.version_id, buildId,
+      evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
     if (build.config?.variant) report.variant = build.config?.variant;
     if (build.config?.corporate_profile) report.corporate_profile = build.config.corporate_profile;
     await writeReviewReport(frozenProject, report);
@@ -288,6 +291,9 @@ export class ApplicationService {
     const build = this.requireBuild(review.build_id);
     const artifactHashes = review.artifact_hashes;
     if (decision === "accepted" && hashJson(artifactHashes ?? {}) !== hashJson(await this.buildArtifactHashes(build))) throw new ApplicationError("REVIEW_SOURCE_CHANGED", "Build artifacts changed after Review; run Review again");
+    if (decision === "accepted" && review.automated?.some((check) => check.required && check.status === "failed")) {
+      throw new ApplicationError("REVIEW_AUTOMATED_FAILED", "failed required automated checks must be resolved before acceptance");
+    }
     const recorded = this.store.saveEntity(this.projectId, { ...stripRevision(review), artifact_hashes: artifactHashes, state: decision, human: [...(review.human ?? []), { status: decision, evidence }] });
     return this.replaceManifest("review", review.id, stripRevision(recorded));
   }
