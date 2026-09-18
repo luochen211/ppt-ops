@@ -12,7 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "accessibility-remediate", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["source-update-preview", "source-update-propose", "candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "accessibility-remediate", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
@@ -34,6 +34,8 @@ Usage:
   pptops handoff <project-dir> --formats <html,pptx> --actor <user>
   pptops deliver <project-dir> --formats <html,pptx> --actor <user>
   pptops candidate-propose <project-dir> --target-kind <kind> --target-id <id> --patch <json> --base-revision <n> [--parent-candidate <id>] [--hypothesis <text>]
+  pptops source-update-preview <project-dir> --source <id> --file <new-file>
+  pptops source-update-propose <project-dir> --source <id> --new-source <id> --page-id <id> --patch <json> --base-revision <n>
   pptops candidate-reconstruct-relations <project-dir> --target-kind page_spec --target-id <id> --patch <json> --base-revision <n> --parent-candidate <id> --reconstruction <json>
   pptops candidate-render <project-dir> --candidate <id> --expected-revision <n>
   pptops candidate-diff <project-dir> --candidate <id>
@@ -198,6 +200,8 @@ async function runApplicationCommand(command, projectDir, options) {
   const { ApplicationError, ApplicationService } = await import("./application/service.js");
   const service = await ApplicationService.open(projectDir);
   try {
+    if (command === "source-update-preview") return service.previewSourceUpdate(required(options, "source"), required(options, "file"));
+    if (command === "source-update-propose") return service.proposeSourceUpdateCandidate({ sourceId: required(options, "source"), newSourceId: required(options, "new-source"), pageId: required(options, "page-id"), patch: jsonOption(options, "patch"), baseRevision: integerOption(options, "base-revision") });
     if (["candidate-propose", "candidate-reconstruct-relations"].includes(command)) return await service.proposeCandidate({
       targetKind: required(options, "target-kind"), targetId: required(options, "target-id"),
       patch: jsonOption(options, "patch"), baseRevision: integerOption(options, "base-revision"),
@@ -326,7 +330,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!key?.startsWith("--") || value === undefined || value.startsWith("--")) throw new Error(`invalid option: ${key ?? ""}`.trim());
     const name = key.slice(2);
-    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "accessibility-profile", "html-file", "pptx-file", "pages", "format", "to", "file", "target-kind", "target-id", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "variant", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
+    if (!["action", "payload", "repository-root", "name", "title", "delivery-mode", "accessibility-profile", "html-file", "pptx-file", "pages", "format", "to", "file", "target-kind", "target-id", "page-id", "new-source", "patch", "base-revision", "candidate", "expected-revision", "parent-candidate", "hypothesis", "reconstruction", "status", "raw-feedback", "findings", "left-candidate", "right-candidate", "version", "variant", "targets", "build", "review", "decision", "evidence", "source", "source-revision", "selection-source", "selection", "approval", "artifact", "formats", "data-root", "brief", "response", "brief-id", "provider", "model", "mime", "generation", "actor", "verdict", "checks", "notes", "asset-id", "page-id", "slot-role", "alt", "fit", "browser", "timeout"].includes(name)) throw new Error(`unknown option: ${key}`);
     options[name] = value;
   }
   return options;

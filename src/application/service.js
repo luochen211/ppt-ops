@@ -21,6 +21,8 @@ import { proposeAccessibilityRemediation } from "../accessibility/remediation.js
 import { manageCorporateProfile, materializeCorporateProfile } from "../templates/corporate-profile.js";
 import { freezeAudienceVariant, manageAudienceVariants } from "../variants/lifecycle.js";
 import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.js";
+import { SourceIntake } from "../sources/intake.js";
+import { compareSourceRevision } from "../sources/revision-impact.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -50,6 +52,38 @@ export class ApplicationService {
   }
 
   close() { this.store.close(); }
+
+  async previewSourceUpdate(sourceId, inputFile) {
+    const source = this.store.getEntity(this.projectId, "source", sourceId) ?? this.project.contracts.sources.find((item) => item.id === sourceId);
+    if (!source) throw new ApplicationError("SOURCE_NOT_FOUND", `unknown source: ${sourceId}`);
+    const intake = new SourceIntake({ projectRoot: this.project.root, store: this.store, projectId: this.projectId });
+    const imported = await intake.importFile(inputFile);
+    const [oldExtraction, newExtraction] = await Promise.all([this.sourceExtraction(intake, source), intake.readExtraction(imported.source)]);
+    return compareSourceRevision(source, imported.source, oldExtraction, newExtraction, this.project.contracts.pages);
+  }
+
+  async proposeSourceUpdateCandidate({ sourceId, newSourceId, pageId, patch, baseRevision }) {
+    const oldSource = this.store.getEntity(this.projectId, "source", sourceId) ?? this.project.contracts.sources.find((item) => item.id === sourceId);
+    const newSource = this.store.getEntity(this.projectId, "source", newSourceId);
+    if (!oldSource || !newSource) throw new ApplicationError("SOURCE_NOT_FOUND", "both source snapshots must exist");
+    if (sourceId === newSourceId || oldSource.sha256 === newSource.sha256) throw new ApplicationError("SOURCE_UNCHANGED", "source content is unchanged");
+    if (!isPlainObject(patch) || !Object.keys(patch).length || "source_refs" in patch) throw new ApplicationError("PATCH_INVALID", "provide a content patch; source bindings await fact-level review");
+    const intake = new SourceIntake({ projectRoot: this.project.root, store: this.store, projectId: this.projectId });
+    const [oldExtraction, newExtraction] = await Promise.all([this.sourceExtraction(intake, oldSource), intake.readExtraction(newSource)]);
+    const report = compareSourceRevision(oldSource, newSource, oldExtraction, newExtraction, this.project.contracts.pages);
+    const impacts = report.page_impacts.filter((item) => item.page_id === pageId && ["needs_revision", "manual_review"].includes(item.status));
+    if (!impacts.length) throw new ApplicationError("PAGE_NOT_IMPACTED", `page ${pageId} has no reviewable source impact`);
+    const candidate = await this.proposeCandidate({ targetKind: "page_spec", targetId: pageId, patch, baseRevision,
+      hypothesis: `Source update ${sourceId} (${oldSource.sha256}) -> ${newSourceId} (${newSource.sha256}); locators: ${impacts.map((item) => item.locator || "unknown").join(", ")}. Evidence and source_refs require human review.` });
+    return { candidate, source_update: { old_source_id: sourceId, new_source_id: newSourceId, old_sha256: oldSource.sha256, new_sha256: newSource.sha256, impacts } };
+  }
+
+  async sourceExtraction(intake, source) {
+    if (source.extraction_file) return intake.readExtraction(source);
+    const imported = await intake.importFile(resolveProjectPath(this.project.root, source.file));
+    if (imported.source.sha256 !== source.sha256) throw new ApplicationError("SOURCE_CHANGED", `stored source bytes changed: ${source.id}`);
+    return imported.extracted;
+  }
 
   async proposeCandidate({ targetKind, targetId, patch, baseRevision, parentCandidateId, hypothesis = "", reconstruction }) {
     if (!isPlainObject(patch)) throw new ApplicationError("PATCH_INVALID", "candidate patch must be a JSON object");
