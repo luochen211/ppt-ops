@@ -2,6 +2,7 @@ import { validateDiagram } from "../layout/diagram.js";
 import { validateV1Bundle } from "../contracts/v1.js";
 import { DELIVERY_MODES, INTERACTION_KINDS } from "../contracts/delivery.js";
 import { validateAccessibilityProfile } from "../accessibility/index.js";
+import { validateFactLedger } from "../facts/ledger.js";
 
 const RELATIONS = new Set(["sequence", "parallel", "cause_effect", "before_after", "hierarchy", "process", "cycle", "comparison", "hero"]);
 const STATUSES = new Set(["draft", "prototype", "approved", "built", "reviewed"]);
@@ -61,6 +62,7 @@ export function validateProject(loaded) {
   if (loaded.contractModel !== "v1" || project.outputs !== undefined) validateEnumList(project.outputs, "project.outputs", OUTPUTS, errors);
   if (project.delivery_mode !== undefined && !DELIVERY_MODES.includes(project.delivery_mode)) errors.push(`project.delivery_mode is invalid: ${project.delivery_mode}`);
   for (const error of validateAccessibilityProfile(project.accessibility_profile)) errors.push(`project: ${error}`);
+  if (loaded.factLedger) for (const error of validateFactLedger(loaded.factLedger, { projectId: project.name, sources: loaded.contracts?.sources, pages: loaded.contracts?.pages })) errors.push(`fact-ledger: ${error}`);
 
   for (const error of validateTheme(loaded.theme)) errors.push(`theme: ${error}`);
   const assetIds = validateAssets(loaded.assets, errors);

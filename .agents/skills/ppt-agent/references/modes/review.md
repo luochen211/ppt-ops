@@ -4,6 +4,8 @@ When the user asks only for content, audience-value, terminology, theory, or spe
 
 For a full Build Review, also read any content-review report tied to its source revision. Mark outdated reports as stale; record unresolved content findings separately from visual defects. Run new DBS analysis only for requested content checks or changed claims, scoped to the affected pages.
 
+When `fact-ledger.json` exists, also read `fact-ledger.md`. Evaluate the ledger against the Frozen Version, pin its revision and evaluation time in Review, and report expired, review-due, unknown, conflicted, unverifiable, missing-source and changed-source states separately. Expired never means false. Enforce only the blocking statuses explicitly declared by project policy.
+
 Validate the selected Build and record page-addressable automated evidence. Apply both `visual-quality.md` and `visual-assets.md`; render and inspect when a renderer is available.
 
 Before Review, re-verify that the canonical first and final pages each resolve to an accepted pipeline-registered ImageGen asset; stop if either boundary is missing or inconsistent. A one-page deck may use one accepted image for both roles.
