@@ -7,12 +7,14 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { applyUpdate, assertTargetPath, coded, previewUpdate, restoreBackup, targetDoctor } from "./src/update/index.js";
 import { command, downloadSystemSnapshot, fileManifest, latestTestedCommit, snapshot } from "./src/update/distribution.js";
+import { checkUpdateReminder, clearUpdateReminderCache } from "./src/update/reminder.js";
 import { resolveDataRoot } from "./src/config/data-contract.js";
 
 const defaultRoot = path.dirname(fileURLToPath(import.meta.url));
 const help = `PPT-Ops system updater (Node.js 22+, Git, npm, tar)
 
   node update.mjs check                 Check the latest main commit that passed CI
+  node update.mjs agent-check           Cached, read-only availability check for PPT Agent
   node update.mjs preview               List file changes and local conflicts
   node update.mjs apply                 Back up, update, install dependencies, run Doctor
   node update.mjs rollback              Restore the last update, including dependencies
@@ -21,6 +23,7 @@ Options:
   --root <path>       Installation directory (default: this script's directory)
   --source <path>     Extracted, checksum-verified system archive for offline use
   --data-root <path>  Explicit project data root
+  --force             Refresh agent-check even when its 24-hour cache is fresh
   --help             Show this help
 
 Online updates follow tested main builds, not GA releases. Local changes block apply.
@@ -28,12 +31,14 @@ Online updates follow tested main builds, not GA releases. Local changes block a
 
 export async function runUpdate(argv, services = {}) {
   const { values, positionals } = parseArgs({ args: argv, allowPositionals: true, options: {
-    root: { type: "string" }, source: { type: "string" }, "data-root": { type: "string" }, help: { type: "boolean" }
+    root: { type: "string" }, source: { type: "string" }, "data-root": { type: "string" }, force: { type: "boolean" }, help: { type: "boolean" }
   } });
   if (values.help) return { help };
   const action = positionals[0] ?? "check";
-  if (positionals.length > 1 || !["check", "preview", "apply", "rollback"].includes(action)) throw coded("UPDATE_USAGE", help);
+  if (positionals.length > 1 || !["check", "agent-check", "preview", "apply", "rollback"].includes(action)) throw coded("UPDATE_USAGE", help);
   if (action === "rollback" && values.source) throw coded("UPDATE_USAGE", "rollback does not accept --source");
+  if (action === "agent-check" && values.source) throw coded("UPDATE_USAGE", "agent-check does not accept --source");
+  if (values.force && action !== "agent-check") throw coded("UPDATE_USAGE", "--force is only available for agent-check");
   if (Number(process.versions.node.split(".")[0]) < 22) throw coded("UPDATE_NODE_REQUIRED", "Node.js 22 or newer is required");
   const root = await fs.realpath(values.root ?? defaultRoot);
   const data = await resolveDataRoot({ repositoryRoot: root, explicitRoot: values["data-root"] });
@@ -43,6 +48,16 @@ export async function runUpdate(argv, services = {}) {
   if (![relativeData, relativeState].every((relative) => relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))) throw coded("PPT_OPS_LAYER_OVERLAP", "project data cannot overlap updater state");
   await assertTargetPath(root, ".pptops-updates/installed.json");
   await assertTargetPath(root, ".pptops-updates/backups");
+  await assertTargetPath(root, ".pptops-updates/agent-check.json");
+  if (action === "agent-check") {
+    const checkArgs = ["check", "--root", root, "--data-root", data.root];
+    return checkUpdateReminder({
+      stateRoot,
+      force: values.force,
+      now: services.now ?? Date.now,
+      check: services.check ?? (() => runUpdate(checkArgs, services))
+    });
+  }
   const stateFile = path.join(stateRoot, "installed.json");
   const previous = await readOptional(stateFile);
   const execute = services.command ?? command;
@@ -71,6 +86,7 @@ export async function runUpdate(argv, services = {}) {
       const oldState = await readOptional(path.join(backupRoot, "installed.json"));
       if (oldState) await writeJson(stateFile, oldState); else await fs.rm(stateFile, { force: true });
       const checked = await doctor(root);
+      await clearUpdateReminderCache(stateRoot);
       return { ...result, ok: checked.ok, doctor: checked };
     }
     temporary = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-updater-"));
@@ -124,6 +140,7 @@ export async function runUpdate(argv, services = {}) {
       } });
       applied = true;
       await writeJson(stateFile, { ...release, files, backup });
+      await clearUpdateReminderCache(stateRoot);
       return { ...summary, ...result };
     } catch (error) {
       if (applied) {

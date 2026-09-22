@@ -7,6 +7,10 @@ description: Generate, revise, validate, and deliver editable PowerPoint decks f
 
 Codex conversation is the product interface. `$ppt-agent` is the only user-facing entry; never ask the user to select an internal mode, skill, parser, renderer, or CLI command. `pptops` and every Mode are hidden implementation capabilities. HTML may be an output artifact, but a Web Workbench is outside the product.
 
+## First invocation in a local session
+
+Before routing the first PPT Agent request, follow `references/update-reminders.md`. Run its cached read-only check as a separate command, fail open on every check failure, and never apply an update without a separate explicit user instruction. Do not repeat this session check on later PPT Agent requests.
+
 ## Route one request
 
 1. Read `references/shared.md` and the user's current request only.
@@ -32,6 +36,7 @@ Route names are `discovery`, `new`, `intake`, `outline`, `design`, `prototype`, 
 
 ## Progressive references
 
+- First invocation in a local session: `references/update-reminders.md`.
 - Always: `references/shared.md`, then `references/routing-contract.json`.
 - Project/root resolution only: `references/data-contract.md`.
 - Selected task only: `references/modes/<mode>.md`.
