@@ -65,7 +65,6 @@ function citationHandoff(reviewReport) {
   if (!evidence) return undefined;
   return { citation_manifest_revision: evidence.citation_manifest_revision, fact_ledger_revision: evidence.fact_ledger_revision, disclosure: evidence.disclosure, status: evidence.status, unresolved_metadata: evidence.unresolved_metadata, hyperlink_inspection: evidence.hyperlink_inspection, fact_validity_is_separate: true };
 }
-
 function factLedgerHandoff(reviewReport) {
   const evidence = reviewReport.automated_checks?.find(({ id }) => id === "fact-ledger")?.evidence;
   if (!evidence) return undefined;

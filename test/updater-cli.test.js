@@ -123,6 +123,45 @@ test("online source is pinned to the successful main CI SHA", async () => {
   await assert.rejects(latestTestedCommit(async () => ({ ok: true, json: async () => ({ workflow_runs: [] }) })), { code: "UPDATE_NO_TESTED_COMMIT" });
 });
 
+test("agent check detects same-version changes and does not repeat remote work inside its TTL", async (t) => {
+  const f = await fixture(t);
+  const targetBefore = await read(f.target, "src/current.js");
+  await write(f.upstream, "src/current.js", "same version, new system bytes\n");
+  await commit(f.upstream);
+  const { stdout } = await command("git", ["rev-parse", "HEAD"], f.upstream);
+  const testedCommit = stdout.trim();
+  let now = Date.parse("2026-09-11T12:00:00.000Z");
+  let remoteCalls = 0;
+  let downloads = 0;
+  const agentServices = {
+    ...services,
+    now: () => now,
+    fetch: async () => {
+      remoteCalls += 1;
+      return { ok: true, json: async () => ({ workflow_runs: [{ head_sha: testedCommit, head_branch: "main", conclusion: "success", html_url: "https://github.com/luochen211/ppt-ops/actions/runs/1" }] }) };
+    },
+    download: async (destination) => { downloads += 1; await snapshot(f.upstream, destination); }
+  };
+
+  const first = await runUpdate(["agent-check", "--root", f.target], agentServices);
+  assert.equal(first.status, "update-available");
+  assert.equal(first.current_version, first.target_version);
+  assert.equal(first.tested_commit, testedCommit);
+  assert.equal(await read(f.target, "src/current.js"), targetBefore);
+
+  now += 60 * 60 * 1000;
+  const second = await runUpdate(["agent-check", "--root", f.target], agentServices);
+  assert.equal(second.cache, "fresh");
+  assert.equal(remoteCalls, 1);
+  assert.equal(downloads, 1);
+
+  const forced = await runUpdate(["agent-check", "--root", f.target, "--force"], agentServices);
+  assert.equal(forced.status, "update-available");
+  assert.equal(remoteCalls, 2);
+  assert.equal(downloads, 2);
+  assert.equal(await read(f.target, "src/current.js"), targetBefore);
+});
+
 test("lock and project-data overlap fail without touching source files", async (t) => {
   const f = await fixture(t);
   await fs.mkdir(path.join(f.target, ".pptops-updates/lock"), { recursive: true });
