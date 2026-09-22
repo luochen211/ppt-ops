@@ -4,6 +4,7 @@ import { renderHtmlDiagram } from "./diagram.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { compileProjectLayout } from "../layout/catalog.js";
+import { applyCitationManifest } from "../citations/manifest.js";
 
 const MIME_TYPES = new Map([
   [".avif", "image/avif"], [".gif", "image/gif"], [".jpeg", "image/jpeg"],
@@ -14,6 +15,7 @@ const MIME_TYPES = new Map([
 
 /** Build a deterministic, directly openable HTML presentation. */
 export async function buildHtml(project) {
+  project = applyCitationManifest(project);
   assertAccessibleTextCapacity(project);
   const embeddedAssets = await embedAssets(project);
   const plans = compileProjectLayout(project);
@@ -58,6 +60,7 @@ figure{width:100%;height:100%;max-height:650px;margin:0;display:grid;place-items
 figure img,figure video{display:block;width:100%;height:100%;object-fit:var(--fit,contain)}
 .asset-link{display:inline-flex;align-items:center;justify-content:center;padding:24px 32px;border:3px solid var(--accent);border-radius:999px;color:var(--text);font-size:28px;text-decoration:none}
 .slide-footer{display:flex;justify-content:space-between;gap:40px;font-size:21px;letter-spacing:.04em;opacity:.56}
+.slide-citations{display:flex;flex-wrap:wrap;gap:8px 22px;min-height:28px;font-size:16px;line-height:1.35;opacity:.78}.slide-citations span{white-space:nowrap}
 .relation-diagram{position:relative;width:100%;height:650px;align-self:center}.diagram-connectors{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:var(--accent);stroke:none}.diagram-connectors line{stroke:var(--accent);stroke-width:2}.diagram-connectors text{font-size:17px;font-family:var(--body)}.diagram-node{position:absolute;display:grid;place-items:center;text-align:center;font-size:31px;line-height:1.45;white-space:pre-line;padding:10px}.diagram-node:after{content:"";position:absolute;left:15%;right:15%;bottom:0;border-bottom:1px solid var(--accent);opacity:.5}.diagram-input,.diagram-output,.diagram-condition{font-weight:700}.diagram-output:after{border-width:3px}.diagram-condition{padding:20px;background:color-mix(in srgb,var(--accent) 8%,transparent);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.diagram-condition span{max-width:64%}.diagram-condition:after{display:none}.slide-content:has(.relation-diagram){display:block}
 .boundary-slide{display:block;padding:0;isolation:isolate}
 .boundary-slide::before{display:none}
@@ -106,20 +109,23 @@ function renderSlide(page, plan, index, count, assets) {
   const subtitle = screen.subtitle ? `<p class="subtitle" data-reading-key="subtitle">${escapeHtml(screen.subtitle)}</p>` : "";
   const body = screen.body?.length ? `<ul class="body-copy" data-reading-key="body">${screen.body.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
   const figures = page.asset_slots.map((slot) => renderAsset(slot, assets.get(slot.asset_id), page.page)).join("");
+  const citations = page.citation_entries?.length ? `<div class="slide-citations" aria-label="Sources">${page.citation_entries.map((entry) => `<span>[${entry.number}] ${escapeHtml(entry.public_label || entry.title || "Citation metadata pending")}</span>`).join("")}</div>` : "";
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
   return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" lang="${escapeAttribute(page.accessibility?.language ?? "")}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
   <header class="slide-header" data-qa-id="page-${page.page}-header" data-qa-role="content"><h1 id="slide-title-${page.page}" data-reading-key="title">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
   <div class="slide-content">${page.diagram ? renderHtmlDiagram(page.diagram, page.page) : `<div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message" data-reading-key="message">${escapeHtml(page.three_second_message)}</p>${body}</div>`}<div class="assets" data-reading-key="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
-  <footer class="slide-footer" data-qa-id="page-${page.page}-footer" data-qa-role="content"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
+  ${citations}<footer class="slide-footer" data-qa-id="page-${page.page}-footer" data-qa-role="content"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
 </section>`;
 }
 
 function renderBoundarySlide(page, plan, index, assets) {
   const figures = page.asset_slots.map((slot) => renderAsset({ ...slot, fit: "contain" }, assets.get(slot.asset_id), page.page)).join("");
+  const citations = page.citation_entries?.length ? `<div class="slide-citations" aria-label="Sources">${page.citation_entries.map((entry) => `<span>[${entry.number}] ${escapeHtml(entry.public_label || entry.title || "Citation metadata pending")}</span>`).join("")}</div>` : "";
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
   return `<section class="slide boundary-slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" lang="${escapeAttribute(page.accessibility?.language ?? "")}" data-html-layout="boundary-image-dominant" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
   <div class="boundary-assets" data-reading-key="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div>
   <h1 class="boundary-title" data-reading-key="title" id="slide-title-${page.page}" data-qa-id="page-${page.page}-title" data-qa-role="content">${escapeHtml(page.screen_text.title)}</h1>
+  ${citations}
 </section>`;
 }
 
