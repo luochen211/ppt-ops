@@ -4,6 +4,17 @@
 
 Requirements: macOS for Microsoft PowerPoint evidence, Node.js 22, npm, Git, and Codex with repository Skill discovery enabled.
 
+### PowerPoint file-access authorization
+
+PPT-Ops cannot grant macOS or Microsoft PowerPoint file permissions on the user's behalf. To avoid repeated prompts, set a stable evidence root before running native rendering:
+
+```sh
+export PPT_OPS_EVIDENCE_ROOT="$HOME/Documents/PPT-Ops-Evidence"
+mkdir -p "$PPT_OPS_EVIDENCE_ROOT"
+```
+
+The first PowerPoint render may still show the macOS file-access dialog. Choose the stable `PPT-Ops-Evidence` folder; later project/build evidence is stored below that same root. This setting changes only rendered evidence placement. It does not bypass PowerPoint's authorization model or grant access to source files.
+
 ```sh
 git clone https://github.com/luochen211/ppt-ops.git
 cd ppt-ops
