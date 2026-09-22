@@ -6,13 +6,27 @@ import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
 import { auditAccessibilityArtifacts } from "../accessibility/artifacts.js";
+import { inspectContentConsistency } from "../qa/content-consistency.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
+
+export function resolveReviewEvidenceDir(projectRoot, scope = "standalone") {
+  const configuredRoot = process.env.PPT_OPS_EVIDENCE_ROOT?.trim();
+  if (!configuredRoot) return path.join(projectRoot, ".pptops", "reviews", scope, "evidence");
+  const root = path.resolve(configuredRoot);
+  const projectName = path.basename(path.resolve(projectRoot));
+  return path.join(root, projectName, scope, "evidence");
+}
 
 export async function reviewProject(project, options = {}) {
   const directory = outputDir(project);
   const validationErrors = validateProject(project);
   const artifacts = await listOutputArtifacts(directory);
+  const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");
+  const htmlFile = options.htmlFile ?? await firstExisting([
+    path.join(directory, "slides.html"),
+    path.join(project.root, "ppt", "index.html")
+  ]);
   const deliveryModeFit = inspectDeliveryModeFit(project);
   const automatedChecks = [
     {
@@ -59,7 +73,6 @@ export async function reviewProject(project, options = {}) {
     status: accessibility.status === "failed" ? "failed" : accessibility.status === "passed" ? "passed" : "pending",
     evidence: accessibility
   });
-  const pptxFile = options.pptxFile ?? path.join(directory, "slides.pptx");
   try {
     await fs.access(pptxFile);
     const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0" });
@@ -75,10 +88,6 @@ export async function reviewProject(project, options = {}) {
     automatedChecks.push({ id: "pptx-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No PPTX build selected for visual QA." } });
   }
   if (options.htmlQa) {
-    const htmlFile = options.htmlFile ?? await firstExisting([
-      path.join(directory, "slides.html"),
-      path.join(project.root, "ppt", "index.html")
-    ]);
     if (htmlFile) {
       const qa = await inspectHtmlPresentation({ htmlFile, browserPath: options.browserPath, timeoutMs: options.htmlQaTimeoutMs });
       automatedChecks.push({
@@ -91,6 +100,10 @@ export async function reviewProject(project, options = {}) {
     } else {
       automatedChecks.push({ id: "html-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No HTML build selected for visual QA." } });
     }
+  }
+  if (htmlFile && await exists(pptxFile)) {
+    const consistency = await inspectContentConsistency({ htmlFile, pptxFile, buildRevision: options.buildRevision });
+    automatedChecks.push({ ...consistency, evidence: consistency });
   }
   const acceptance = [
     pendingAcceptance("visual-acceptance", "visual", "Requires human visual inspection of rendered slides."),
@@ -150,6 +163,10 @@ async function firstExisting(files) {
     try { await fs.access(file); return file; } catch {}
   }
   return undefined;
+}
+
+async function exists(file) {
+  try { await fs.access(file); return true; } catch { return false; }
 }
 
 function pendingAcceptance(id, kind, note) {

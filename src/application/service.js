@@ -15,7 +15,7 @@ import { exportPresentationPdf, hashFile, pdfCapability } from "../delivery/pdf.
 import { findBrowser } from "../qa/html.js";
 import { ProjectFileStore } from "../infrastructure/file-store.js";
 import { InfrastructureStore } from "../infrastructure/store.js";
-import { reviewProject, writeReviewReport } from "../review/index.js";
+import { resolveReviewEvidenceDir, reviewProject, writeReviewReport } from "../review/index.js";
 import { createReviewerFeedbackPackage, importReviewerResponse } from "../reviewer-feedback/index.js";
 import { proposeAccessibilityRemediation } from "../accessibility/remediation.js";
 import { manageCorporateProfile, materializeCorporateProfile } from "../templates/corporate-profile.js";
@@ -266,7 +266,7 @@ export class ApplicationService {
     await assertBoundaryGeneratedImages(frozenProject);
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
     const htmlFile = build.targets.includes("html") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "html", "slides.html")) : undefined;
-    const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveProjectPath(this.project.root, path.join(".pptops", "reviews", `build-${buildId}`, "evidence")) });
+    const report = await reviewProject(frozenProject, { buildRevision: build.id, pptxFile, htmlFile, htmlQa: Boolean(htmlFile), evidenceDir: resolveReviewEvidenceDir(this.project.root, `build-${buildId}`) });
     if (build.config?.variant) report.variant = build.config?.variant;
     if (build.config?.corporate_profile) report.corporate_profile = build.config.corporate_profile;
     await writeReviewReport(frozenProject, report);
