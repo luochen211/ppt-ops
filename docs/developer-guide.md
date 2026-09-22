@@ -12,6 +12,8 @@ JSON contracts and project files are portable truth. SQLite stores rebuildable i
 
 `src/reviewer-feedback/index.js` packages an already-built HTML target; it must never invoke a renderer. The technical manifest binds the package to exact Build and Review hashes while the entry page shows only a short package fingerprint. Returned JSON is normalized into append-only `reviewer_feedback` evidence with a portable manifest that `reindex` restores. Import preserves supplied language and identity fields, records identity as unverified, flags a response when a newer succeeded Build exists, and reports opposing decisions without merging reviewers or changing Review state.
 
+When both actual Build artifacts exist, Review also runs `src/qa/content-consistency.js`. It extracts page text from the generated HTML and native PPTX, binds the check to both artifact hashes and the Build revision, and reports page-level title/message/footer differences plus sensitive number and unit differences. This check is semantic only: it does not compare pixels, geometry, fonts, speaker notes, or PowerPoint visual acceptance. A blocking difference prevents the automated Review from passing; unsupported chart, table, citation, and hidden-content checks remain explicit human-review limits.
+
 ## Templates and renderers
 
 Add semantic templates in `src/layout/catalog.js`, including explicit capacity rules and renderer mappings. Both HTML and PPTX must consume the same PageSpec meaning and deterministic Layout Plan. Add fixtures for both renderers and reject over-capacity content rather than silently shrinking it.

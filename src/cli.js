@@ -9,7 +9,7 @@ import { outputDir, readProject } from "./core/project.js";
 import { validateProject } from "./core/validate.js";
 import { createHandoff } from "./handoff/index.js";
 import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
-import { reviewProject, writeReviewReport } from "./review/index.js";
+import { resolveReviewEvidenceDir, reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
 const APPLICATION_COMMANDS = new Set(["candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "accessibility-remediate", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
@@ -276,7 +276,7 @@ async function buildFormats(project, formats) {
 
 async function runReview(project) {
   await assertBoundaryGeneratedImages(project);
-  const report = await reviewProject(project, { htmlQa: true });
+  const report = await reviewProject(project, { htmlQa: true, evidenceDir: resolveReviewEvidenceDir(project.root) });
   const reportFile = await writeReviewReport(project, report);
   console.log(JSON.stringify({ ...report, report_file: reportFile }, null, 2));
   if (!report.passed) process.exitCode = 1;
@@ -298,7 +298,7 @@ async function runHandoff(project, options) {
     artifact_type: "presentation", formats, available_formats: available.map(item => item.format), actor,
     source_id: "legacy-output-snapshot", source_revision: digest(available.map(({ format, sha256 }) => ({ format, sha256 }))), selection_source: "explicit_cli_formats"
   });
-  const report = await reviewProject(project, { htmlQa: true });
+  const report = await reviewProject(project, { htmlQa: true, evidenceDir: resolveReviewEvidenceDir(project.root) });
   const reportFile = await writeReviewReport(project, report);
   const sourceFiles = available.filter(item => selection.decision.formats.includes(item.format));
   sourceFiles.push({ name: "review-report.json", path: reportFile });

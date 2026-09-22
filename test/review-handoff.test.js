@@ -7,6 +7,18 @@ import test from "node:test";
 import { promisify } from "node:util";
 import { writeMigratedProject } from "../src/migrations/foundation-to-v1.js";
 import { seedAcceptedBoundaryImages } from "./support/accepted-boundaries.js";
+import { resolveReviewEvidenceDir } from "../src/review/index.js";
+
+test("review evidence can use one stable user-selected root", () => {
+  const previous = process.env.PPT_OPS_EVIDENCE_ROOT;
+  process.env.PPT_OPS_EVIDENCE_ROOT = "/tmp/ppt-ops-stable-evidence";
+  try {
+    assert.equal(resolveReviewEvidenceDir("/tmp/client-deck", "build-001"), "/tmp/ppt-ops-stable-evidence/client-deck/build-001/evidence");
+  } finally {
+    if (previous === undefined) delete process.env.PPT_OPS_EVIDENCE_ROOT;
+    else process.env.PPT_OPS_EVIDENCE_ROOT = previous;
+  }
+});
 
 const execFileAsync = promisify(execFile);
 const cli = path.resolve("src/cli.js");
