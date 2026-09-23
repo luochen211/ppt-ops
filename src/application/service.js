@@ -24,6 +24,7 @@ import { assertBoundaryGeneratedImages } from "../visual-assets/boundary-policy.
 import { buildCitationManifest } from "../citations/manifest.js";
 import { SourceIntake } from "../sources/intake.js";
 import { compareSourceRevision } from "../sources/revision-impact.js";
+import { createRefinementScope, inspectRefinementPptx, stableHash } from "../refinement/pptx-inspection.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -53,6 +54,33 @@ export class ApplicationService {
   }
 
   close() { this.store.close(); }
+
+  async inspectPptxRefinement(inputFile) {
+    if (path.extname(inputFile).toLowerCase() !== ".pptx") throw new ApplicationError("REFINEMENT_PPTX_REQUIRED", "visual refinement requires a PPTX source");
+    const intake = new SourceIntake({ projectRoot: this.project.root, store: this.store, projectId: this.projectId });
+    const imported = await intake.importFile(inputFile);
+    if (imported.source.mime !== "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
+      throw new ApplicationError("REFINEMENT_PPTX_REQUIRED", "visual refinement requires a PPTX source");
+    }
+    const report = await inspectRefinementPptx(resolveProjectPath(this.project.root, imported.source.file), imported.source);
+    const relative = path.join(".pptops", "refinement", "inspections", imported.source.sha256, "inspection.json");
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, relative), report);
+    return { source: imported.source, duplicate: imported.duplicate, inspection: report, inspection_file: relative };
+  }
+
+  async proposePptxRefinementScope({ sourceId, targets, actor }) {
+    const source = this.requireEntity("source", sourceId);
+    if (source.mime !== "application/vnd.openxmlformats-officedocument.presentationml.presentation") throw new ApplicationError("REFINEMENT_PPTX_REQUIRED", "visual refinement requires a PPTX source");
+    const inspectionFile = resolveProjectPath(this.project.root, path.join(".pptops", "refinement", "inspections", source.sha256, "inspection.json"));
+    let inspection;
+    try { inspection = JSON.parse(await fs.readFile(inspectionFile, "utf8")); }
+    catch (error) { if (error.code === "ENOENT") throw new ApplicationError("REFINEMENT_INSPECTION_REQUIRED", "inspect the PPTX before proposing a refinement scope"); throw error; }
+    const scope = createRefinementScope(inspection, { targets, actor });
+    const id = `scope-${stableHash(scope).slice(0, 16)}`;
+    const relative = path.join(".pptops", "refinement", "scopes", id, "scope.json");
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, relative), { ...scope, id });
+    return { scope: { ...scope, id }, scope_file: relative };
+  }
 
   async previewSourceUpdate(sourceId, inputFile) {
     const source = this.store.getEntity(this.projectId, "source", sourceId) ?? this.project.contracts.sources.find((item) => item.id === sourceId);
@@ -553,6 +581,16 @@ async function atomicWriteJson(file, value) {
   const temporary = `${file}.tmp-${crypto.randomUUID()}`;
   await fs.writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" });
   await fs.rename(temporary, file);
+}
+
+async function writeImmutableOrVerify(file, value) {
+  const serialized = `${JSON.stringify(value, null, 2)}\n`;
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  try { await fs.writeFile(file, serialized, { flag: "wx" }); }
+  catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    if (await fs.readFile(file, "utf8") !== serialized) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable evidence differs: ${path.basename(file)}`);
+  }
 }
 function nextId(prefix, entities) { return `${prefix}-${String(entities.length + 1).padStart(3, "0")}`; }
 function stripRevision({ revision, ...entity }) { return entity; }
