@@ -12,7 +12,7 @@ import { writeMigratedProject } from "./migrations/foundation-to-v1.js";
 import { resolveReviewEvidenceDir, reviewProject, writeReviewReport } from "./review/index.js";
 import { assertBoundaryGeneratedImages } from "./visual-assets/boundary-policy.js";
 
-const APPLICATION_COMMANDS = new Set(["source-update-preview", "source-update-propose", "candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "accessibility-remediate", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
+const APPLICATION_COMMANDS = new Set(["refinement-inspect", "refinement-scope-propose", "source-update-preview", "source-update-propose", "candidate-propose", "candidate-reconstruct-relations", "candidate-render", "candidate-diff", "candidate-accept", "candidate-reject", "candidate-auto-reject", "candidate-continue", "candidate-record-powerpoint-observation", "candidate-feedback-show", "candidate-attempts", "candidate-compare", "variant-manage", "corporate-template", "accessibility-remediate", "version-freeze", "build-create", "build-retry", "review-run", "review-record", "review-package-create", "review-package-import", "outline-source", "outline-approve", "delivery-capabilities", "delivery-select", "handoff-create"]);
 const VISUAL_ASSET_COMMANDS = new Set(["visual-asset-prepare", "visual-asset-ingest", "visual-asset-observe", "visual-asset-decide", "visual-asset-register"]);
 const HELP = `PPT-Ops 1.0
 
@@ -20,6 +20,8 @@ Usage:
   pptops init <project-dir> [--name <id>] [--title <title>] [--delivery-mode <live_talk|workshop|pitch|leave_behind|async>] [--accessibility-profile <json>]
   pptops migrate <foundation-project-dir> --to <v1-project-dir>
   pptops import <project-dir> --file <markdown|docx|pptx>
+  pptops refinement-inspect <project-dir> --file <pptx>
+  pptops refinement-scope-propose <project-dir> --source <id> --payload <json>
   pptops visual-preference <repository-root> --action <inspect|nominate|observe|propose|feedback|decide|revise|remove> [--payload <json>]
   pptops design-context <project-dir> [--repository-root <path>]
   pptops validate <project-dir>
@@ -200,6 +202,11 @@ async function runApplicationCommand(command, projectDir, options) {
   const { ApplicationError, ApplicationService } = await import("./application/service.js");
   const service = await ApplicationService.open(projectDir);
   try {
+    if (command === "refinement-inspect") return await service.inspectPptxRefinement(required(options, "file"));
+    if (command === "refinement-scope-propose") {
+      const payload = jsonOption(options, "payload");
+      return await service.proposePptxRefinementScope({ sourceId: required(options, "source"), targets: payload.targets, actor: payload.actor });
+    }
     if (command === "source-update-preview") return service.previewSourceUpdate(required(options, "source"), required(options, "file"));
     if (command === "source-update-propose") return service.proposeSourceUpdateCandidate({ sourceId: required(options, "source"), newSourceId: required(options, "new-source"), pageId: required(options, "page-id"), patch: jsonOption(options, "patch"), baseRevision: integerOption(options, "base-revision") });
     if (["candidate-propose", "candidate-reconstruct-relations"].includes(command)) return await service.proposeCandidate({
