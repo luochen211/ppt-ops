@@ -54,6 +54,45 @@ export class ApplicationService {
 
   close() { this.store.close(); }
 
+  inspectProject() {
+    const entityKinds = ["candidate", "candidate_feedback", "version", "review", "handoff"];
+    return {
+      project: {
+        id: this.projectId,
+        title: this.project.project.title,
+        contract_version: this.project.project.contract_version,
+        format: this.project.project.format,
+        delivery_mode: this.project.project.delivery_mode ?? null
+      },
+      contracts: {
+        sources: this.project.contracts.sources.length,
+        pages: this.project.contracts.pages.length,
+        assets: this.project.contracts.assets.length,
+        templates: this.project.contracts.templates.length
+      },
+      workflow: {
+        ...Object.fromEntries(entityKinds.map((kind) => [kind, this.store.listEntities(this.projectId, kind).length])),
+        builds: this.store.listBuilds(this.projectId).length
+      }
+    };
+  }
+
+  buildStatus(buildId) {
+    return {
+      build: this.requireBuild(buildId),
+      attempts: this.store.listAttempts(buildId),
+      events: this.store.listEvents(buildId)
+    };
+  }
+
+  reviewInspect(reviewId) {
+    const review = this.requireEntity("review", reviewId);
+    return {
+      review,
+      build: this.requireBuild(review.build_id)
+    };
+  }
+
   async previewSourceUpdate(sourceId, inputFile) {
     const source = this.store.getEntity(this.projectId, "source", sourceId) ?? this.project.contracts.sources.find((item) => item.id === sourceId);
     if (!source) throw new ApplicationError("SOURCE_NOT_FOUND", `unknown source: ${sourceId}`);
