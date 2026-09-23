@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/ppt-ops-logo.png" alt="PPT-Ops Logo：机器人手持橙红色演示文稿页面" width="220">
+
 # PPT-Ops
 
 ### 从一份资料，到一套可讲、可改、可交付的演示文稿
