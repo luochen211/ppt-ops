@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import JSZip from "jszip";
 
-const SUPPORTED_PROPERTIES = Object.freeze({
+export const SUPPORTED_PROPERTIES = Object.freeze({
   text_box: ["position", "size", "font_family", "font_size", "font_weight", "line_spacing", "fill_color", "line_color", "text_color"],
   basic_shape: ["position", "size", "fill_color", "line_color"],
   picture: ["position", "size", "crop"]
@@ -33,6 +33,7 @@ export async function inspectRefinementPptx(file, source) {
   return {
     contract_version: "1.0", kind: "pptx_refinement_inspection",
     source: { id: source.id, sha256: source.sha256, original_name: source.original_name, bytes: source.bytes },
+    package_sha256: actualSha256,
     slide_count: slides.length, object_counts: counts, slides, findings,
     capabilities: { supported_properties: SUPPORTED_PROPERTIES, content_editing: false, slide_reordering: false, whole_slide_replacement: false, real_powerpoint_acceptance: "pending" }
   };
@@ -51,16 +52,22 @@ export function createRefinementScope(inspection, { targets, actor }) {
     if (!object) throw coded("REFINEMENT_TARGET_INVALID", `unknown object on slide ${target.slide}: ${target.object_id}`);
     if (!SUPPORTED_PROPERTIES[object.type]) throw coded("REFINEMENT_OBJECT_UNSUPPORTED", `object ${target.object_id} on slide ${target.slide} is not safely editable`);
     if (!Array.isArray(target.properties) || target.properties.length === 0) throw coded("REFINEMENT_PROPERTIES_REQUIRED", `target ${target.object_id} requires visual properties`);
-    const properties = [...new Set(target.properties.map(String))].sort();
+    if (target.properties.some((property) => typeof property !== "string" || !property.trim())) throw coded("REFINEMENT_PROPERTY_INVALID", `target ${target.object_id} contains an empty property`);
+    const properties = [...new Set(target.properties.map((property) => property.trim()))].sort();
     const forbidden = properties.filter((property) => !SUPPORTED_PROPERTIES[object.type].includes(property));
     if (forbidden.length) throw coded("REFINEMENT_PROPERTY_FORBIDDEN", `unsupported properties for ${object.type}: ${forbidden.join(", ")}`);
     const key = `${target.slide}:${target.object_id}`;
     if (seen.has(key)) throw coded("REFINEMENT_TARGET_DUPLICATE", `duplicate target: ${key}`);
     seen.add(key);
-    return { slide: target.slide, object_id: target.object_id, object_type: object.type, properties, objective: String(target.objective ?? "").trim() };
+    return {
+      slide: target.slide, object_id: target.object_id, object_type: object.type, properties,
+      baseline: { fingerprint: object.fingerprint, bounds_emu: object.bounds_emu ?? null, text_sha256: object.text_sha256 },
+      objective: String(target.objective ?? "").trim()
+    };
   });
   return {
-    contract_version: "1.0", kind: "pptx_refinement_scope", source: inspection.source, actor: actor.trim(), targets: normalized,
+    contract_version: "1.0", kind: "pptx_refinement_scope", source: { ...inspection.source, package_sha256: inspection.package_sha256 }, actor: actor.trim(),
+    slides: [...new Set(normalized.map((target) => target.slide))].sort((left, right) => left - right), targets: normalized,
     preservation: { text: true, facts: true, numbers: true, slide_order: true, untargeted_slides: true, untargeted_properties: true },
     prohibited_operations: ["content_rewrite", "slide_reorder", "whole_slide_replacement", "unsupported_object_edit"],
     acceptance: { automated_scope_check: "pending", before_after_preview: "pending", real_powerpoint: "pending", user_decision: "pending" }
@@ -71,24 +78,28 @@ export function stableHash(value) { return crypto.createHash("sha256").update(st
 
 function inspectSlideObjects(xml, slide) {
   return [
-    ...elementBlocks(xml, "p:sp").map((block) => objectFromBlock(block, slide, "shape")),
-    ...elementBlocks(xml, "p:pic").map((block) => objectFromBlock(block, slide, "picture")),
-    ...elementBlocks(xml, "p:graphicFrame").map((block) => objectFromBlock(block, slide, "graphic_frame"))
+    ...elementBlocks(xml, "p:sp").map((block, index) => objectFromBlock(block, slide, "shape", index + 1)),
+    ...elementBlocks(xml, "p:pic").map((block, index) => objectFromBlock(block, slide, "picture", index + 1)),
+    ...elementBlocks(xml, "p:graphicFrame").map((block, index) => objectFromBlock(block, slide, "graphic_frame", index + 1))
   ].sort((left, right) => Number(left.native_id) - Number(right.native_id) || left.id.localeCompare(right.id));
 }
 
-function objectFromBlock(xml, slide, baseType) {
+function objectFromBlock(xml, slide, baseType, ordinal) {
   const tag = /<p:cNvPr\b([^>]*)\/?\s*>/.exec(xml)?.[1] ?? "";
-  const nativeId = /\bid="([^"]+)"/.exec(tag)?.[1] ?? "unknown";
+  const nativeId = /\bid="([^"]+)"/.exec(tag)?.[1] ?? `unknown-${ordinal}`;
   const name = /\bname="([^"]*)"/.exec(tag)?.[1] ?? "";
   const hasText = /<a:t(?:\s[^>]*)?>/.test(xml);
   const type = baseType === "shape" ? (hasText ? "text_box" : "basic_shape") : baseType === "picture" ? "picture" : detectGraphicType(xml);
   const offset = /<a:off\b[^>]*\bx="(-?\d+)"[^>]*\by="(-?\d+)"/.exec(xml);
   const extent = /<a:ext\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/.exec(xml);
   const text = [...xml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)].map((match) => decodeXml(match[1])).join("");
-  const fingerprint = stableHash({ slide, native_id: nativeId, type, name, text, offset: offset?.slice(1), extent: extent?.slice(1) }).slice(0, 16);
+  const fingerprint = stableHash({ slide, native_id: nativeId, type, name, text, offset: offset?.slice(1), extent: extent?.slice(1) });
+  // The identity is tied to the native object identity only. Content and geometry
+  // are retained as a baseline fingerprint so a later stage can reject stale edits
+  // without changing the address of the object being edited.
+  const identity = stableHash({ slide, native_id: nativeId, type }).slice(0, 16);
   return {
-    id: `slide-${String(slide).padStart(3, "0")}-object-${nativeId}-${fingerprint}`, native_id: nativeId, name, type,
+    id: `slide-${String(slide).padStart(3, "0")}-object-${nativeId}-${identity}`, native_id: nativeId, name, type, fingerprint,
     editable_properties: SUPPORTED_PROPERTIES[type] ?? [],
     ...(offset && extent ? { bounds_emu: { x: Number(offset[1]), y: Number(offset[2]), width: Number(extent[1]), height: Number(extent[2]) } } : {}),
     text_sha256: text ? crypto.createHash("sha256").update(text).digest("hex") : null

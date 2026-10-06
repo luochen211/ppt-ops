@@ -39,11 +39,33 @@ test("refinement scope permits only explicit visual properties on supported obje
   const textBox = inspection.slides[0].objects.find((object) => object.type === "text_box");
   const scope = createRefinementScope(inspection, { actor: "user:syna", targets: [{ slide: 1, object_id: textBox.id, properties: ["font_size", "position"], objective: "Improve hierarchy" }] });
   assert.deepEqual(scope.targets[0].properties, ["font_size", "position"]);
+  assert.deepEqual(scope.slides, [1]);
+  assert.equal(scope.targets[0].baseline.fingerprint, textBox.fingerprint);
   assert.equal(scope.preservation.text, true);
   assert.equal(scope.acceptance.real_powerpoint, "pending");
   assert.throws(() => createRefinementScope(inspection, { actor: "user:syna", targets: [{ slide: 1, object_id: textBox.id, properties: ["text"] }] }), { code: "REFINEMENT_PROPERTY_FORBIDDEN" });
   const chart = inspection.slides[1].objects.find((object) => object.type === "chart");
   assert.throws(() => createRefinementScope(inspection, { actor: "user:syna", targets: [{ slide: 2, object_id: chart.id, properties: ["fill_color"] }] }), { code: "REFINEMENT_OBJECT_UNSUPPORTED" });
+});
+
+test("object identity remains stable while the inspection fingerprint changes", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-identity-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const originalFile = path.join(root, "original.pptx");
+  const changedFile = path.join(root, "changed.pptx");
+  const originalBytes = await refinementPptx();
+  await fs.writeFile(originalFile, originalBytes);
+  const changedZip = await JSZip.loadAsync(originalBytes);
+  changedZip.file("ppt/slides/slide1.xml", `<p:sld><p:cSld><p:spTree><p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="999" y="200"/><a:ext cx="300" cy="400"/></a:xfrm></p:spPr><p:txBody><a:p><a:r><a:t>Changed result 42</a:t></a:r></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`);
+  await fs.writeFile(changedFile, await changedZip.generateAsync({ type: "nodebuffer" }));
+  const first = await inspectRefinementPptx(originalFile, { id: "source", sha256: sha(originalBytes), original_name: "original.pptx", bytes: originalBytes.length });
+  const secondBytes = await fs.readFile(changedFile);
+  const second = await inspectRefinementPptx(changedFile, { id: "source", sha256: sha(secondBytes), original_name: "changed.pptx", bytes: secondBytes.length });
+  const firstObject = first.slides[0].objects.find((object) => object.native_id === "2");
+  const secondObject = second.slides[0].objects.find((object) => object.native_id === "2");
+  assert.equal(secondObject.id, firstObject.id);
+  assert.notEqual(secondObject.fingerprint, firstObject.fingerprint);
+  assert.notEqual(secondObject.text_sha256, firstObject.text_sha256);
 });
 
 test("application service stores the original, inspection, and idempotent scope without editing the PPTX", async (t) => {
