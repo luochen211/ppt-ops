@@ -9,6 +9,7 @@ import { ApplicationError, ApplicationService } from "../application/service.js"
 
 const SERVER_VERSION = "0.1.0";
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+const STATEFUL_BUILD_RETRY = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 
 export async function resolveProjectDirectory(argv) {
   if (argv.length !== 2 || argv[0] !== "--project-dir" || !argv[1]) {
@@ -27,7 +28,7 @@ export async function resolveProjectDirectory(argv) {
 export function createPptOpsMcpServer(projectDir) {
   const server = new McpServer(
     { name: "ppt-ops", version: SERVER_VERSION },
-    { capabilities: { tools: {} }, instructions: "只读访问启动时指定的单个 PPT-Ops 项目。所有写入与工作流推进操作仍由 CLI 或 ApplicationService 的受控入口完成。" }
+    { capabilities: { tools: {} }, instructions: "访问启动时指定的单个 PPT-Ops 项目。查询工具只读；Build 重试仅通过 ApplicationService 受控入口执行，并保留既有状态门禁。" }
   );
 
   registerReadOnlyTool(server, "pptops_project_inspect", "读取项目身份、契约数量和工作流对象数量。", z.object({}).strict(), async () => {
@@ -52,11 +53,21 @@ export function createPptOpsMcpServer(projectDir) {
     return withService(projectDir, (service) => service.deliveryCapabilities(artifact_type, build_id));
   });
 
+  registerTool(server, "pptops_build_retry", "重试一个已失败或已取消的 Build；保留原有 attempt 和事件记录。", z.object({
+    build_id: idSchema("Build")
+  }).strict(), STATEFUL_BUILD_RETRY, async ({ build_id }) => {
+    return withService(projectDir, (service) => service.retryBuild(build_id));
+  });
+
   return server;
 }
 
 function registerReadOnlyTool(server, name, description, inputSchema, handler) {
-  server.registerTool(name, { description, inputSchema, annotations: READ_ONLY }, async (input) => {
+  registerTool(server, name, description, inputSchema, READ_ONLY, handler);
+}
+
+function registerTool(server, name, description, inputSchema, annotations, handler) {
+  server.registerTool(name, { description, inputSchema, annotations }, async (input) => {
     try {
       const data = sanitize(await handler(input));
       return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: data };

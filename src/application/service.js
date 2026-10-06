@@ -332,6 +332,10 @@ export class ApplicationService {
   }
 
   async retryBuild(buildId) {
+    const build = this.requireBuild(buildId);
+    if (!["failed", "cancelled"].includes(build.state)) {
+      throw new ApplicationError("BUILD_RETRY_INVALID_STATE", `build cannot be retried from state: ${build.state}`, { state: build.state });
+    }
     this.store.retryBuild(buildId);
     return this.runBuild(buildId);
   }

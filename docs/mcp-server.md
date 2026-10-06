@@ -39,12 +39,14 @@ npm run mcp -- --project-dir /absolute/path/to/ppt-ops-project
 | `pptops_candidate_diff` | `candidate_id` | Candidate 补丁、目标版本、是否过期 |
 | `pptops_review_inspect` | `review_id` | Review 证据状态和关联 Build |
 | `pptops_delivery_capabilities` | `artifact_type`，presentation 另需 `build_id` | 当前可选择的交付格式 |
+| `pptops_build_retry` | `build_id` | 重试已失败或已取消的 Build，并返回新的尝试结果 |
 
-所有工具均声明为只读、幂等且不访问外部网络。返回值同时包含文本 JSON 和 `structuredContent`。业务错误使用稳定的 `error.code`；未知内部错误不会向客户端暴露堆栈。
+查询工具声明为只读、幂等且不访问外部网络；`pptops_build_retry` 是唯一的有状态工具，仍不访问外部网络。返回值同时包含文本 JSON 和 `structuredContent`。业务错误使用稳定的 `error.code`；未知内部错误不会向客户端暴露堆栈。
 
 ## 当前限制
 
 - 仅支持本机 `stdio` 传输。
 - 一个 Server 进程只服务一个项目。
-- Source 导入、Build、Review 和 Handoff 等有状态操作尚未开放为 MCP 工具。
+- `pptops_build_retry` 只允许 `failed` 或 `cancelled` 状态；它不会接受排队中、运行中或成功的 Build，也不会修改已冻结 Version。
+- Source 导入、Build 创建、Review 和 Handoff 等其他有状态操作尚未开放为 MCP 工具。
 - Server 复用 `ApplicationService`，不维护第二套业务状态或生命周期规则。
