@@ -112,6 +112,35 @@ test("application service rejects modified inspection evidence", async (t) => {
   } finally { service.close(); }
 });
 
+test("Stage 2 creates an immutable scoped Candidate and preserves the original PPTX", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-candidate-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const projectDir = path.join(root, "project");
+  await initializeProject(projectDir, { name: "candidate-fixture", title: "Candidate Fixture" });
+  const input = path.join(root, "existing.pptx"), bytes = await refinementPptx();
+  await fs.writeFile(input, bytes);
+  const service = await ApplicationService.open(projectDir);
+  try {
+    const inspected = await service.inspectPptxRefinement(input);
+    const textBox = inspected.inspection.slides[0].objects.find((object) => object.type === "text_box");
+    const scoped = await service.proposePptxRefinementScope({ sourceId: inspected.source.id, actor: "user:syna", targets: [{ slide: 1, object_id: textBox.id, properties: ["position", "font_size"] }] });
+    const request = { sourceId: inspected.source.id, scopeId: scoped.scope.id, actor: "user:syna", changes: [{ slide: 1, object_id: textBox.id, properties: { position: { x: 120, y: 240 }, font_size: 24 } }] };
+    const first = await service.createPptxRefinementCandidate(request);
+    const second = await service.createPptxRefinementCandidate(request);
+    assert.equal(second.candidate.id, first.candidate.id);
+    assert.deepEqual(first.candidate.operations[0].properties, ["font_size", "position"]);
+    assert.equal(first.candidate.original_preserved, true);
+    assert.equal(sha(await fs.readFile(path.join(projectDir, inspected.source.file))), sha(bytes));
+    const candidateBytes = await fs.readFile(path.join(projectDir, first.candidate_file));
+    assert.notEqual(sha(candidateBytes), sha(bytes));
+    const archive = await JSZip.loadAsync(candidateBytes);
+    const slide = await archive.file("ppt/slides/slide1.xml").async("string");
+    assert.match(slide, /<a:off x="120" y="240"\/>/);
+    assert.match(slide, /<a:rPr sz="2400"\/>/);
+    await assert.rejects(service.createPptxRefinementCandidate({ ...request, changes: [{ slide: 1, object_id: textBox.id, properties: { fill_color: "FF0000" } }] }), { code: "REFINEMENT_PROPERTY_FORBIDDEN" });
+  } finally { service.close(); }
+});
+
 async function refinementPptx() {
   const zip = new JSZip();
   zip.file("[Content_Types].xml", "<Types/>");

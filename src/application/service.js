@@ -26,6 +26,7 @@ import { buildCitationManifest } from "../citations/manifest.js";
 import { multimodalCapabilities, SourceIntake } from "../sources/intake.js";
 import { compareSourceRevision } from "../sources/revision-impact.js";
 import { createRefinementScope, inspectRefinementPptx, stableHash } from "../refinement/pptx-inspection.js";
+import { applyRefinementPptx } from "../refinement/pptx-editor.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -147,6 +148,25 @@ export class ApplicationService {
     const relative = path.join(".pptops", "refinement", "scopes", id, "scope.json");
     await writeImmutableOrVerify(resolveProjectPath(this.project.root, relative), { ...scope, id });
     return { scope: { ...scope, id }, scope_file: relative };
+  }
+
+  async createPptxRefinementCandidate({ sourceId, scopeId, changes, actor }) {
+    const source = this.requireEntity("source", sourceId);
+    if (typeof actor !== "string" || !actor.trim()) throw new ApplicationError("REFINEMENT_ACTOR_REQUIRED", "an explicit actor is required");
+    const scopeRelative = path.join(".pptops", "refinement", "scopes", scopeId, "scope.json");
+    const scope = await readRefinementJson(resolveProjectPath(this.project.root, scopeRelative), "REFINEMENT_SCOPE_REQUIRED", "propose a Scope before creating a refinement Candidate");
+    if (scope.actor !== actor.trim()) throw new ApplicationError("REFINEMENT_ACTOR_MISMATCH", "Candidate actor must match the approved Scope actor");
+    const inspectionFile = resolveProjectPath(this.project.root, scope.inspection_file);
+    const inspection = await readRefinementJson(inspectionFile, "REFINEMENT_INSPECTION_REQUIRED", "approved inspection evidence is missing");
+    const inspectionBytes = await fs.readFile(inspectionFile);
+    if (crypto.createHash("sha256").update(inspectionBytes).digest("hex") !== scope.inspection_sha256) throw new ApplicationError("REFINEMENT_INSPECTION_CHANGED", "approved inspection evidence changed after Scope creation");
+    const result = await applyRefinementPptx(resolveProjectPath(this.project.root, source.file), source, inspection, scope, changes);
+    const id = `refinement-${stableHash({ scope_id: scope.id, changes }).slice(0, 16)}`;
+    const base = path.join(".pptops", "refinement", "candidates", id), artifactRelative = path.join(base, "candidate.pptx"), evidenceRelative = path.join(base, "evidence.json");
+    const evidence = { ...result.evidence, id, actor: actor.trim(), scope_file: scopeRelative.replaceAll("\\", "/"), artifact: artifactRelative.replaceAll("\\", "/") };
+    await writeImmutableBytesOrVerify(resolveProjectPath(this.project.root, artifactRelative), result.bytes);
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, evidenceRelative), evidence);
+    return { candidate: evidence, candidate_file: artifactRelative, evidence_file: evidenceRelative };
   }
 
   async previewSourceUpdate(sourceId, inputFile) {
@@ -677,6 +697,18 @@ async function writeImmutableOrVerify(file, value) {
     if (error.code !== "EEXIST") throw error;
     if (await fs.readFile(file, "utf8") !== serialized) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable evidence differs: ${path.basename(file)}`);
   }
+}
+async function writeImmutableBytesOrVerify(file, value) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  try { await fs.writeFile(file, value, { flag: "wx" }); }
+  catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    if (!(await fs.readFile(file)).equals(value)) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable artifact differs: ${path.basename(file)}`);
+  }
+}
+async function readRefinementJson(file, code, message) {
+  try { return JSON.parse(await fs.readFile(file, "utf8")); }
+  catch (error) { if (error.code === "ENOENT") throw new ApplicationError(code, message); throw error; }
 }
 function nextId(prefix, entities) { return `${prefix}-${String(entities.length + 1).padStart(3, "0")}`; }
 function stripRevision({ revision, ...entity }) { return entity; }
