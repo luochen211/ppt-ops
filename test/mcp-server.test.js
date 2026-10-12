@@ -45,13 +45,17 @@ test("MCP stdio server exposes and calls all five read-only tools without changi
 
   const listed = await client.listTools();
   assert.deepEqual(listed.tools.map((tool) => tool.name).sort(), [
+    "pptops_build_create",
     "pptops_build_status",
     "pptops_candidate_diff",
     "pptops_delivery_capabilities",
     "pptops_project_inspect",
-    "pptops_review_inspect"
+    "pptops_review_inspect",
+    "pptops_review_run",
+    "pptops_source_import"
   ]);
-  assert.ok(listed.tools.every((tool) => tool.annotations?.readOnlyHint === true));
+  assert.ok(listed.tools.filter(({ name }) => !["pptops_source_import", "pptops_build_create", "pptops_review_run"].includes(name)).every((tool) => tool.annotations?.readOnlyHint === true));
+  assert.ok(listed.tools.filter(({ name }) => ["pptops_source_import", "pptops_build_create", "pptops_review_run"].includes(name)).every((tool) => tool.annotations?.readOnlyHint === false));
 
   const result = await client.callTool({ name: "pptops_project_inspect", arguments: {} });
   assert.equal(result.isError, undefined);
