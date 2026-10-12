@@ -385,6 +385,25 @@ export class ApplicationService {
     return this.runBuild(id);
   }
 
+  async queueBuild({ versionId, targets, citations, requestId }) {
+    const version = this.requireEntity("version", versionId);
+    if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
+    if (!Array.isArray(targets) || targets.length === 0 || targets.some((target) => !["html", "pptx"].includes(target))) throw new ApplicationError("TARGET_UNSUPPORTED", "targets must contain html and/or pptx");
+    const normalizedTargets = [...new Set(targets)].sort();
+    if (!hasText(requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+    const existing = this.store.listBuilds(this.projectId).find((build) => build.config?.mcp_request_id === requestId);
+    if (existing) {
+      if (existing.version_id !== versionId || JSON.stringify([...existing.targets].sort()) !== JSON.stringify(normalizedTargets)) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Build request");
+      return { build: existing, reused: true };
+    }
+    const frozenProject = await this.projectFromVersion(versionId);
+    const citationManifest = citations ? buildCitationManifest({ ledger: frozenProject.factLedger, sources: frozenProject.contracts.sources, pages: frozenProject.contracts.pages, decision: citations.decision, metadata: citations.metadata }) : undefined;
+    const id = nextId("build", this.store.listBuilds(this.projectId));
+    const build = createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets: normalizedTargets, attempts: [], config: { mcp_request_id: requestId, ...(version.variant ? { variant: version.variant } : {}), ...(version.corporate_profile ? { corporate_profile: version.corporate_profile } : {}), ...(citationManifest ? { citation_manifest: citationManifest } : {}) } });
+    this.store.enqueueBuild(build);
+    return { build: this.requireBuild(id), reused: false };
+  }
+
   async retryBuild(buildId) {
     this.store.retryBuild(buildId);
     return this.runBuild(buildId);

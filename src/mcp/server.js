@@ -9,6 +9,7 @@ import { ApplicationError, ApplicationService } from "../application/service.js"
 
 const SERVER_VERSION = "0.1.0";
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+const MUTATING = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
 export async function resolveProjectDirectory(argv) {
   if (argv.length !== 2 || argv[0] !== "--project-dir" || !argv[1]) {
@@ -27,7 +28,7 @@ export async function resolveProjectDirectory(argv) {
 export function createPptOpsMcpServer(projectDir) {
   const server = new McpServer(
     { name: "ppt-ops", version: SERVER_VERSION },
-    { capabilities: { tools: {} }, instructions: "只读访问启动时指定的单个 PPT-Ops 项目。所有写入与工作流推进操作仍由 CLI 或 ApplicationService 的受控入口完成。" }
+    { capabilities: { tools: {} }, instructions: "访问启动时指定的单个 PPT-Ops 项目。所有工具均通过 ApplicationService，并保留既有状态机、不可变性和人工确认门。" }
   );
 
   registerReadOnlyTool(server, "pptops_project_inspect", "读取项目身份、契约数量和工作流对象数量。", z.object({}).strict(), async () => {
@@ -56,6 +57,20 @@ export function createPptOpsMcpServer(projectDir) {
     }));
   });
 
+  registerStatefulTool(server, "pptops_source_import", "导入项目目录内明确指定的资料；不扫描目录、不接受绝对路径或越界符号链接。", z.object({
+    source_file: z.string().trim().min(1)
+  }).strict(), async ({ source_file }) => {
+    const inputFile = await resolveMcpSourceFile(projectDir, source_file);
+    return withWriteService(projectDir, (service) => service.importSource(inputFile));
+  });
+  registerStatefulTool(server, "pptops_build_create", "从已冻结 Version 创建异步 Build；立即返回 Build ID，并用 pptops_build_status 查询进度。", z.object({
+    version_id: idSchema("Version"), targets: z.array(z.enum(["html", "pptx"])).min(1), request_id: idSchema("Request")
+  }).strict(), async ({ version_id, targets, request_id }) => {
+    const queued = await withWriteService(projectDir, (service) => service.queueBuild({ versionId: version_id, targets, requestId: request_id }));
+    if (!queued.reused || queued.build.state === "queued") scheduleBuild(projectDir, queued.build.id);
+    return { build_id: queued.build.id, state: queued.build.state, reused: queued.reused, status_tool: "pptops_build_status" };
+  });
+
   return server;
 }
 
@@ -72,10 +87,52 @@ function registerReadOnlyTool(server, name, description, inputSchema, handler) {
   });
 }
 
+function registerStatefulTool(server, name, description, inputSchema, handler) {
+  server.registerTool(name, { description, inputSchema, annotations: MUTATING }, async (input) => {
+    try {
+      const data = sanitize(await handler(input));
+      return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: data };
+    } catch (error) {
+      const failure = sanitizeError(error);
+      console.error(JSON.stringify(failure));
+      return { isError: true, content: [{ type: "text", text: JSON.stringify(failure) }], structuredContent: failure };
+    }
+  });
+}
+
 async function withService(projectDir, operation) {
   const service = await ApplicationService.openReadOnly(projectDir);
   try { return await operation(service); }
   finally { service.close(); }
+}
+
+async function withWriteService(projectDir, operation) {
+  const service = await ApplicationService.open(projectDir);
+  try { return await operation(service); }
+  finally { service.close(); }
+}
+
+export async function resolveMcpSourceFile(projectDir, sourceFile) {
+  if (path.isAbsolute(sourceFile)) throw new ApplicationError("MCP_SOURCE_PATH_INVALID", "source_file must be project-relative");
+  const lexical = path.resolve(projectDir, sourceFile);
+  if (outside(projectDir, lexical)) throw new ApplicationError("MCP_SOURCE_PATH_INVALID", "source_file escapes the configured project");
+  let real;
+  try { real = await fs.realpath(lexical); }
+  catch (error) {
+    if (error.code === "ENOENT") throw new ApplicationError("MCP_SOURCE_NOT_FOUND", "source_file does not exist");
+    throw error;
+  }
+  if (outside(projectDir, real)) throw new ApplicationError("MCP_SOURCE_PATH_INVALID", "source_file resolves outside the configured project");
+  return real;
+}
+
+function outside(root, candidate) { const relative = path.relative(root, candidate); return relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative); }
+
+function scheduleBuild(projectDir, buildId) {
+  setImmediate(async () => {
+    try { await withWriteService(projectDir, (service) => service.runBuild(buildId)); }
+    catch (error) { console.error(JSON.stringify(sanitizeError(error))); }
+  });
 }
 
 function idSchema(label) { return z.string().trim().min(1).describe(`${label} ID`); }
