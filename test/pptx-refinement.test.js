@@ -112,12 +112,50 @@ test("application service rejects modified inspection evidence", async (t) => {
   } finally { service.close(); }
 });
 
+test("Stage 2 creates an immutable scoped Candidate and preserves the original PPTX", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-candidate-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const projectDir = path.join(root, "project");
+  await initializeProject(projectDir, { name: "candidate-fixture", title: "Candidate Fixture" });
+  const input = path.join(root, "existing.pptx"), bytes = await refinementPptx();
+  await fs.writeFile(input, bytes);
+  const service = await ApplicationService.open(projectDir);
+  try {
+    const inspected = await service.inspectPptxRefinement(input);
+    const textBox = inspected.inspection.slides[0].objects.find((object) => object.type === "text_box");
+    const scoped = await service.proposePptxRefinementScope({ sourceId: inspected.source.id, actor: "user:syna", targets: [{ slide: 1, object_id: textBox.id, properties: ["position", "font_size"] }] });
+    const request = { sourceId: inspected.source.id, scopeId: scoped.scope.id, actor: "user:syna", changes: [{ slide: 1, object_id: textBox.id, properties: { position: { x: 120, y: 240 }, font_size: 24 } }] };
+    const first = await service.createPptxRefinementCandidate(request);
+    const second = await service.createPptxRefinementCandidate(request);
+    assert.equal(second.candidate.id, first.candidate.id);
+    assert.deepEqual(first.candidate.operations[0].properties, ["font_size", "position"]);
+    assert.equal(first.candidate.original_preserved, true);
+    assert.equal(sha(await fs.readFile(path.join(projectDir, inspected.source.file))), sha(bytes));
+    const candidateBytes = await fs.readFile(path.join(projectDir, first.candidate_file));
+    assert.notEqual(sha(candidateBytes), sha(bytes));
+    const archive = await JSZip.loadAsync(candidateBytes);
+    const slide = await archive.file("ppt/slides/slide1.xml").async("string");
+    assert.match(slide, /<a:off x="120" y="240"\/>/);
+    assert.match(slide, /<a:rPr sz="2400"\/>/);
+    const reviewed = await service.reviewPptxRefinementCandidate(first.candidate.id);
+    assert.equal(reviewed.diff.passed, true);
+    assert.deepEqual(reviewed.diff.changed_parts, ["ppt/slides/slide1.xml"]);
+    assert.equal(await fs.readFile(path.join(projectDir, reviewed.preview_file), "utf8").then((value) => value.includes("Scoped refinement preview")), true);
+    await assert.rejects(service.createPptxRefinementCandidate({ ...request, changes: [{ slide: 1, object_id: textBox.id, properties: { fill_color: "FF0000" } }] }), { code: "REFINEMENT_PROPERTY_FORBIDDEN" });
+    const decided = await service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 });
+    assert.equal(decided.decision.state, "accepted");
+    assert.equal(decided.version.delivery_state, "versioned");
+    assert.equal(sha(await fs.readFile(path.join(projectDir, decided.version.artifact))), sha(candidateBytes));
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "reject", actor: "user:syna", expectedRevision: 0 }), { code: "STALE_BASE_REVISION" });
+  } finally { service.close(); }
+});
+
 async function refinementPptx() {
   const zip = new JSZip();
   zip.file("[Content_Types].xml", "<Types/>");
   zip.file("ppt/presentation.xml", "<p:presentation/>");
   zip.file("ppt/slides/slide1.xml", `<p:sld><p:cSld><p:spTree>
-    <p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm></p:spPr><p:txBody><a:p><a:r><a:t>Confidential result 42</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm></p:spPr><p:txBody><a:p><a:r><a:rPr sz="1800"/><a:t>Confidential result 42</a:t></a:r></a:p></p:txBody></p:sp>
     <p:pic><p:nvPicPr><p:cNvPr id="3" name="Photo"/></p:nvPicPr><p:spPr><a:xfrm><a:off x="500" y="600"/><a:ext cx="700" cy="800"/></a:xfrm></p:spPr></p:pic>
   </p:spTree></p:cSld><p:timing/></p:sld>`);
   zip.file("ppt/slides/slide2.xml", `<p:sld><p:cSld><p:spTree><p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="4" name="Chart"/></p:nvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"/></a:graphic></p:graphicFrame></p:spTree></p:cSld></p:sld>`);

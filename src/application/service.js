@@ -26,6 +26,9 @@ import { buildCitationManifest } from "../citations/manifest.js";
 import { multimodalCapabilities, SourceIntake } from "../sources/intake.js";
 import { compareSourceRevision } from "../sources/revision-impact.js";
 import { createRefinementScope, inspectRefinementPptx, stableHash } from "../refinement/pptx-inspection.js";
+import { applyRefinementPptx } from "../refinement/pptx-editor.js";
+import { reviewRefinementCandidate } from "../refinement/pptx-diff.js";
+import { createRefinementDecision, createRefinementVersion } from "../refinement/lifecycle.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -147,6 +150,55 @@ export class ApplicationService {
     const relative = path.join(".pptops", "refinement", "scopes", id, "scope.json");
     await writeImmutableOrVerify(resolveProjectPath(this.project.root, relative), { ...scope, id });
     return { scope: { ...scope, id }, scope_file: relative };
+  }
+
+  async createPptxRefinementCandidate({ sourceId, scopeId, changes, actor }) {
+    const source = this.requireEntity("source", sourceId);
+    if (typeof actor !== "string" || !actor.trim()) throw new ApplicationError("REFINEMENT_ACTOR_REQUIRED", "an explicit actor is required");
+    const scopeRelative = path.join(".pptops", "refinement", "scopes", scopeId, "scope.json");
+    const scope = await readRefinementJson(resolveProjectPath(this.project.root, scopeRelative), "REFINEMENT_SCOPE_REQUIRED", "propose a Scope before creating a refinement Candidate");
+    if (scope.actor !== actor.trim()) throw new ApplicationError("REFINEMENT_ACTOR_MISMATCH", "Candidate actor must match the approved Scope actor");
+    const inspectionFile = resolveProjectPath(this.project.root, scope.inspection_file);
+    const inspection = await readRefinementJson(inspectionFile, "REFINEMENT_INSPECTION_REQUIRED", "approved inspection evidence is missing");
+    const inspectionBytes = await fs.readFile(inspectionFile);
+    if (crypto.createHash("sha256").update(inspectionBytes).digest("hex") !== scope.inspection_sha256) throw new ApplicationError("REFINEMENT_INSPECTION_CHANGED", "approved inspection evidence changed after Scope creation");
+    const result = await applyRefinementPptx(resolveProjectPath(this.project.root, source.file), source, inspection, scope, changes);
+    const id = `refinement-${stableHash({ scope_id: scope.id, changes }).slice(0, 16)}`;
+    const base = path.join(".pptops", "refinement", "candidates", id), artifactRelative = path.join(base, "candidate.pptx"), evidenceRelative = path.join(base, "evidence.json");
+    const evidence = { ...result.evidence, id, actor: actor.trim(), scope_file: scopeRelative.replaceAll("\\", "/"), artifact: artifactRelative.replaceAll("\\", "/") };
+    await writeImmutableBytesOrVerify(resolveProjectPath(this.project.root, artifactRelative), result.bytes);
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, evidenceRelative), evidence);
+    return { candidate: evidence, candidate_file: artifactRelative, evidence_file: evidenceRelative };
+  }
+
+  async reviewPptxRefinementCandidate(candidateId) {
+    const base = path.join(".pptops", "refinement", "candidates", candidateId);
+    const evidence = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "evidence.json")), "REFINEMENT_CANDIDATE_REQUIRED", "create a refinement Candidate before review");
+    const scope = await readRefinementJson(resolveProjectPath(this.project.root, evidence.scope_file), "REFINEMENT_SCOPE_REQUIRED", "Candidate Scope evidence is missing");
+    const source = this.requireEntity("source", evidence.source.id);
+    const result = await reviewRefinementCandidate(resolveProjectPath(this.project.root, source.file), resolveProjectPath(this.project.root, evidence.artifact), source, scope, evidence);
+    const reportRelative = path.join(base, "scoped-diff.json"), previewRelative = path.join(base, "before-after.html");
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, reportRelative), result.report);
+    await writeImmutableTextOrVerify(resolveProjectPath(this.project.root, previewRelative), result.preview);
+    return { diff: result.report, diff_file: reportRelative, preview_file: previewRelative };
+  }
+
+  async decidePptxRefinementCandidate(candidateId, { decision, actor, expectedRevision }) {
+    const base = path.join(".pptops", "refinement", "candidates", candidateId);
+    const candidate = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "evidence.json")), "REFINEMENT_CANDIDATE_REQUIRED", "unknown refinement Candidate");
+    const diff = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "scoped-diff.json")), "REFINEMENT_REVIEW_REQUIRED", "review the refinement Candidate before decision");
+    const decisionFile = resolveProjectPath(this.project.root, path.join(base, "decision.json"));
+    const current = await readOptionalJson(decisionFile);
+    const record = createRefinementDecision({ candidate, diff, decision, actor, expectedRevision, current });
+    await atomicWriteJson(decisionFile, record);
+    const version = createRefinementVersion(candidate, record);
+    if (!version) return { decision: record, version: null };
+    const versionBase = path.join(".pptops", "refinement", "versions", version.id), artifactRelative = path.join(versionBase, "refined.pptx"), manifestRelative = path.join(versionBase, "manifest.json");
+    const candidateBytes = await fs.readFile(resolveProjectPath(this.project.root, candidate.artifact));
+    await writeImmutableBytesOrVerify(resolveProjectPath(this.project.root, artifactRelative), candidateBytes);
+    const manifest = { ...version, artifact: artifactRelative.replaceAll("\\", "/") };
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, manifestRelative), manifest);
+    return { decision: record, version: manifest, manifest_file: manifestRelative };
   }
 
   async previewSourceUpdate(sourceId, inputFile) {
@@ -678,6 +730,24 @@ async function writeImmutableOrVerify(file, value) {
     if (await fs.readFile(file, "utf8") !== serialized) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable evidence differs: ${path.basename(file)}`);
   }
 }
+async function writeImmutableBytesOrVerify(file, value) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  try { await fs.writeFile(file, value, { flag: "wx" }); }
+  catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    if (!(await fs.readFile(file)).equals(value)) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable artifact differs: ${path.basename(file)}`);
+  }
+}
+async function writeImmutableTextOrVerify(file, value) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  try { await fs.writeFile(file, value, { flag: "wx" }); }
+  catch (error) { if (error.code !== "EEXIST") throw error; if (await fs.readFile(file, "utf8") !== value) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable preview differs: ${path.basename(file)}`); }
+}
+async function readRefinementJson(file, code, message) {
+  try { return JSON.parse(await fs.readFile(file, "utf8")); }
+  catch (error) { if (error.code === "ENOENT") throw new ApplicationError(code, message); throw error; }
+}
+async function readOptionalJson(file) { try { return JSON.parse(await fs.readFile(file, "utf8")); } catch (error) { if (error.code === "ENOENT") return null; throw error; } }
 function nextId(prefix, entities) { return `${prefix}-${String(entities.length + 1).padStart(3, "0")}`; }
 function stripRevision({ revision, ...entity }) { return entity; }
 function hashJson(value) { return crypto.createHash("sha256").update(stableJson(value)).digest("hex"); }
