@@ -385,14 +385,41 @@ export class ApplicationService {
     return this.runBuild(id);
   }
 
+  async queueBuild({ versionId, targets, citations, requestId }) {
+    const version = this.requireEntity("version", versionId);
+    if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
+    if (!Array.isArray(targets) || targets.length === 0 || targets.some((target) => !["html", "pptx"].includes(target))) throw new ApplicationError("TARGET_UNSUPPORTED", "targets must contain html and/or pptx");
+    const normalizedTargets = [...new Set(targets)].sort();
+    if (!hasText(requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+    const existing = this.store.listBuilds(this.projectId).find((build) => build.config?.mcp_request_id === requestId);
+    if (existing) {
+      if (existing.version_id !== versionId || JSON.stringify([...existing.targets].sort()) !== JSON.stringify(normalizedTargets)) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Build request");
+      return { build: existing, reused: true };
+    }
+    const frozenProject = await this.projectFromVersion(versionId);
+    const citationManifest = citations ? buildCitationManifest({ ledger: frozenProject.factLedger, sources: frozenProject.contracts.sources, pages: frozenProject.contracts.pages, decision: citations.decision, metadata: citations.metadata }) : undefined;
+    const id = nextId("build", this.store.listBuilds(this.projectId));
+    const build = createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets: normalizedTargets, attempts: [], config: { mcp_request_id: requestId, ...(version.variant ? { variant: version.variant } : {}), ...(version.corporate_profile ? { corporate_profile: version.corporate_profile } : {}), ...(citationManifest ? { citation_manifest: citationManifest } : {}) } });
+    this.store.enqueueBuild(build);
+    return { build: this.requireBuild(id), reused: false };
+  }
+
   async retryBuild(buildId) {
     this.store.retryBuild(buildId);
     return this.runBuild(buildId);
   }
 
-  async runReview(buildId) {
+  async runReview(buildId, options = {}) {
     const build = this.requireBuild(buildId);
     if (build.state !== "succeeded") throw new ApplicationError("BUILD_NOT_SUCCEEDED", "review requires a succeeded build");
+    if (options.requestId !== undefined) {
+      if (!hasText(options.requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(options.requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+      const existing = this.store.listEntities(this.projectId, "review").find((review) => review.mcp_request_id === options.requestId);
+      if (existing) {
+        if (existing.build_id !== buildId) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Review request");
+        return { review: existing, report: null, reused: true };
+      }
+    }
     const frozenProject = await this.projectFromVersion(build.version_id);
     if (build.config?.citation_manifest) frozenProject.citationManifest = build.config.citation_manifest;
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
@@ -404,11 +431,11 @@ export class ApplicationService {
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
     const immutableReport = await this.files.writeImmutable(`.pptops/reviews/${id}/review-report.json`, `${JSON.stringify(report, null, 2)}\n`);
     const artifactHashes = await this.buildArtifactHashes(build);
-    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file, report_sha256: immutableReport.sha256 }));
+    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(options.requestId ? { mcp_request_id: options.requestId } : {}), ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file, report_sha256: immutableReport.sha256 }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
     await this.files.writeManifest("review", id, stripRevision(review));
-    return { review, report };
+    return { review, report, reused: false };
   }
 
   async recordReview(reviewId, { decision, expectedRevision, evidence = {} }) {
@@ -510,6 +537,14 @@ export class ApplicationService {
 
   async createHandoff(buildId, reviewId, options = {}) {
     const review = this.requireEntity("review", reviewId);
+    if (options.requestId !== undefined) {
+      if (!hasText(options.requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(options.requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+      const existing = this.store.listEntities(this.projectId, "handoff").find((handoff) => handoff.mcp_request_id === options.requestId);
+      if (existing) {
+        if (existing.build_id !== buildId || existing.review_id !== reviewId) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Handoff request");
+        return { handoff: existing, manifest_file: existing.package_manifest, package_dir: existing.package_dir, reused: true };
+      }
+    }
     if (review.state !== "accepted" || review.build_id !== buildId) throw new ApplicationError("REVIEW_NOT_ACCEPTED", "handoff requires an accepted review for the selected build");
     const frozenProject = await this.projectFromVersion(this.requireBuild(buildId).version_id);
     if (!review.report_file) throw new ApplicationError("REVIEW_REPORT_REQUIRED", "handoff requires the selected immutable Review report");
@@ -550,10 +585,12 @@ export class ApplicationService {
     }
     const packageResult = await createHandoff(frozenProject, report, { sourceFiles, deliverySelection: selection, variant: build.config?.variant, corporateProfile: build.config?.corporate_profile, handout });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
-    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
+    const packageManifest = path.relative(this.project.root, packageResult.manifestFile);
+    const packageDirectory = path.relative(this.project.root, packageResult.packageDir);
+    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(options.requestId ? { mcp_request_id: options.requestId } : {}), package_manifest: packageManifest, package_dir: packageDirectory, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
     await this.files.writeManifest("handoff", id, stripRevision(handoff));
-    return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
+    return { handoff, manifest_file: options.requestId ? packageManifest : packageResult.manifestFile, package_dir: options.requestId ? packageDirectory : packageResult.packageDir, reused: false };
   }
 
   async buildHandoffFiles(buildId, review, selectedFormats) {
