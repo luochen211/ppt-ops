@@ -49,9 +49,11 @@ test("MCP stdio server exposes and calls all five read-only tools without changi
     "pptops_candidate_diff",
     "pptops_delivery_capabilities",
     "pptops_project_inspect",
-    "pptops_review_inspect"
+    "pptops_review_inspect",
+    "pptops_source_import"
   ]);
-  assert.ok(listed.tools.every((tool) => tool.annotations?.readOnlyHint === true));
+  assert.ok(listed.tools.filter(({ name }) => name !== "pptops_source_import").every((tool) => tool.annotations?.readOnlyHint === true));
+  assert.equal(listed.tools.find(({ name }) => name === "pptops_source_import").annotations?.readOnlyHint, false);
 
   const result = await client.callTool({ name: "pptops_project_inspect", arguments: {} });
   assert.equal(result.isError, undefined);
