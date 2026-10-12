@@ -1,0 +1,11 @@
+{
+  "description": "Synthetic multi-file regression fixture; never valid as real acceptance evidence.",
+  "artifacts": [
+    { "id": "hazard-deck", "role": "presentation", "format": "pptx" },
+    { "id": "hazard-guide", "role": "learner_guide", "format": "docx" },
+    { "id": "hazard-assessment", "role": "assessment", "format": "assessment" },
+    { "id": "hazard-alignment", "role": "alignment_report", "format": "pdf" }
+  ],
+  "cases": ["consistent", "controlled-action-conflict", "missing-assessment-mapping", "word-vs-pdf-page-confusion", "stale-shared-entity-revision"],
+  "acceptance_kind": "synthetic_fixture"
+}
