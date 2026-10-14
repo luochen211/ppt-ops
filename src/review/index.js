@@ -104,7 +104,7 @@ export async function reviewProject(project, options = {}) {
   });
   try {
     await fs.access(pptxFile);
-    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0" });
+    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0", comprehensionObservations: options.comprehensionObservations });
     automatedChecks.push({
       id: "pptx-visual-qa",
       kind: "automated",
@@ -112,6 +112,7 @@ export async function reviewProject(project, options = {}) {
       status: qa.status === "failed" ? "failed" : qa.status === "degraded" ? "pending" : "passed",
       evidence: qa
     });
+    automatedChecks.push(comprehensionReviewCheck(qa.comprehension_qa));
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
     automatedChecks.push({ id: "pptx-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No PPTX build selected for visual QA." } });
@@ -156,6 +157,11 @@ export async function reviewProject(project, options = {}) {
     acceptance,
     summary: summarizeAcceptance(automatedChecks, acceptance)
   };
+}
+
+export function comprehensionReviewCheck(evidence) {
+  const status = evidence?.status === "no_heuristic_findings" ? "passed" : "pending";
+  return { id: "comprehension-qa", kind: "automated", required: false, status, evidence: evidence ?? { status: "not_assessed", reason: "No comprehension evidence was selected." } };
 }
 
 export async function writeReviewReport(project, report) {
