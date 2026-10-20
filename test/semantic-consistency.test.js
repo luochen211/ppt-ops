@@ -60,7 +60,7 @@ test("Stage 3 reports conflict, omission, location, original text, and expected 
   const report = checkSemanticConsistency(registry, manifest, [{ entity_id: "risk.high", required_roles: ["presentation", "learner_guide", "assessment"] }]);
   assert.equal(report.passed, false);
   assert.equal(report.automated_resolution, false);
-  assert.deepEqual(report.findings.map((item) => item.code), ["SEMANTIC_BINDING_MISSING", "SEMANTIC_BINDING_STALE", "SEMANTIC_ONE_TO_MANY_CONFLICT", "SEMANTIC_VALUE_MISMATCH"]);
+  assert.deepEqual(report.findings.map((item) => item.code), ["SEMANTIC_BINDING_MISSING", "SEMANTIC_BINDING_STALE", "SEMANTIC_ONE_TO_MANY_CONFLICT", "SEMANTIC_VALUE_MISMATCH", "SEMANTIC_VARIANT_CONFLICT"]);
   const mismatch = report.findings.find((item) => item.code === "SEMANTIC_VALUE_MISMATCH");
   assert.deepEqual(mismatch.locator, { kind: "section", id: "risk-table" });
   assert.equal(mismatch.observed, "Report when practical");
@@ -98,4 +98,12 @@ test("formal acceptance rejects unrelated hashes, duplicate ids, and stale autom
     assert.throws(() => evaluateSemanticDeliveryAcceptance({ ...input, caseEvidence: { ...input.caseEvidence, artifact_hashes } }), { code: "SEMANTIC_ARTIFACT_HASH_MISMATCH" });
   }
   assert.throws(() => evaluateSemanticDeliveryAcceptance({ ...input, coverage: { ...input.coverage, manifest_sha256: "stale" } }), { code: "SEMANTIC_EVIDENCE_MISMATCH" });
+});
+
+
+test("registry conflicts remain blocking even without artifact bindings", () => {
+  const { registry } = validateSemanticRegistry(registryInput());
+  const report = checkSemanticConsistency(registry, { artifacts: [], sha256: "manifest" });
+  assert.equal(report.passed, false);
+  assert.equal(report.findings[0].code, "SEMANTIC_VARIANT_CONFLICT");
 });

@@ -1,7 +1,7 @@
 import { semanticEntity } from "./registry.js";
 
 export function checkSemanticConsistency(registry, manifest, requirements = []) {
-  const findings = [];
+  const findings = registry.entities.flatMap((entity) => (entity.variants ?? []).filter((value) => value !== entity.canonical_value).map((value) => ({ code: "SEMANTIC_VARIANT_CONFLICT", severity: "blocking", entity_id: entity.id, observed: value, expected: entity.canonical_value, resolution: "human_required" })));
   const all = manifest.artifacts.flatMap((artifact) => artifact.bindings.map((binding) => ({ artifact, binding })));
   for (const { artifact, binding } of all) {
     const entity = semanticEntity(registry, binding.entity_id);
