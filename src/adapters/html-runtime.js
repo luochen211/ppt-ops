@@ -29,7 +29,7 @@ export const DECK_KEYMAP = Object.freeze([
   ["N", "Open presenter view"],
   ["F", "Fullscreen"],
   ["?", "Show / hide this help"],
-  ["Esc", "Close overlay / clear jump"]
+  ["Esc", "Open overview / close overlay / clear jump"]
 ]);
 
 /** Extra keys that only apply inside the `?view=presenter` window. */
@@ -98,6 +98,17 @@ export function deckKeyAction(key, modifiers, typing) {
  * Presenter-window key resolver: live marks (`!`, `?`, `X`), export (`E`) and help (`H`)
  * take precedence; every other key behaves exactly like the main deck.
  */
+/**
+ * Resolve what Esc does from the current overlay state: an active jump or help panel closes first,
+ * an open overview closes, and otherwise Esc opens the slide overview.
+ */
+export function escapeAction({ jumping = false, helpOpen = false, overviewOpen = false } = {}) {
+  if (jumping) return "clear-jump";
+  if (helpOpen) return "close-help";
+  if (overviewOpen) return "close-overview";
+  return "open-overview";
+}
+
 export function presenterKeyAction(key, modifiers, typing) {
   if (typing || !key) return null;
   if (modifiers && (modifiers.ctrlKey || modifiers.metaKey || modifiers.altKey)) return null;
@@ -319,7 +330,12 @@ function deckRuntime(config) {
     else if (action === "backspace" && digits) { digits = digits.slice(0, -1); if (digits) pushDigit(""); else clearDigits(); }
     else if (action === "enter" && digits) commitDigits(goTo);
     else if (action === "help") toggleHelp();
-    else if (action === "escape") { clearDigits(); toggleHelp(false); setOverlay(overview, false); }
+    else if (action === "escape") {
+      const next = escapeAction({ jumping: Boolean(digits), helpOpen: Boolean(keymap && !keymap.hidden), overviewOpen: Boolean(overview && !overview.hidden) });
+      if (next === "clear-jump") clearDigits();
+      else if (next === "close-help") toggleHelp(false);
+      else if (overview) toggleOverview(next === "open-overview");
+    }
     else return false;
     return true;
   }
@@ -525,6 +541,6 @@ function deckRuntime(config) {
 
 /** Inline `<script>` body for the deck. `config` is read from the JSON config element. */
 export function deckRuntimeScript() {
-  const helpers = [createSyncMessage, parseSyncMessage, deckKeyAction, presenterKeyAction, createDeliveryRecord, recordNavigate, recordToggleMark, buildDeliveryRecord, timerElapsed, timerCommand, formatClock].map(String).join("\n");
+  const helpers = [createSyncMessage, parseSyncMessage, deckKeyAction, escapeAction, presenterKeyAction, createDeliveryRecord, recordNavigate, recordToggleMark, buildDeliveryRecord, timerElapsed, timerCommand, formatClock].map(String).join("\n");
   return `(()=>{${helpers}\n(${deckRuntime})(JSON.parse(document.getElementById('deck-runtime-config').textContent))})();`;
 }
