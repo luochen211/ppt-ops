@@ -112,7 +112,7 @@ async function fixture(t) {
 
 async function connect(t, projectDir) {
   const client = new Client({ name: "ppt-ops-stateful-test", version: "1.0.0" });
-  const transport = new StdioClientTransport({ command: process.execPath, args: [serverEntry, "--project-dir", projectDir], stderr: "pipe" });
+  const transport = new StdioClientTransport({ command: process.execPath, args: [serverEntry, "--project-dir", projectDir], env: { ...process.env, PPT_OPS_RENDER_QA: "0" }, stderr: "pipe" });
   t.after(async () => client.close()); await client.connect(transport); return client;
 }
 
