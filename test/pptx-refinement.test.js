@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import JSZip from "jszip";
+import { applyRefinementPptx } from "../src/refinement/pptx-editor.js";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
 import { createRefinementScope, inspectRefinementPptx } from "../src/refinement/pptx-inspection.js";
@@ -146,6 +147,14 @@ test("Stage 2 creates an immutable scoped Candidate and preserves the original P
     await assert.rejects(service.recordPptxRefinementPowerPointAcceptance(first.candidate.id, { candidate_id: first.candidate.id, candidate_sha256: first.candidate.candidate_sha256, application: "Microsoft PowerPoint", real_presentation: false, case_id: "synthetic-fixture", actor: "user:syna", steps: { opened: true, edited: true, saved: true, reopened: true } }), { code: "REFINEMENT_REAL_CASE_REQUIRED" });
     const accepted = await service.recordPptxRefinementPowerPointAcceptance(first.candidate.id, { candidate_id: first.candidate.id, candidate_sha256: first.candidate.candidate_sha256, application: "Microsoft PowerPoint", real_presentation: true, case_id: "authorized-case-001", actor: "user:syna", steps: { opened: true, edited: true, saved: true, reopened: true }, notes: "Editable round trip completed." });
     assert.equal(accepted.acceptance.accepted, true);
+    await fs.writeFile(path.join(projectDir, first.candidate_file), Buffer.from("tampered"));
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 }), { code: "REFINEMENT_CANDIDATE_CHANGED" });
+    await fs.writeFile(path.join(projectDir, first.candidate_file), candidateBytes);
+    const acceptancePath = path.join(projectDir, accepted.acceptance_file);
+    const acceptanceText = await fs.readFile(acceptancePath, "utf8");
+    await fs.writeFile(acceptancePath, JSON.stringify({ ...accepted.acceptance, actor: "different-reviewer" }));
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 }), { code: "REFINEMENT_ACCEPTANCE_CHANGED" });
+    await fs.writeFile(acceptancePath, acceptanceText);
     const decided = await service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 });
     assert.equal(decided.decision.state, "accepted");
     assert.equal(decided.version.delivery_state, "versioned");
@@ -182,3 +191,21 @@ async function edgeCasePptx() {
 }
 
 function sha(value) { return crypto.createHash("sha256").update(value).digest("hex"); }
+
+
+test("font properties preserve well-formed self-closing run properties", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-font-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const file = path.join(root, "existing.pptx"), bytes = await refinementPptx();
+  await fs.writeFile(file, bytes);
+  const source = { id: "source-font", sha256: sha(bytes), original_name: "existing.pptx", bytes: bytes.length };
+  const inspection = await inspectRefinementPptx(file, source);
+  const target = inspection.slides[0].objects.find((object) => object.type === "text_box");
+  const scope = createRefinementScope(inspection, { actor: "reviewer", inspectionFile: "inspection.json", inspectionSha256: "a".repeat(64), targets: [{ slide: 1, object_id: target.id, properties: ["font_weight", "font_family", "text_color"] }] });
+  const result = await applyRefinementPptx(file, source, inspection, scope, [{ slide: 1, object_id: target.id, properties: { font_weight: "bold", font_family: "Arial", text_color: "FF0000" } }]);
+  const archive = await JSZip.loadAsync(result.bytes);
+  const xml = await archive.file("ppt/slides/slide1.xml").async("string");
+  assert.doesNotMatch(xml, /\/\s+b=/, "attributes must precede the self-closing slash");
+  assert.match(xml, /<a:rPr[^>]*b="1"[^>]*>[\s\S]*?<a:latin typeface="Arial"\/>[\s\S]*?<\/a:rPr>/);
+  assert.match(xml, /<a:rPr[^>]*>[\s\S]*?<a:solidFill><a:srgbClr val="FF0000"\/><\/a:solidFill>[\s\S]*?<\/a:rPr>/);
+});

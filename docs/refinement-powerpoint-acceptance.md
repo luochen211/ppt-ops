@@ -26,3 +26,5 @@ Example:
 ```
 
 This record confirms application-level interoperability. It does not expand the approved Scope or authorize content changes.
+
+At the decision boundary, the service rechecks Candidate bytes and the recorded PowerPoint acceptance hash. A modified Candidate or acceptance record cannot produce an accepted Version. Font-weight, family, and text-color edits preserve self-closing run-property XML and keep inserted children inside the run properties.

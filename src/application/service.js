@@ -190,13 +190,18 @@ export class ApplicationService {
     const diff = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "scoped-diff.json")), "REFINEMENT_REVIEW_REQUIRED", "review the refinement Candidate before decision");
     const decisionFile = resolveProjectPath(this.project.root, path.join(base, "decision.json"));
     const current = await readOptionalJson(decisionFile);
-    if (decision === "accept") await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "powerpoint-acceptance.json")), "REFINEMENT_POWERPOINT_ACCEPTANCE_REQUIRED", "record a real Microsoft PowerPoint round trip before acceptance");
+    const candidateBytes = await fs.readFile(resolveProjectPath(this.project.root, candidate.artifact));
+    if (crypto.createHash("sha256").update(candidateBytes).digest("hex") !== candidate.candidate_sha256) throw new ApplicationError("REFINEMENT_CANDIDATE_CHANGED", "Candidate bytes changed after scoped review");
+    if (decision === "accept") {
+      const acceptance = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "powerpoint-acceptance.json")), "REFINEMENT_POWERPOINT_ACCEPTANCE_REQUIRED", "record a real Microsoft PowerPoint round trip before acceptance");
+      const validated = validatePowerPointAcceptance(candidate, acceptance);
+      if (validated.acceptance_sha256 !== acceptance.acceptance_sha256) throw new ApplicationError("REFINEMENT_ACCEPTANCE_CHANGED", "PowerPoint acceptance evidence changed after recording");
+    }
     const record = createRefinementDecision({ candidate, diff, decision, actor, expectedRevision, current });
     await atomicWriteJson(decisionFile, record);
     const version = createRefinementVersion(candidate, record);
     if (!version) return { decision: record, version: null };
     const versionBase = path.join(".pptops", "refinement", "versions", version.id), artifactRelative = path.join(versionBase, "refined.pptx"), manifestRelative = path.join(versionBase, "manifest.json");
-    const candidateBytes = await fs.readFile(resolveProjectPath(this.project.root, candidate.artifact));
     await writeImmutableBytesOrVerify(resolveProjectPath(this.project.root, artifactRelative), candidateBytes);
     const manifest = { ...version, artifact: artifactRelative.replaceAll("\\", "/") };
     await writeImmutableOrVerify(resolveProjectPath(this.project.root, manifestRelative), manifest);

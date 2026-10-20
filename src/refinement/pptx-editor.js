@@ -49,7 +49,7 @@ function editObject(xml, nativeId, type, values) {
     else if (property === "line_spacing") block = upsertParagraphSpacing(block, Math.round(number(value, property) * 1000));
     else if (property === "fill_color") block = upsertColor(block, "a:solidFill", color(value, property));
     else if (property === "line_color") block = upsertLineColor(block, color(value, property));
-    else if (property === "text_color") block = upsertRunChild(block, "a:solidFill", `><a:srgbClr val="${color(value, property)}"/></a:solidFill`, true);
+    else if (property === "text_color") block = upsertRunChild(block, "a:solidFill", `><a:srgbClr val="${color(value, property)}"/></a:solidFill>`, true);
     else if (property === "crop") block = upsertCrop(block, value);
     else throw coded("REFINEMENT_PROPERTY_UNSUPPORTED", `editor does not support property: ${property}`);
     applied.push(property);
@@ -64,7 +64,7 @@ function replacePair(block, tag, first, second, value, property) {
   return block.replace(pattern, `<${tag} ${first}="${a}" ${second}="${b}"/>`);
 }
 function replaceRunAttribute(block, name, value) {
-  return mapRuns(block, (run) => /<a:rPr\b/.test(run) ? run.replace(/<a:rPr\b([^>]*)>/, (_all, attrs) => `<a:rPr${setAttribute(attrs, name, value)}>`)
+  return mapRuns(block, (run) => /<a:rPr\b/.test(run) ? run.replace(/<a:rPr\b([^>]*)>/, (_all, attrs) => `<a:rPr${setAttribute(attrs.replace(/\/$/, ""), name, value) + (attrs.endsWith("/") ? "/" : "")}>`)
     : run.replace(/<a:r>/, `<a:r><a:rPr ${name}="${value}"/>`));
 }
 function upsertRunChild(block, tag, attributes, whole = false) {
@@ -72,12 +72,13 @@ function upsertRunChild(block, tag, attributes, whole = false) {
   const pattern = new RegExp(`<${tag}\\b[\\s\\S]*?<\\/${tag}>|<${tag}\\b[^>]*/>`);
   return mapRuns(block, (run) => {
     if (pattern.test(run)) return run.replace(pattern, child);
+    if (/<a:rPr\b[^>]*\/>/.test(run)) return run.replace(/<a:rPr\b([^>]*?)\/>/, `<a:rPr$1>${child}</a:rPr>`);
     if (/<a:rPr\b[^>]*>/.test(run)) return run.replace(/<a:rPr\b([^>]*)>/, `<a:rPr$1>${child}`);
     return run.replace(/<a:r>/, `<a:r><a:rPr>${child}</a:rPr>`);
   });
 }
 function mapRuns(block, transform) { return block.replace(/<a:r>[\s\S]*?<\/a:r>/g, transform); }
-function upsertParagraphSpacing(block, value) { const spacing = `<a:lnSpc><a:spcPct val="${value}"/></a:lnSpc>`; return /<a:pPr\b[^>]*>/.test(block) ? block.replace(/<a:pPr\b([^>]*)>/, `<a:pPr$1>${spacing}`) : block.replace(/<a:p>/, `<a:p><a:pPr>${spacing}</a:pPr>`); }
+function upsertParagraphSpacing(block, value) { block = block.replace(/<a:pPr\b([^>]*?)\/>/g, "<a:pPr$1></a:pPr>"); const spacing = `<a:lnSpc><a:spcPct val="${value}"/></a:lnSpc>`; return /<a:lnSpc\b[\s\S]*?<\/a:lnSpc>/.test(block) ? block.replace(/<a:lnSpc\b[\s\S]*?<\/a:lnSpc>/, spacing) : /<a:pPr\b[^>]*>/.test(block) ? block.replace(/<a:pPr\b([^>]*)>/, `<a:pPr$1>${spacing}`) : block.replace(/<a:p>/, `<a:p><a:pPr>${spacing}</a:pPr>`); }
 function upsertColor(block, tag, value) { const fill = `<${tag}><a:srgbClr val="${value}"/></${tag}>`; return new RegExp(`<${tag}\\b[\\s\\S]*?<\\/${tag}>`).test(block) ? block.replace(new RegExp(`<${tag}\\b[\\s\\S]*?<\\/${tag}>`), fill) : block.replace(/<p:spPr\b([^>]*)>/, `<p:spPr$1>${fill}`); }
 function upsertLineColor(block, value) { const line = `<a:ln><a:solidFill><a:srgbClr val="${value}"/></a:solidFill></a:ln>`; return /<a:ln\b[\s\S]*?<\/a:ln>/.test(block) ? block.replace(/<a:ln\b[\s\S]*?<\/a:ln>/, line) : block.replace(/<p:spPr\b([^>]*)>/, `<p:spPr$1>${line}`); }
 function upsertCrop(block, value) { const attrs = ["left", "top", "right", "bottom"].map((key) => `${key[0]}="${Math.round(number(value?.[key] ?? 0, "crop") * 100000)}"`).join(" "); const crop = `<a:srcRect ${attrs}/>`; return /<a:srcRect\b[^>]*\/>/.test(block) ? block.replace(/<a:srcRect\b[^>]*\/>/, crop) : block.replace(/<p:blipFill\b([^>]*)>/, `<p:blipFill$1>${crop}`); }
