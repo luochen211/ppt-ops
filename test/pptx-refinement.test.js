@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import JSZip from "jszip";
+import { reviewRefinementCandidate } from "../src/refinement/pptx-diff.js";
 import { applyRefinementPptx } from "../src/refinement/pptx-editor.js";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
@@ -208,4 +209,37 @@ test("font properties preserve well-formed self-closing run properties", async (
   assert.doesNotMatch(xml, /\/\s+b=/, "attributes must precede the self-closing slash");
   assert.match(xml, /<a:rPr[^>]*b="1"[^>]*>[\s\S]*?<a:latin typeface="Arial"\/>[\s\S]*?<\/a:rPr>/);
   assert.match(xml, /<a:rPr[^>]*>[\s\S]*?<a:solidFill><a:srgbClr val="FF0000"\/><\/a:solidFill>[\s\S]*?<\/a:rPr>/);
+  const candidateFile = path.join(root, "candidate.pptx");
+  await fs.writeFile(candidateFile, result.bytes);
+  assert.equal((await reviewRefinementCandidate(file, candidateFile, source, scope, result.evidence)).report.passed, true);
+});
+
+
+test("shape and line fills preserve run colors and unrelated line styling", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-fill-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const archive = await JSZip.loadAsync(await refinementPptx());
+  const original = (await archive.file("ppt/slides/slide1.xml").async("string"))
+    .replace("</a:xfrm></p:spPr>", '<' + '/a:xfrm><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill><a:prstDash val="dash"/></a:ln></p:spPr>')
+    .replace('<a:rPr sz="1800"/>', '<a:rPr sz="1800"><a:solidFill><a:srgbClr val="112233"/></a:solidFill></a:rPr>');
+  archive.file("ppt/slides/slide1.xml", original);
+  const bytes = await archive.generateAsync({ type: "nodebuffer" }), file = path.join(root, "source.pptx");
+  await fs.writeFile(file, bytes);
+  const source = { id: "source-fill", sha256: sha(bytes), original_name: "source.pptx", bytes: bytes.length };
+  const inspection = await inspectRefinementPptx(file, source), target = inspection.slides[0].objects[0];
+  const scope = createRefinementScope(inspection, { actor: "reviewer", inspectionFile: "inspection.json", inspectionSha256: "a".repeat(64), targets: [{ slide: 1, object_id: target.id, properties: ["fill_color", "line_color"] }] });
+  const result = await applyRefinementPptx(file, source, inspection, scope, [{ slide: 1, object_id: target.id, properties: { fill_color: "ABCDEF", line_color: "FEDCBA" } }]);
+  const zip = await JSZip.loadAsync(result.bytes), xml = await zip.file("ppt/slides/slide1.xml").async("string");
+  assert.match(xml, /<a:rPr sz="1800"><a:solidFill><a:srgbClr val="112233"\/><\/a:solidFill><\/a:rPr>/);
+  assert.match(xml, /<a:ln w="12700"><a:solidFill><a:srgbClr val="FEDCBA"\/><\/a:solidFill><a:prstDash val="dash"\/><\/a:ln>/);
+  assert.match(xml, /<p:spPr>[\s\S]*?val="ABCDEF"[\s\S]*?<\/p:spPr>/);
+  const candidateFile = path.join(root, "candidate.pptx");
+  await fs.writeFile(candidateFile, result.bytes);
+  assert.equal((await reviewRefinementCandidate(file, candidateFile, source, scope, result.evidence)).report.passed, true);
+  for (const changed of [xml.replace('w="12700"', 'w="25400"'), xml.replace('val="112233"', 'val="445566"')]) {
+    zip.file("ppt/slides/slide1.xml", changed);
+    const tampered = await zip.generateAsync({ type: "nodebuffer" });
+    await fs.writeFile(candidateFile, tampered);
+    await assert.rejects(reviewRefinementCandidate(file, candidateFile, source, scope, { ...result.evidence, candidate_sha256: sha(tampered) }), { code: "REFINEMENT_SCOPE_DIFF_FAILED" });
+  }
 });

@@ -79,8 +79,29 @@ function upsertRunChild(block, tag, attributes, whole = false) {
 }
 function mapRuns(block, transform) { return block.replace(/<a:r>[\s\S]*?<\/a:r>/g, transform); }
 function upsertParagraphSpacing(block, value) { block = block.replace(/<a:pPr\b([^>]*?)\/>/g, "<a:pPr$1></a:pPr>"); const spacing = `<a:lnSpc><a:spcPct val="${value}"/></a:lnSpc>`; return /<a:lnSpc\b[\s\S]*?<\/a:lnSpc>/.test(block) ? block.replace(/<a:lnSpc\b[\s\S]*?<\/a:lnSpc>/, spacing) : /<a:pPr\b[^>]*>/.test(block) ? block.replace(/<a:pPr\b([^>]*)>/, `<a:pPr$1>${spacing}`) : block.replace(/<a:p>/, `<a:p><a:pPr>${spacing}</a:pPr>`); }
-function upsertColor(block, tag, value) { const fill = `<${tag}><a:srgbClr val="${value}"/></${tag}>`; return new RegExp(`<${tag}\\b[\\s\\S]*?<\\/${tag}>`).test(block) ? block.replace(new RegExp(`<${tag}\\b[\\s\\S]*?<\\/${tag}>`), fill) : block.replace(/<p:spPr\b([^>]*)>/, `<p:spPr$1>${fill}`); }
-function upsertLineColor(block, value) { const line = `<a:ln><a:solidFill><a:srgbClr val="${value}"/></a:solidFill></a:ln>`; return /<a:ln\b[\s\S]*?<\/a:ln>/.test(block) ? block.replace(/<a:ln\b[\s\S]*?<\/a:ln>/, line) : block.replace(/<p:spPr\b([^>]*)>/, `<p:spPr$1>${line}`); }
+function replaceFill(content, fill) {
+  const pattern = /<a:(?:solidFill|gradFill|blipFill|pattFill)\b[^>]*>[\s\S]*?<\/a:(?:solidFill|gradFill|blipFill|pattFill)>|<a:(?:noFill|grpFill|solidFill)\b[^>]*\/>/;
+  if (pattern.test(content)) return content.replace(pattern, fill);
+  const transform = content.match(/<a:xfrm\b[\s\S]*?<\/a:xfrm>/)?.[0];
+  return transform ? content.replace(transform, `${transform}${fill}`) : `${fill}${content}`;
+}
+function shapeProperties(block, transform) {
+  return block.replace(/<p:spPr\b([^>]*?)\/>|<p:spPr\b([^>]*)>([\s\S]*?)<\/p:spPr>/, (_all, emptyAttrs, attrs, content) => `<p:spPr${attrs ?? emptyAttrs}>${transform(content ?? "")}</p:spPr>`);
+}
+function upsertColor(block, tag, value) {
+  return shapeProperties(block, (content) => {
+    const lines = [];
+    content = content.replace(/<a:ln\b[^>]*\/>|<a:ln\b[^>]*>[\s\S]*?<\/a:ln>/g, (line) => { lines.push(line); return `__PPTOPS_LINE_${lines.length - 1}__`; });
+    return replaceFill(content, `<${tag}><a:srgbClr val="${value}"/></${tag}>`).replace(/__PPTOPS_LINE_(\d+)__/g, (_all, index) => lines[Number(index)]);
+  });
+}
+function upsertLineColor(block, value) {
+  const fill = `<a:solidFill><a:srgbClr val="${value}"/></a:solidFill>`;
+  return shapeProperties(block, (content) => {
+    const pattern = /<a:ln\b([^>]*?)\/>|<a:ln\b([^>]*)>([\s\S]*?)<\/a:ln>/;
+    return pattern.test(content) ? content.replace(pattern, (_all, emptyAttrs, attrs, inner) => `<a:ln${attrs ?? emptyAttrs}>${replaceFill(inner ?? "", fill)}</a:ln>`) : `${content}<a:ln>${fill}</a:ln>`;
+  });
+}
 function upsertCrop(block, value) { const attrs = ["left", "top", "right", "bottom"].map((key) => `${key[0]}="${Math.round(number(value?.[key] ?? 0, "crop") * 100000)}"`).join(" "); const crop = `<a:srcRect ${attrs}/>`; return /<a:srcRect\b[^>]*\/>/.test(block) ? block.replace(/<a:srcRect\b[^>]*\/>/, crop) : block.replace(/<p:blipFill\b([^>]*)>/, `<p:blipFill$1>${crop}`); }
 function setAttribute(attrs, name, value) { const pattern = new RegExp(`\\s${name}="[^"]*"`); return pattern.test(attrs) ? attrs.replace(pattern, ` ${name}="${value}"`) : `${attrs} ${name}="${value}"`; }
 function number(value, property) { if (!Number.isFinite(Number(value)) || Number(value) < 0) throw coded("REFINEMENT_VALUE_INVALID", `${property} requires a non-negative number`); return Number(value); }

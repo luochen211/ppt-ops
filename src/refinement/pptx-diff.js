@@ -56,18 +56,27 @@ function normalizeAllowed(block, properties) {
   for (const property of properties) {
     if (property === "position") value = value.replace(/<a:off\b[^>]*\/>/, "<a:off scoped=\"position\"/>");
     else if (property === "size") value = value.replace(/<a:ext\b[^>]*\/>/, "<a:ext scoped=\"size\"/>");
-    else if (property === "font_size") value = value.replace(/(<a:rPr\b[^>]*?)\ssz="[^"]*"/g, "$1 sz=\"scoped\"");
-    else if (property === "font_weight") value = value.replace(/(<a:rPr\b[^>]*?)\sb="[^"]*"/g, "$1 b=\"scoped\"");
-    else if (property === "font_family") value = value.replace(/<a:latin\b[^>]*\/>/g, "<a:latin scoped=\"font_family\"/>");
-    else if (property === "line_spacing") value = value.replace(/<a:lnSpc\b[\s\S]*?<\/a:lnSpc>/g, "<a:lnSpc scoped=\"line_spacing\"/>");
+    else if (property === "font_size") value = value.replace(/(<a:rPr\b[^>]*?)\ssz="[^"]*"/g, "$1");
+    else if (property === "font_weight") value = value.replace(/(<a:rPr\b[^>]*?)\sb="[^"]*"/g, "$1");
+    else if (property === "font_family") value = value.replace(/<a:latin\b[^>]*\/>/g, "");
+    else if (property === "line_spacing") value = value.replace(/<a:lnSpc\b[\s\S]*?<\/a:lnSpc>/g, "");
     else if (property === "fill_color") value = replaceNthFill(value, "fill_color", 0);
-    else if (property === "line_color") value = value.replace(/<a:ln\b[\s\S]*?<\/a:ln>/, "<a:ln scoped=\"line_color\"/>");
-    else if (property === "text_color") value = value.replace(/(<a:rPr\b[^>]*>)[\s\S]*?<a:solidFill\b[\s\S]*?<\/a:solidFill>/g, "$1<a:solidFill scoped=\"text_color\"/>");
-    else if (property === "crop") value = value.replace(/<a:srcRect\b[^>]*\/>/, "<a:srcRect scoped=\"crop\"/>");
+    else if (property === "line_color") value = value.replace(/<a:ln\b([^>]*)>([\s\S]*?)<\/a:ln>/g, (_all, attrs, inner) => `<a:ln${attrs}>${stripFill(inner)}</a:ln>`);
+    else if (property === "text_color") value = value.replace(/<a:rPr\b([^>]*)>([\s\S]*?)<\/a:rPr>/g, (_all, attrs, inner) => `<a:rPr${attrs}>${stripFill(inner)}</a:rPr>`);
+    else if (property === "crop") value = value.replace(/<a:srcRect\b[^>]*\/>/, "");
   }
-  return value;
+  value = value.replace(/<a:(rPr|pPr|ln)\b([^>]*?)\/>/g, (_all, tag, attrs) => `<a:${tag}${attrs}></a:${tag}>`);
+  value = value.replace(/<a:(rPr|pPr|ln)\s*><\/a:\1>/g, "");
+  return value.replace(/<p:spPr\b([^>]*)><\/p:spPr>/g, "<p:spPr$1/>");
 }
-function replaceNthFill(value, marker) { return value.replace(/(<p:spPr\b[^>]*>[\s\S]*?)<a:solidFill\b[\s\S]*?<\/a:solidFill>/, `$1<a:solidFill scoped="${marker}"/>`); }
+function stripFill(value) { return value.replace(/<a:(solidFill|gradFill|blipFill|pattFill)\b[^>]*>[\s\S]*?<\/a:\1>|<a:(?:noFill|grpFill|solidFill)\b[^>]*\/>/g, ""); }
+function replaceNthFill(value) {
+  return value.replace(/<p:spPr\b([^>]*)>([\s\S]*?)<\/p:spPr>/, (_all, attrs, inner) => {
+    const lines = [];
+    const masked = inner.replace(/<a:ln\b[^>]*\/>|<a:ln\b[^>]*>[\s\S]*?<\/a:ln>/g, (line) => { lines.push(line); return `__PPTOPS_LINE_${lines.length - 1}__`; });
+    return `<p:spPr${attrs}>${stripFill(masked).replace(/__PPTOPS_LINE_(\d+)__/g, (_match, index) => lines[Number(index)])}</p:spPr>`;
+  });
+}
 function previewHtml(report) { const rows = report.objects.map((item) => `<tr><td>${item.slide}</td><td>${html(item.object_id)}</td><td>${html(item.properties.join(", "))}</td><td><code>${html(JSON.stringify(item.before_bounds_emu))}</code></td><td><code>${html(JSON.stringify(item.after_bounds_emu))}</code></td></tr>`).join(""); return `<!doctype html><html><head><meta charset="utf-8"><title>Refinement before/after</title><style>body{font:14px system-ui;margin:32px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px;text-align:left}code{font-size:12px}</style></head><body><h1>Scoped refinement preview</h1><p>Candidate ${html(report.candidate_sha256.slice(0, 12))} passed the automated scope check.</p><table><thead><tr><th>Slide</th><th>Object</th><th>Authorized properties</th><th>Before bounds</th><th>After bounds</th></tr></thead><tbody>${rows}</tbody></table></body></html>`; }
 function sha(value) { return crypto.createHash("sha256").update(value).digest("hex"); }
 function escape(value) { return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
