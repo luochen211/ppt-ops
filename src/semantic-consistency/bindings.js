@@ -11,6 +11,7 @@ export function validateSemanticBindings(registry, artifacts) {
     if (!artifact?.id || artifactIds.has(artifact.id)) throw coded("SEMANTIC_ARTIFACT_INVALID", `artifact ${artifactIndex} requires a unique id`);
     artifactIds.add(artifact.id);
     if (!LOCATORS[artifact.format] || !ROLES.has(artifact.role)) throw coded("SEMANTIC_ARTIFACT_INVALID", `${artifact.id} has unsupported format or role`);
+    if (artifact.sha256 !== undefined && !/^[a-f0-9]{64}$/.test(artifact.sha256)) throw coded("SEMANTIC_ARTIFACT_INVALID", `${artifact.id} requires a valid SHA-256`);
     if (!Array.isArray(artifact.bindings)) throw coded("SEMANTIC_BINDINGS_REQUIRED", `${artifact.id} requires bindings`);
     const bindings = artifact.bindings.map((binding, bindingIndex) => {
       const id = binding.id ?? `${artifact.id}:binding-${bindingIndex + 1}`;
@@ -23,10 +24,10 @@ export function validateSemanticBindings(registry, artifacts) {
       if (!Number.isInteger(binding.entity_revision) || binding.entity_revision < 1) throw coded("SEMANTIC_BINDING_REVISION_INVALID", `${id} requires a semantic entity revision`);
       return { id, entity_id: binding.entity_id, entity_revision: binding.entity_revision, locator: structuredClone(binding.locator), observed_text: binding.observed_text.trim() };
     });
-    return { id: artifact.id, role: artifact.role, format: artifact.format, file: String(artifact.file ?? ""), bindings };
+    return { id: artifact.id, role: artifact.role, format: artifact.format, ...(artifact.sha256 ? { sha256: artifact.sha256 } : {}), file: String(artifact.file ?? ""), bindings };
   });
   const manifest = { contract_version: "1.0", kind: "semantic_binding_manifest", registry_sha256: registry.sha256, artifacts: normalized };
   return { ...manifest, sha256: crypto.createHash("sha256").update(JSON.stringify(manifest)).digest("hex") };
 }
-function positiveLocator(locator) { return Number.isInteger(locator?.number) ? locator.number > 0 : typeof locator?.id === "string" && locator.id.length > 0; }
+function positiveLocator(locator) { return ["slide", "word_page", "pdf_page"].includes(locator?.kind) ? Number.isInteger(locator.number) && locator.number > 0 : typeof locator?.id === "string" && locator.id.trim().length > 0; }
 function coded(code, message) { return Object.assign(new Error(message), { code }); }

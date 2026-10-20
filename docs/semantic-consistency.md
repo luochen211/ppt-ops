@@ -17,3 +17,5 @@ These locator kinds are deliberately not interchangeable; “slide 7,” “Word
 ## Acceptance boundary
 
 The included Hazard delivery fixture is synthetic regression evidence only. Formal acceptance additionally requires exact hashes for an authorized real presentation, learner guide, assessment, and alignment report plus a named instructional designer’s explicit acceptance. Automated consistency passing never substitutes for content approval.
+
+Acceptance verifies each unique artifact ID and hash against the selected manifest, and binds both automated reports to that manifest and registry. Missing learning objectives fail coverage even when the submitted mapping list is empty; removed entities remain visible in impact reports. Numeric page locators require page numbers, while section/item/row locators require IDs.

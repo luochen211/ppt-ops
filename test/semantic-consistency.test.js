@@ -21,8 +21,8 @@ test("Stage 1 validates stable shared semantics without resolving conflicts", ()
 });
 
 test("Stage 5 keeps synthetic regression evidence separate from human acceptance", () => {
-  const manifest = { artifacts: ["presentation", "learner_guide", "assessment", "alignment_report"].map((role, index) => ({ id: `artifact-${index}`, role })) };
-  const input = { consistency: { passed: true }, coverage: { passed: true }, manifest, caseEvidence: { kind: "synthetic_fixture", case_id: "hazard-regression", artifact_hashes: [] }, humanAcceptance: { decision: "accepted", actor: "reviewer", role: "Instructional Designer" } };
+  const manifest = { sha256: "a".repeat(64), registry_sha256: "b".repeat(64), artifacts: ["presentation", "learner_guide", "assessment", "alignment_report"].map((role, index) => ({ id: `artifact-${index}`, role, sha256: String(index + 1).repeat(64) })) };
+  const input = { consistency: { passed: true, manifest_sha256: manifest.sha256, registry_sha256: manifest.registry_sha256 }, coverage: { passed: true, manifest_sha256: manifest.sha256, registry_sha256: manifest.registry_sha256 }, manifest, caseEvidence: { kind: "synthetic_fixture", case_id: "hazard-regression", artifact_hashes: [] }, humanAcceptance: { decision: "accepted", actor: "reviewer", role: "Instructional Designer" } };
   assert.throws(() => evaluateSemanticDeliveryAcceptance(input), { code: "SEMANTIC_REAL_CASE_REQUIRED" });
   const accepted = evaluateSemanticDeliveryAcceptance({ ...input, caseEvidence: { kind: "authorized_real_case", case_id: "authorized-hazard-delivery", artifact_hashes: manifest.artifacts.map((artifact, index) => ({ artifact_id: artifact.id, sha256: String(index + 1).repeat(64) })) } });
   assert.equal(accepted.accepted, true);
@@ -78,4 +78,24 @@ test("Stage 2 binds format-specific locators to stable semantic IDs", () => {
   assert.deepEqual(manifest.artifacts.map((artifact) => artifact.bindings[0].locator.kind), ["slide", "word_page", "pdf_page"]);
   assert.throws(() => validateSemanticBindings(registry, [{ id: "deck", role: "presentation", format: "pptx", bindings: [{ entity_id: "lo.hazard-identification", entity_revision: 1, locator: { kind: "pdf_page", number: 1 }, observed_text: "wrong locator" }] }]), { code: "SEMANTIC_LOCATOR_INVALID" });
   assert.throws(() => validateSemanticBindings(registry, [{ id: "deck", role: "presentation", format: "pptx", bindings: [{ entity_id: "missing", entity_revision: 1, locator: { kind: "slide", number: 1 }, observed_text: "unknown" }] }]), { code: "SEMANTIC_ENTITY_UNKNOWN" });
+});
+
+
+test("coverage cannot pass by omitting all learning objectives", () => {
+  const { registry } = validateSemanticRegistry(registryInput());
+  const report = analyzeLearningCoverage(registry, { artifacts: [], sha256: "manifest" }, []);
+  assert.equal(report.passed, false);
+  assert.equal(report.findings[0].code, "SEMANTIC_OBJECTIVE_UNCOVERED");
+  const changed = { ...registry, entities: [] };
+  assert.equal(analyzeSemanticImpact(registry, changed, { artifacts: [] }).changes.length, 2);
+});
+
+test("formal acceptance rejects unrelated hashes, duplicate ids, and stale automated reports", () => {
+  const manifest = { sha256: "a".repeat(64), registry_sha256: "b".repeat(64), artifacts: ["presentation", "learner_guide", "assessment", "alignment_report"].map((role, index) => ({ id: `artifact-${index}`, role, sha256: String(index + 1).repeat(64) })) };
+  const input = { manifest, consistency: { passed: true, manifest_sha256: manifest.sha256, registry_sha256: manifest.registry_sha256 }, coverage: { passed: true, manifest_sha256: manifest.sha256, registry_sha256: manifest.registry_sha256 }, caseEvidence: { kind: "authorized_real_case", case_id: "real-case", artifact_hashes: manifest.artifacts.map(({ id, sha256 }) => ({ artifact_id: id, sha256 })) }, humanAcceptance: { decision: "accepted", actor: "reviewer", role: "Instructional Designer" } };
+  assert.equal(evaluateSemanticDeliveryAcceptance(input).accepted, true);
+  for (const artifact_hashes of [input.caseEvidence.artifact_hashes.map((item) => ({ ...item, sha256: "f".repeat(64) })), Array(4).fill(input.caseEvidence.artifact_hashes[0])]) {
+    assert.throws(() => evaluateSemanticDeliveryAcceptance({ ...input, caseEvidence: { ...input.caseEvidence, artifact_hashes } }), { code: "SEMANTIC_ARTIFACT_HASH_MISMATCH" });
+  }
+  assert.throws(() => evaluateSemanticDeliveryAcceptance({ ...input, coverage: { ...input.coverage, manifest_sha256: "stale" } }), { code: "SEMANTIC_EVIDENCE_MISMATCH" });
 });
