@@ -74,6 +74,8 @@ test("MCP handoff requires an accepted exact Review and stored delivery selectio
   assert.equal(path.isAbsolute(first.structuredContent.package_dir), false);
   const second = await client.callTool({ name: "pptops_handoff_create", arguments: input });
   assert.equal(second.structuredContent.handoff_id, first.structuredContent.handoff_id); assert.equal(second.structuredContent.reused, true);
+  const differentSelection = await client.callTool({ name: "pptops_handoff_create", arguments: { ...input, delivery_selection_id: "selection-other" } });
+  assert.equal(differentSelection.structuredContent.error.code, "MCP_REQUEST_CONFLICT");
   const stale = await client.callTool({ name: "pptops_handoff_create", arguments: { ...input, request_id: "handoff-request-002", expected_review_revision: accepted.revision - 1 } });
   assert.equal(stale.structuredContent.error.code, "STALE_OBJECT_REVISION");
 });
@@ -113,3 +115,32 @@ async function connect(t, projectDir) {
   const transport = new StdioClientTransport({ command: process.execPath, args: [serverEntry, "--project-dir", projectDir], stderr: "pipe" });
   t.after(async () => client.close()); await client.connect(transport); return client;
 }
+
+
+test("running a requested queued Build never claims another older Build", async t => {
+  const projectDir = await fixture(t); await seedAcceptedBoundaryImages(projectDir);
+  const service = await ApplicationService.open(projectDir);
+  try {
+    const version = await service.freezeVersion();
+    const first = await service.queueBuild({ versionId: version.id, targets: ["html"], requestId: "queue-first" });
+    const second = await service.queueBuild({ versionId: version.id, targets: ["html"], requestId: "queue-second" });
+    await service.runBuild(second.build.id);
+    assert.equal(service.buildStatus(first.build.id).build.state, "queued");
+    assert.equal(service.buildStatus(second.build.id).build.state, "succeeded");
+  } finally { service.close(); }
+});
+
+test("concurrent MCP writes preserve the active Build attempt", async t => {
+  const projectDir = await fixture(t); await seedAcceptedBoundaryImages(projectDir);
+  const service = await ApplicationService.open(projectDir);
+  const version = await service.freezeVersion(); service.close();
+  await fs.writeFile(path.join(projectDir, "during-build.md"), "# Concurrent import\n");
+  const client = await connect(t, projectDir);
+  const created = await client.callTool({ name: "pptops_build_create", arguments: { version_id: version.id, targets: ["html", "pptx"], request_id: "concurrent-build" } });
+  const imported = await client.callTool({ name: "pptops_source_import", arguments: { source_file: "during-build.md" } });
+  assert.equal(imported.isError, undefined);
+  const status = await client.callTool({ name: "pptops_build_status", arguments: { build_id: created.structuredContent.build_id } });
+  assert.equal(status.structuredContent.build.state, "succeeded");
+  assert.equal(status.structuredContent.attempts.length, 1);
+  assert.equal(status.structuredContent.attempts[0].error, null);
+});

@@ -7,6 +7,8 @@ import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
 import { ApplicationError, ApplicationService } from "../application/service.js";
 
+const projectWrites = new Map();
+
 const SERVER_VERSION = "0.2.0";
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const MUTATING = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false };
@@ -123,9 +125,17 @@ async function withService(projectDir, operation) {
 }
 
 async function withWriteService(projectDir, operation) {
-  const service = await ApplicationService.open(projectDir);
-  try { return await operation(service); }
-  finally { service.close(); }
+  // Opening a writable store recovers interrupted work. Serialize all writes,
+  // including background builds, so a second request cannot recover a live build.
+  const previous = projectWrites.get(projectDir) ?? Promise.resolve();
+  const current = previous.catch(() => {}).then(async () => {
+    const service = await ApplicationService.open(projectDir);
+    try { return await operation(service); }
+    finally { service.close(); }
+  });
+  projectWrites.set(projectDir, current);
+  try { return await current; }
+  finally { if (projectWrites.get(projectDir) === current) projectWrites.delete(projectDir); }
 }
 
 export async function resolveMcpSourceFile(projectDir, sourceFile) {
@@ -146,7 +156,7 @@ function outside(root, candidate) { const relative = path.relative(root, candida
 
 function scheduleBuild(projectDir, buildId) {
   setImmediate(async () => {
-    try { await withWriteService(projectDir, (service) => service.runBuild(buildId)); }
+    try { await withWriteService(projectDir, (service) => service.buildStatus(buildId).build.state === "queued" ? service.runBuild(buildId) : undefined); }
     catch (error) { console.error(JSON.stringify(sanitizeError(error))); }
   });
 }

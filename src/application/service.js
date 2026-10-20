@@ -541,7 +541,7 @@ export class ApplicationService {
       if (!hasText(options.requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(options.requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
       const existing = this.store.listEntities(this.projectId, "handoff").find((handoff) => handoff.mcp_request_id === options.requestId);
       if (existing) {
-        if (existing.build_id !== buildId || existing.review_id !== reviewId) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Handoff request");
+        if (existing.build_id !== buildId || existing.review_id !== reviewId || existing.delivery_selection_id !== options.deliverySelectionId) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Handoff request");
         return { handoff: existing, manifest_file: existing.package_manifest, package_dir: existing.package_dir, reused: true };
       }
     }
@@ -587,7 +587,7 @@ export class ApplicationService {
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
     const packageManifest = path.relative(this.project.root, packageResult.manifestFile);
     const packageDirectory = path.relative(this.project.root, packageResult.packageDir);
-    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(options.requestId ? { mcp_request_id: options.requestId } : {}), package_manifest: packageManifest, package_dir: packageDirectory, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
+    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(options.requestId ? { mcp_request_id: options.requestId } : {}), delivery_selection_id: options.deliverySelectionId, package_manifest: packageManifest, package_dir: packageDirectory, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
     await this.files.writeManifest("handoff", id, stripRevision(handoff));
     return { handoff, manifest_file: options.requestId ? packageManifest : packageResult.manifestFile, package_dir: options.requestId ? packageDirectory : packageResult.packageDir, reused: false };
@@ -610,7 +610,7 @@ export class ApplicationService {
   }
 
   async runBuild(buildId) {
-    const claimed = this.store.claimNextBuild();
+    const claimed = this.store.claimNextBuild(buildId);
     if (!claimed || claimed.id !== buildId) throw new ApplicationError("BUILD_NOT_CLAIMED", `build could not be claimed: ${buildId}`);
     try {
       const project = await this.projectFromVersion(claimed.version_id);

@@ -74,3 +74,5 @@ SDK 在进入 handler 前执行输入 schema 校验。未知字段、缺少必�
 - Version 冻结、Review 人工决策和 Delivery Selection 仍不开放为 MCP 工具。
 - Build 在 Server 进程内后台执行；客户端应保存 Build ID 并轮询状态，不应把一次连接存活等同于 Build 成功。
 - Server 复用 `ApplicationService`，不维护第二套业务状态或生命周期规则。
+
+Concurrent writes and background builds are serialized within the server for the configured project, preventing a new writable-store open from treating an active build as interrupted. A requested build claims only its own queue entry. Handoff request IDs also bind the selected delivery decision, so a retry with a different selection fails with `MCP_REQUEST_CONFLICT`.
