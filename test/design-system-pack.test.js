@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { indexDesignSystemPack, migrateLegacyTemplate, normalizeDesignSystemPack, resolveDesignSystemResource } from "../src/templates/design-system-pack.js";
+import { compileProjectLayout } from "../src/layout/catalog.js";
 
 test("normalizes the versioned Design System Pack contract", () => {
   const pack = normalizeDesignSystemPack({ kind: "design_system_pack", id: "design-pack-blue", name: "Blue", tokens: { colors: {}, typography: {}, spacing: {} }, components: [], layouts: [], assets: [] });
@@ -34,11 +35,20 @@ test("rejects duplicate and dangling resource IDs", () => {
   assert.throws(() => indexDesignSystemPack(dangling), (error) => error.code === "DESIGN_PACK_RESOURCE_MISSING");
 });
 
+test("Design and Build share IDs while renderers stay independent", () => {
+  const pack = completePack();
+  pack.layouts[0] = { ...pack.layouts[0], template_id: "template-hero", component_ids: ["component-title"], asset_ids: ["asset-grid"], renderers: { html: "design-cover-web", pptx: "design-cover-native" } };
+  const project = { project: {}, theme: { dimensions: { width: 13.333, height: 7.5 }, typography: {}, colors: {}, spacing: { page_margin: 0.6 } }, assets: [], designSystemPack: pack, pages: [{ id: "page-1", page: 1, relation: "hero", design_system_layout_id: "layout-cover", screen_text: { title: "Cover", body: [] }, three_second_message: "One system", asset_slots: [] }] };
+  const [plan] = compileProjectLayout(project);
+  assert.deepEqual(plan.design_system, { pack_id: "design-pack-blue", layout_id: "layout-cover", component_ids: ["component-title"], asset_ids: ["asset-grid"] });
+  assert.deepEqual(plan.renderer, { html: "design-cover-web", pptx: "design-cover-native" });
+});
+
 function completePack() {
   return {
     kind: "design_system_pack", id: "design-pack-blue", name: "Technical Blue", tokens: { colors: { accent: "#0057ff" }, typography: { heading: "Aptos" }, spacing: { unit: 8 } },
     components: [{ id: "component-title" }, { id: "component-card" }],
-    layouts: ["cover", "statement", "comparison", "sequence", "evidence", "closing"].map((name, index) => ({ id: `layout-${name}`, semantic_family: index === 0 ? "hero" : name })),
+    layouts: ["cover", "statement", "comparison", "sequence", "evidence", "closing"].map((name, index) => ({ id: `layout-${name}`, semantic_family: index === 0 ? "hero" : name, template_id: index === 0 ? "template-hero" : "template-statement", renderers: { html: `design-${name}-web`, pptx: `design-${name}-native` } })),
     assets: [{ id: "asset-grid", type: "background" }, { id: "asset-arrow", type: "icon" }, { id: "asset-orbit", type: "illustration" }],
     relationships: [{ from: "layout-cover", to: "asset-grid", relation: "uses" }]
   };

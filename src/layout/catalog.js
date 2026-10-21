@@ -1,4 +1,5 @@
 import { validateDiagram } from "./diagram.js";
+import { indexDesignSystemPack, resolveDesignSystemResource } from "../templates/design-system-pack.js";
 const baseCapacity = { title_chars: 90, message_chars: 180, body_items: 6, body_item_chars: 180, total_body_chars: 720, asset_slots: 2 };
 
 export const TEMPLATE_CATALOG = Object.freeze([
@@ -19,14 +20,15 @@ export class LayoutCapacityError extends Error {
 }
 
 export function compileProjectLayout(project) {
-  return project.pages.map((page) => compilePageLayout(page, project.theme, { projectThemeOverride: project.project.theme_override, assets: project.assets }));
+  return project.pages.map((page) => compilePageLayout(page, project.theme, { projectThemeOverride: project.project.theme_override, assets: project.assets, designSystemPack: project.designSystemPack }));
 }
 
 export function compilePageLayout(page, theme, options = {}) {
   const diagramErrors = validateDiagram(page.diagram);
   if (page.diagram && (page.screen_text.body?.length || page.asset_slots?.length)) diagramErrors.push("diagram pages use their authored nodes instead of body cards or asset slots");
   if (diagramErrors.length) throw Object.assign(new Error(diagramErrors.join("; ")), { code: "DIAGRAM_INVALID" });
-  const templateId = options.templateId ?? page.template_id ?? templateForRelation(page.relation).id;
+  const designSelection = resolveDesignSelection(page, options.designSystemPack);
+  const templateId = options.templateId ?? designSelection?.template_id ?? page.template_id ?? templateForRelation(page.relation).id;
   const selected = byId.get(templateId);
   if (!selected) throw new Error(`unknown template: ${templateId}`);
   if (!selected.relations.includes(page.relation) && options.allowRelationOverride !== true) throw new Error(`template ${templateId} does not support relation ${page.relation}`);
@@ -36,7 +38,8 @@ export function compilePageLayout(page, theme, options = {}) {
   const width = resolvedTheme.dimensions.width; const height = resolvedTheme.dimensions.height; const margin = resolvedTheme.spacing.page_margin;
   return Object.freeze({
     version: "1", page: page.page, template_id: selected.id, relation: page.relation,
-    renderer: selected.renderers, capacity: selected.capacity,
+    renderer: designSelection?.renderers ?? selected.renderers, capacity: selected.capacity,
+    ...(designSelection ? { design_system: designSelection.identity } : {}),
     theme: resolvedTheme, asset_checks: Object.freeze(inspectAssets(page.asset_slots ?? [], options.assets ?? [])),
     content: Object.freeze({ title: page.screen_text.title, subtitle: page.screen_text.subtitle ?? "", message: page.three_second_message, body: Object.freeze([...(page.screen_text.body ?? [])]), assets: Object.freeze([...(page.asset_slots ?? [])]) }),
     geometry: Object.freeze({
@@ -47,6 +50,17 @@ export function compilePageLayout(page, theme, options = {}) {
     })
   });
 }
+
+function resolveDesignSelection(page, pack) {
+  const layoutId = page.design_system_layout_id;
+  if (!layoutId) return undefined;
+  if (!pack) throw Object.assign(new Error(`design system pack is required for ${layoutId}`), { code: "DESIGN_PACK_REQUIRED" });
+  const layout = resolveDesignSystemResource(indexDesignSystemPack(pack), layoutId, "layout");
+  if (!hasRenderer(layout.renderers?.html) || !hasRenderer(layout.renderers?.pptx)) throw Object.assign(new Error(`layout ${layoutId} needs independent html and pptx renderer mappings`), { code: "DESIGN_PACK_RENDERER_MISSING" });
+  return Object.freeze({ template_id: layout.template_id, renderers: Object.freeze({ ...layout.renderers }), identity: Object.freeze({ pack_id: pack.id, layout_id: layout.id, component_ids: Object.freeze([...(layout.component_ids ?? [])]), asset_ids: Object.freeze([...(layout.asset_ids ?? [])]) }) });
+}
+
+function hasRenderer(value) { return typeof value === "string" && value.trim().length > 0; }
 
 export function templateForRelation(relation) {
   const selected = TEMPLATE_CATALOG.find((entry) => entry.relations.includes(relation));
