@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bindVisualRepairEvidence, createVisualFailureRecord, decideVisualRuleCandidate, evaluateVisualRegression, VISUAL_FAILURE_CATEGORIES } from "../src/qa/visual-regression.js";
+import { bindVisualRepairEvidence, createVisualFailureRecord, decideVisualRuleCandidate, evaluateVisualRegression, validateVisualRegressionCase, VISUAL_FAILURE_CATEGORIES } from "../src/qa/visual-regression.js";
 
 const base = { id: "failure-001", raw_feedback: "The label is too quiet.", target: { page_id: "page-002", element_id: "label-risk", bounds: { x: 1, y: 2, width: 3, height: 1 } }, version: { id: "version-001", revision: "rev-a" }, evidence: { screenshot_sha256: "a".repeat(64), locator: "page-2.png" }, classification: { category: "hierarchy", confidence: 0.8 } };
 
@@ -10,6 +10,16 @@ test("Stage 1 records raw feedback separately from inferred visual classificatio
   assert.deepEqual(record.classification, { category: "hierarchy", confidence: 0.8, source: "system_inference" });
   assert.equal(record.rule_activation, "none");
   assert.deepEqual(VISUAL_FAILURE_CATEGORIES, ["layout", "hierarchy", "alignment", "clarity", "imagery", "repetition"]);
+});
+
+test("Stage 5 keeps a complete synthetic V1-V4 case separate from real acceptance", () => {
+  const versions = ["v1", "v2", "v3", "v4"].map((id, index) => ({ id, artifact_sha256: String(index + 1).repeat(64), screenshot_sha256: "a".repeat(64) }));
+  const failure_records = VISUAL_FAILURE_CATEGORIES.map((category) => ({ classification: { category } }));
+  const synthetic = validateVisualRegressionCase({ id: "case-synthetic", case_kind: "synthetic_fixture", versions, failure_records });
+  assert.equal(synthetic.parent_issue_ready_to_close, false);
+  assert.throws(() => validateVisualRegressionCase({ id: "case-bad", case_kind: "synthetic_fixture", versions, failure_records, human_review: { actor: "user:syna", conclusion: "accepted" }, real_powerpoint: { status: "passed" } }), { code: "VISUAL_CASE_ACCEPTANCE_INCOMPLETE" });
+  const real = validateVisualRegressionCase({ id: "case-real", case_kind: "authorized_real_case", versions, failure_records, human_review: { actor: "user:syna", conclusion: "accepted" }, real_powerpoint: { status: "passed" } });
+  assert.equal(real.parent_issue_ready_to_close, true);
 });
 
 test("Stage 4 regression findings link the original feedback and accepted repair", () => {

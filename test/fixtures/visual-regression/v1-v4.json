@@ -1,0 +1,18 @@
+{
+  "id": "visual-regression-v1-v4",
+  "case_kind": "synthetic_fixture",
+  "versions": [
+    {"id":"v1","artifact_sha256":"1111111111111111111111111111111111111111111111111111111111111111","screenshot_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {"id":"v2","artifact_sha256":"2222222222222222222222222222222222222222222222222222222222222222","screenshot_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    {"id":"v3","artifact_sha256":"3333333333333333333333333333333333333333333333333333333333333333","screenshot_sha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+    {"id":"v4","artifact_sha256":"4444444444444444444444444444444444444444444444444444444444444444","screenshot_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}
+  ],
+  "failure_records": [
+    {"classification":{"category":"layout"}},
+    {"classification":{"category":"hierarchy"}},
+    {"classification":{"category":"alignment"}},
+    {"classification":{"category":"clarity"}},
+    {"classification":{"category":"imagery"}},
+    {"classification":{"category":"repetition"}}
+  ]
+}

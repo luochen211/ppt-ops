@@ -74,6 +74,18 @@ export function evaluateVisualRegression(rules = [], observations = []) {
   return { schema_version: "1.0", kind: "visual_regression", status: findings.length ? "findings" : "passed", findings, acceptance_boundary: "Automated regression evidence does not replace human visual acceptance." };
 }
 
+export function validateVisualRegressionCase(input) {
+  const versions = input?.versions ?? [];
+  if (versions.length !== 4 || versions.map(({ id }) => id).join(",") !== "v1,v2,v3,v4" || versions.some(({ artifact_sha256, screenshot_sha256 }) => !isSha256(artifact_sha256) || !isSha256(screenshot_sha256))) throw coded("VISUAL_CASE_VERSIONS_INVALID", "the case must bind immutable v1 through v4 artifacts and screenshots");
+  const covered = new Set(input.failure_records?.map(({ classification }) => classification?.category));
+  const missing = VISUAL_FAILURE_CATEGORIES.filter((category) => !covered.has(category));
+  if (missing.length) throw coded("VISUAL_CASE_COVERAGE_INCOMPLETE", `missing failure categories: ${missing.join(", ")}`);
+  if (!['synthetic_fixture', 'authorized_real_case'].includes(input.case_kind)) throw coded("VISUAL_CASE_KIND_INVALID", "case_kind must separate synthetic and authorized real evidence");
+  const accepted = input.human_review?.conclusion === "accepted";
+  if (accepted && (!/^user:\S+$/.test(input.human_review.actor ?? "") || input.case_kind !== "authorized_real_case" || input.real_powerpoint?.status !== "passed")) throw coded("VISUAL_CASE_ACCEPTANCE_INCOMPLETE", "formal acceptance requires a named user, authorized real case, and passed real PowerPoint evidence");
+  return { schema_version: "1.0", kind: "visual_regression_case", id: input.id, case_kind: input.case_kind, versions: structuredClone(versions), covered_categories: VISUAL_FAILURE_CATEGORIES, human_review: input.human_review ?? { status: "pending" }, real_powerpoint: input.real_powerpoint ?? { status: "pending" }, parent_issue_ready_to_close: accepted, acceptance_boundary: "Synthetic fixtures never satisfy real-case acceptance." };
+}
+
 function normalizeBounds(value) {
   if (!value) return null;
   for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(value[key]) || value[key] < 0) throw coded("VISUAL_FAILURE_BOUNDS_INVALID", `bounds.${key} must be non-negative`);
