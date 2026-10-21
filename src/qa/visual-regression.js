@@ -26,6 +26,22 @@ export function createVisualFailureRecord(input) {
   };
 }
 
+export function bindVisualRepairEvidence(record, input) {
+  if (record?.kind !== "visual_failure_record") throw coded("VISUAL_FAILURE_RECORD_INVALID", "a visual failure record is required");
+  for (const key of ["before_artifact_sha256", "after_artifact_sha256", "before_page_sha256", "after_page_sha256"]) if (!isSha256(input?.[key])) throw coded("VISUAL_REPAIR_EVIDENCE_INVALID", `${key} must be a SHA-256 digest`);
+  const changed = input.changed_targets ?? [];
+  if (!Array.isArray(changed) || changed.length === 0) throw coded("VISUAL_REPAIR_CHANGE_REQUIRED", "at least one changed target is required");
+  if (changed.some(({ page_id, element_id }) => page_id !== record.target.page_id || element_id !== record.target.element_id)) throw coded("VISUAL_REPAIR_SCOPE_VIOLATION", "repair evidence includes an unauthorized page or element");
+  if (input.unrelated_pages_unchanged !== true || input.unrelated_fields_unchanged !== true) throw coded("VISUAL_REPAIR_SCOPE_VIOLATION", "unrelated pages and fields must remain unchanged");
+  return {
+    schema_version: "1.0", kind: "visual_repair_evidence", id: `${record.id}-repair`, failure_record_id: record.id,
+    before: { artifact_sha256: input.before_artifact_sha256, page_sha256: input.before_page_sha256 },
+    after: { artifact_sha256: input.after_artifact_sha256, page_sha256: input.after_page_sha256 },
+    changed_targets: structuredClone(changed), unrelated_pages_unchanged: true, unrelated_fields_unchanged: true,
+    acceptance_boundary: "Before/after evidence proves bounded change, not visual acceptance."
+  };
+}
+
 function normalizeBounds(value) {
   if (!value) return null;
   for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(value[key]) || value[key] < 0) throw coded("VISUAL_FAILURE_BOUNDS_INVALID", `bounds.${key} must be non-negative`);
