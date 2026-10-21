@@ -1,0 +1,25 @@
+{
+  "pack": {
+    "kind": "design_system_pack", "id": "design-pack-blueprint", "name": "Technical Blueprint",
+    "tokens": { "colors": { "accent": "#0057ff" }, "typography": { "heading": "Aptos" }, "spacing": { "unit": 8 } },
+    "components": [{ "id": "component-title" }, { "id": "component-card" }],
+    "layouts": [
+      { "id": "layout-cover", "template_id": "template-hero", "component_ids": ["component-title"], "asset_ids": ["asset-grid"], "renderers": { "html": "cover-web", "pptx": "cover-native" } },
+      { "id": "layout-statement", "template_id": "template-statement", "component_ids": ["component-title"], "asset_ids": ["asset-grid"], "renderers": { "html": "statement-web", "pptx": "statement-native" } },
+      { "id": "layout-comparison", "template_id": "template-comparison", "component_ids": ["component-card"], "asset_ids": ["asset-arrow"], "renderers": { "html": "comparison-web", "pptx": "comparison-native" } },
+      { "id": "layout-sequence", "template_id": "template-sequence", "component_ids": ["component-card"], "asset_ids": ["asset-arrow"], "renderers": { "html": "sequence-web", "pptx": "sequence-native" } },
+      { "id": "layout-evidence", "template_id": "template-data", "component_ids": ["component-card"], "asset_ids": ["asset-orbit"], "renderers": { "html": "evidence-web", "pptx": "evidence-native" } },
+      { "id": "layout-closing", "template_id": "template-statement", "component_ids": ["component-title"], "asset_ids": ["asset-orbit"], "renderers": { "html": "closing-web", "pptx": "closing-native" } }
+    ],
+    "assets": [{ "id": "asset-grid", "type": "background" }, { "id": "asset-arrow", "type": "icon" }, { "id": "asset-orbit", "type": "illustration" }],
+    "relationships": [{ "from": "layout-cover", "to": "asset-grid", "relation": "uses" }]
+  },
+  "pages": [
+    { "id": "page-1", "design_system_layout_id": "layout-cover" },
+    { "id": "page-2", "design_system_layout_id": "layout-statement" },
+    { "id": "page-3", "design_system_layout_id": "layout-comparison" },
+    { "id": "page-4", "design_system_layout_id": "layout-sequence" },
+    { "id": "page-5", "design_system_layout_id": "layout-evidence" },
+    { "id": "page-6", "design_system_layout_id": "layout-closing" }
+  ]
+}

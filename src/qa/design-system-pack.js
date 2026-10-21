@@ -22,7 +22,21 @@ export function inspectDesignSystemPack(project) {
   return report(project, findings);
 }
 
+export function validateDesignSystemCase({ pack, pages, acceptance = {} }) {
+  const index = indexDesignSystemPack(pack);
+  const selected = pages.map((page) => resolveDesignSystemResource(index, page.design_system_layout_id, "layout"));
+  const reused = repeatedIds(selected.flatMap((layout) => [...(layout.component_ids ?? []), ...(layout.asset_ids ?? [])]));
+  const automated = index.metrics.layouts >= 6 && index.metrics.asset_types >= 3 && reused.length > 0;
+  return {
+    status: automated ? "automated_passed_human_pending" : "failed",
+    automated: { passed: automated, semantic_layouts: index.metrics.layouts, asset_types: index.metrics.asset_types, reused_resource_ids: reused },
+    gates: { powerpoint: acceptance.powerpoint === "accepted" ? "accepted" : "pending", human_visual_review: acceptance.human_visual_review === "accepted" ? "accepted" : "pending" }
+  };
+}
+
 function report(project, findings) {
   return { status: findings.some(({ severity }) => severity === "error") ? "failed" : findings.length ? "review_required" : "passed", findings, metrics: { pages: project.pages.length, selected: project.pages.filter(({ design_system_layout_id }) => design_system_layout_id).length } };
 }
+
+function repeatedIds(ids) { const counts = new Map(); for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1); return [...counts].filter(([, count]) => count > 1).map(([id]) => id).sort(); }
 

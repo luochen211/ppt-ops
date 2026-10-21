@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import test from "node:test";
 import { indexDesignSystemPack, migrateLegacyTemplate, normalizeDesignSystemPack, resolveDesignSystemResource } from "../src/templates/design-system-pack.js";
 import { compileProjectLayout } from "../src/layout/catalog.js";
-import { inspectDesignSystemPack } from "../src/qa/design-system-pack.js";
+import { inspectDesignSystemPack, validateDesignSystemCase } from "../src/qa/design-system-pack.js";
 
 test("normalizes the versioned Design System Pack contract", () => {
   const pack = normalizeDesignSystemPack({ kind: "design_system_pack", id: "design-pack-blue", name: "Blue", tokens: { colors: {}, typography: {}, spacing: {} }, components: [], layouts: [], assets: [] });
@@ -63,6 +64,16 @@ test("QA preserves an explicit legacy migration review gate", () => {
   const report = inspectDesignSystemPack(project);
   assert.equal(report.status, "review_required");
   assert.equal(report.findings[0].code, "DESIGN_PACK_MIGRATION_REVIEW_REQUIRED");
+});
+
+test("multipage case proves reuse while PowerPoint and human gates stay separate", async () => {
+  const fixture = JSON.parse(await fs.readFile(new URL("./fixtures/design-system-pack/multipage-reuse.json", import.meta.url), "utf8"));
+  const result = validateDesignSystemCase(fixture);
+  assert.equal(result.status, "automated_passed_human_pending");
+  assert.equal(result.automated.semantic_layouts, 6);
+  assert.equal(result.automated.asset_types, 3);
+  assert.ok(result.automated.reused_resource_ids.includes("component-title"));
+  assert.deepEqual(result.gates, { powerpoint: "pending", human_visual_review: "pending" });
 });
 
 function completePack() {
