@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { indexDesignSystemPack, migrateLegacyTemplate, normalizeDesignSystemPack, resolveDesignSystemResource } from "../src/templates/design-system-pack.js";
 import { compileProjectLayout } from "../src/layout/catalog.js";
+import { inspectDesignSystemPack } from "../src/qa/design-system-pack.js";
 
 test("normalizes the versioned Design System Pack contract", () => {
   const pack = normalizeDesignSystemPack({ kind: "design_system_pack", id: "design-pack-blue", name: "Blue", tokens: { colors: {}, typography: {}, spacing: {} }, components: [], layouts: [], assets: [] });
@@ -44,6 +45,26 @@ test("Design and Build share IDs while renderers stay independent", () => {
   assert.deepEqual(plan.renderer, { html: "design-cover-web", pptx: "design-cover-native" });
 });
 
+test("QA reports missing resources and capacity overflow by page", () => {
+  const project = selectedProject();
+  project.designSystemPack.layouts[0].asset_ids = ["asset-missing"];
+  let report = inspectDesignSystemPack(project);
+  assert.equal(report.findings[0].code, "DESIGN_PACK_RESOURCE_MISSING");
+  project.designSystemPack.layouts[0].asset_ids = ["asset-grid"];
+  project.pages[0].screen_text.title = "X".repeat(91);
+  report = inspectDesignSystemPack(project);
+  assert.equal(report.findings[0].code, "LAYOUT_CAPACITY_EXCEEDED");
+  assert.equal(report.findings[0].page_id, "page-1");
+});
+
+test("QA preserves an explicit legacy migration review gate", () => {
+  const project = selectedProject(); project.designSystemPack = migrateLegacyTemplate({ id: "old", name: "Old", reference_image: "old.png" });
+  delete project.pages[0].design_system_layout_id;
+  const report = inspectDesignSystemPack(project);
+  assert.equal(report.status, "review_required");
+  assert.equal(report.findings[0].code, "DESIGN_PACK_MIGRATION_REVIEW_REQUIRED");
+});
+
 function completePack() {
   return {
     kind: "design_system_pack", id: "design-pack-blue", name: "Technical Blue", tokens: { colors: { accent: "#0057ff" }, typography: { heading: "Aptos" }, spacing: { unit: 8 } },
@@ -52,4 +73,10 @@ function completePack() {
     assets: [{ id: "asset-grid", type: "background" }, { id: "asset-arrow", type: "icon" }, { id: "asset-orbit", type: "illustration" }],
     relationships: [{ from: "layout-cover", to: "asset-grid", relation: "uses" }]
   };
+}
+
+function selectedProject() {
+  const pack = completePack();
+  pack.layouts[0] = { ...pack.layouts[0], component_ids: ["component-title"], asset_ids: ["asset-grid"] };
+  return { project: {}, theme: { dimensions: { width: 13.333, height: 7.5 }, typography: {}, colors: {}, spacing: { page_margin: 0.6 } }, assets: [], designSystemPack: pack, pages: [{ id: "page-1", page: 1, relation: "hero", design_system_layout_id: "layout-cover", screen_text: { title: "Cover", body: [] }, three_second_message: "One system", asset_slots: [] }] };
 }
