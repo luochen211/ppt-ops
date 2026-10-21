@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/design-system-pack.schema.json",
+  "title": "Design System Pack",
+  "type": "object",
+  "required": ["contract_version", "kind", "id", "name", "tokens", "components", "layouts", "assets"],
+  "properties": {
+    "contract_version": { "const": "1.0" },
+    "kind": { "const": "design_system_pack" },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "tokens": { "type": "object", "required": ["colors", "typography", "spacing"] },
+    "components": { "type": "array", "items": { "$ref": "#/$defs/resource" } },
+    "layouts": { "type": "array", "items": { "$ref": "#/$defs/resource" } },
+    "assets": { "type": "array", "items": { "allOf": [{ "$ref": "#/$defs/resource" }, { "required": ["type"] }] } },
+    "relationships": { "type": "array", "items": { "type": "object", "required": ["from", "to", "relation"] } },
+    "migration": { "type": "object" }
+  },
+  "$defs": { "resource": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string", "minLength": 1 } } } }
+}
+
