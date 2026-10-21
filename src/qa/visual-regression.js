@@ -42,6 +42,21 @@ export function bindVisualRepairEvidence(record, input) {
   };
 }
 
+export function decideVisualRuleCandidate(record, repair, input) {
+  if (repair?.failure_record_id !== record?.id) throw coded("VISUAL_RULE_EVIDENCE_MISMATCH", "repair evidence does not match the failure record");
+  if (!/^user:\S+$/.test(input?.actor ?? "")) throw coded("VISUAL_RULE_USER_REQUIRED", "a named user decision is required");
+  if (!['accepted', 'modified', 'rejected'].includes(input?.decision)) throw coded("VISUAL_RULE_DECISION_INVALID", "decision must be accepted, modified, or rejected");
+  required(input.raw_feedback, "VISUAL_RULE_FEEDBACK_REQUIRED");
+  if (input.decision === "rejected") return { schema_version: "1.0", kind: "visual_rule_decision", failure_record_id: record.id, actor: input.actor, decision: "rejected", raw_feedback: input.raw_feedback.trim(), active_rule: null };
+  if (!VISUAL_RULE_SCOPES.includes(input.scope)) throw coded("VISUAL_RULE_SCOPE_INVALID", "scope must be project, template, or global");
+  required(input.condition, "VISUAL_RULE_CONDITION_REQUIRED");
+  return {
+    schema_version: "1.0", kind: "visual_rule_decision", failure_record_id: record.id, repair_evidence_id: repair.id,
+    actor: input.actor, decision: input.decision, raw_feedback: input.raw_feedback.trim(),
+    active_rule: { id: `${record.id}-rule`, category: input.category ?? record.classification.category, scope: input.scope, condition: input.condition.trim(), source_failure_record_id: record.id, source_repair_evidence_id: repair.id }
+  };
+}
+
 function normalizeBounds(value) {
   if (!value) return null;
   for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(value[key]) || value[key] < 0) throw coded("VISUAL_FAILURE_BOUNDS_INVALID", `bounds.${key} must be non-negative`);
