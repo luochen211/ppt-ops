@@ -57,6 +57,23 @@ export function decideVisualRuleCandidate(record, repair, input) {
   };
 }
 
+export function evaluateVisualRegression(rules = [], observations = []) {
+  if (!Array.isArray(rules) || rules.some((rule) => !rule?.id || !VISUAL_RULE_SCOPES.includes(rule.scope))) throw coded("VISUAL_REGRESSION_RULES_INVALID", "accepted scoped rules are required");
+  if (rules.length === 0) return { schema_version: "1.0", kind: "visual_regression", status: "not_assessed", findings: [], acceptance_boundary: "No accepted rules apply." };
+  const byRule = new Map(observations.map((item) => [item.rule_id, item]));
+  const findings = [];
+  for (const rule of rules) {
+    const observation = byRule.get(rule.id);
+    if (!observation || observation.passed !== true) findings.push({
+      rule_id: rule.id, category: rule.category, scope: rule.scope,
+      page_id: observation?.page_id ?? null, element_id: observation?.element_id ?? null,
+      failure_record_id: rule.source_failure_record_id, repair_evidence_id: rule.source_repair_evidence_id,
+      evidence: structuredClone(observation?.evidence ?? {}), status: observation ? "failed" : "missing_evidence"
+    });
+  }
+  return { schema_version: "1.0", kind: "visual_regression", status: findings.length ? "findings" : "passed", findings, acceptance_boundary: "Automated regression evidence does not replace human visual acceptance." };
+}
+
 function normalizeBounds(value) {
   if (!value) return null;
   for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(value[key]) || value[key] < 0) throw coded("VISUAL_FAILURE_BOUNDS_INVALID", `bounds.${key} must be non-negative`);

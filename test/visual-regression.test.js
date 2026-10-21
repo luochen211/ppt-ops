@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bindVisualRepairEvidence, createVisualFailureRecord, decideVisualRuleCandidate, VISUAL_FAILURE_CATEGORIES } from "../src/qa/visual-regression.js";
+import { bindVisualRepairEvidence, createVisualFailureRecord, decideVisualRuleCandidate, evaluateVisualRegression, VISUAL_FAILURE_CATEGORIES } from "../src/qa/visual-regression.js";
 
 const base = { id: "failure-001", raw_feedback: "The label is too quiet.", target: { page_id: "page-002", element_id: "label-risk", bounds: { x: 1, y: 2, width: 3, height: 1 } }, version: { id: "version-001", revision: "rev-a" }, evidence: { screenshot_sha256: "a".repeat(64), locator: "page-2.png" }, classification: { category: "hierarchy", confidence: 0.8 } };
 
@@ -10,6 +10,14 @@ test("Stage 1 records raw feedback separately from inferred visual classificatio
   assert.deepEqual(record.classification, { category: "hierarchy", confidence: 0.8, source: "system_inference" });
   assert.equal(record.rule_activation, "none");
   assert.deepEqual(VISUAL_FAILURE_CATEGORIES, ["layout", "hierarchy", "alignment", "clarity", "imagery", "repetition"]);
+});
+
+test("Stage 4 regression findings link the original feedback and accepted repair", () => {
+  const rule = { id: "failure-001-rule", category: "hierarchy", scope: "project", source_failure_record_id: "failure-001", source_repair_evidence_id: "failure-001-repair" };
+  const report = evaluateVisualRegression([rule], [{ rule_id: rule.id, page_id: "page-004", element_id: "label-risk", passed: false, evidence: { contrast_ratio: 2.1 } }]);
+  assert.equal(report.status, "findings");
+  assert.deepEqual(report.findings[0].failure_record_id, "failure-001");
+  assert.equal(evaluateVisualRegression([], []).status, "not_assessed");
 });
 
 test("Stage 3 activates a scoped rule only after a named user decision", () => {

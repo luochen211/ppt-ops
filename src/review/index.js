@@ -12,6 +12,7 @@ import { citationReviewEvidence } from "../citations/manifest.js";
 import { inspectContentConsistency } from "../qa/content-consistency.js";
 import { inspectDeliveryFeedback } from "../delivery/retro.js";
 import { reviewSpeakerScript } from "../qa/speaker-script.js";
+import { evaluateVisualRegression } from "../qa/visual-regression.js";
 
 export const REVIEW_REPORT_FILE = "review-report.json";
 
@@ -62,6 +63,8 @@ export async function reviewProject(project, options = {}) {
   if (deliveryFeedback) automatedChecks.push(deliveryFeedback);
   const speakerScript = reviewSpeakerScript(project);
   if (speakerScript) automatedChecks.push({ id: "speaker-script-review", kind: "automated", required: false, status: speakerScript.status, evidence: speakerScript });
+  const visualRegression = evaluateVisualRegression(options.visualRegressionRules, options.visualRegressionObservations);
+  automatedChecks.push({ id: "visual-feedback-regression", kind: "automated", required: false, status: visualRegression.status === "passed" ? "passed" : "pending", evidence: visualRegression });
   if (project.factLedger) {
     const evidence = evaluateFactLedger(project.factLedger, {
       at: options.factLedgerEvaluatedAt ?? new Date().toISOString(),
