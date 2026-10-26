@@ -16,13 +16,13 @@ export function createVisualFailureRecord(input) {
   if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) throw coded("VISUAL_FAILURE_CONFIDENCE_INVALID", "classification confidence must be between 0 and 1");
   return {
     schema_version: "1.0", kind: "visual_failure_record", id: input.id,
-    raw_feedback: input.raw_feedback.trim(),
+    raw_feedback: input.raw_feedback,
     target: { page_id: input.target.page_id, element_id: input.target.element_id, bounds: normalizeBounds(input.target.bounds) },
     version: { id: input.version.id, revision: input.version.revision },
     evidence: { screenshot_sha256: input.evidence.screenshot_sha256.toLowerCase(), locator: input.evidence.locator ?? null },
     classification: { category: input.classification.category, confidence, source: "system_inference" },
     status: "proposed", rule_activation: "none",
-    record_sha256: digest({ id: input.id, raw_feedback: input.raw_feedback.trim(), target: input.target, version: input.version, evidence: input.evidence })
+    record_sha256: digest({ id: input.id, raw_feedback: input.raw_feedback, target: input.target, version: input.version, evidence: input.evidence })
   };
 }
 
@@ -43,7 +43,8 @@ export function bindVisualRepairEvidence(record, input) {
 }
 
 function normalizeBounds(value) {
-  if (!value) return null;
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "object" || Array.isArray(value)) throw coded("VISUAL_FAILURE_BOUNDS_INVALID", "bounds must be an object");
   for (const key of ["x", "y", "width", "height"]) if (!Number.isFinite(value[key]) || value[key] < 0) throw coded("VISUAL_FAILURE_BOUNDS_INVALID", `bounds.${key} must be non-negative`);
   return { x: value.x, y: value.y, width: value.width, height: value.height };
 }
