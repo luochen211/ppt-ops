@@ -191,6 +191,11 @@
         "id": {
           "$ref": "#/$defs/identifier"
         },
+        "component_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "asset_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "template_id": { "$ref": "#/$defs/identifier" },
+        "semantic_family": { "$ref": "#/$defs/identifier" },
+        "text": { "$ref": "#/$defs/text" },
         "name": {
           "$ref": "#/$defs/text"
         },

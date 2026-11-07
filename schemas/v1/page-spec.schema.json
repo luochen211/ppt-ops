@@ -22,6 +22,7 @@
       ],
       "properties": {
         "diagram": { "$ref": "../diagram.schema.json" },
+        "design_system_layout_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
         "kind": {
           "const": "page_spec"
         },

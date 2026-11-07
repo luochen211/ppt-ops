@@ -5,7 +5,8 @@ import PptxGenJS from "pptxgenjs";
 import { resolveProjectPath } from "../core/project.js";
 import { renderNativeDiagram } from "./diagram.js";
 import { assertAccessibleTextCapacity } from "../accessibility/index.js";
-import { compileProjectLayout } from "../layout/catalog.js";
+import { PACK_PPTX_RENDERERS } from "../templates/pack-renderers.js";
+import { compileProjectLayout, materializeDesignSystemResources } from "../layout/catalog.js";
 import { applyCitationManifest } from "../citations/manifest.js";
 import { compileImageSemanticLayout } from "../layout/image-semantics.js";
 
@@ -23,7 +24,7 @@ export async function buildPptx(project, outputFile) {
     throw new TypeError("buildPptx requires an output file");
   }
 
-  project = applyCitationManifest(project);
+  project = materializeDesignSystemResources(applyCitationManifest(project));
   assertAccessibleTextCapacity(project);
   project = { ...project, assets: await Promise.all(project.assets.map(async (asset) => {
     if (!(asset.mime?.startsWith("image/") || [".png", ".jpg", ".jpeg", ".svg"].includes(path.extname(asset.file).toLowerCase()))) return asset;
@@ -151,7 +152,16 @@ function renderSlide(pptx, page, plan, project) {
     margin: 0, valign: "mid", objectName: `Slide ${page.page} ${plan.renderer.pptx} title`
   });
 
-  const contentBox = contentGeometry(theme, assets.length > 0);
+  const components = plan.design_resources?.components ?? [];
+  const mode = plan.design_system ? PACK_PPTX_RENDERERS[plan.renderer.pptx] : undefined;
+  const contentBox = contentGeometry(theme, assets.length > 0, mode, components.length > 0);
+  components.forEach((component, index) => addText(slide, component.text, {
+    x: margin + index * ((width - margin * 2) / components.length), y: 1.5,
+    w: (width - margin * 2) / components.length - 0.15, h: 0.4,
+    fontFace: bodyFont, fontSize: 14, bold: true, color: colors.accent,
+    margin: 0.04, line: { color: colors.accent, width: 1 },
+    objectName: `Pack component ${component.id}`
+  }));
   const body = bodyLines(page.screen_text);
   if (page.diagram) renderNativeDiagram(slide, page.diagram, contentBox.copy, theme, colors);
   else if (body.length > 0) renderBody(slide, pptx, body, theme, colors, bodyFont, contentBox.copy);
@@ -231,12 +241,17 @@ function renderMessage(slide, pptx, message, theme, colors, bodyFont, bounds) {
   });
 }
 
-function contentGeometry(theme, hasAssets) {
+function contentGeometry(theme, hasAssets, mode, hasComponents) {
   const { width, height } = theme.dimensions;
   const margin = theme.spacing.page_margin;
-  const content = { x: margin, y: 1.72, w: width - (margin * 2), h: height - 1.72 - margin - 0.58 };
+  const top = hasComponents ? 2.08 : 1.72;
+  const content = { x: margin, y: top, w: width - (margin * 2), h: height - top - margin - 0.58 };
   if (!hasAssets) return { copy: content, assets: null };
   const gap = Math.max(theme.spacing.unit * 1.5, 0.38);
+  if (mode === "stacked") {
+    const copyHeight = (content.h - gap) * 0.48;
+    return { copy: { ...content, h: copyHeight }, assets: { x: content.x, y: content.y + copyHeight + gap, w: content.w, h: content.h - copyHeight - gap } };
+  }
   const assetWidth = Math.min(4.55, content.w * 0.39);
   return {
     copy: { ...content, w: content.w - assetWidth - gap },

@@ -59,6 +59,7 @@ export function validateV1Bundle(bundle) {
 
 const validators = {
   project(value, errors) {
+    if (value.design_system_pack_file !== undefined) requireText(value, "design_system_pack_file", errors);
     requireText(value, "title", errors);
     if (value.format !== "16:9") errors.push("format must be 16:9");
     requireIdList(value.source_ids, "source_ids", errors);
@@ -85,6 +86,7 @@ const validators = {
     }
   },
   page_spec(value, errors) {
+    if (value.design_system_layout_id !== undefined) requireId(value, "design_system_layout_id", errors);
     if (!Number.isInteger(value.page) || value.page < 1) errors.push("page must be a positive integer");
     for (const field of ["task", "three_second_message", "visual_job"]) requireText(value, field, errors);
     requireEnum(value, "relation", RELATIONS, errors);

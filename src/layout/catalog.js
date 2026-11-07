@@ -1,4 +1,6 @@
 import { validateDiagram } from "./diagram.js";
+import { indexDesignSystemPack, resolveDesignSystemResource } from "../templates/design-system-pack.js";
+import { PACK_HTML_RENDERERS, PACK_PPTX_RENDERERS } from "../templates/pack-renderers.js";
 const baseCapacity = { title_chars: 90, message_chars: 180, body_items: 6, body_item_chars: 180, total_body_chars: 720, asset_slots: 2 };
 
 export const TEMPLATE_CATALOG = Object.freeze([
@@ -19,26 +21,32 @@ export class LayoutCapacityError extends Error {
 }
 
 export function compileProjectLayout(project) {
-  return project.pages.map((page) => compilePageLayout(page, project.theme, { projectThemeOverride: project.project.theme_override, assets: project.assets }));
+  return project.pages.map((page) => compilePageLayout(page, project.theme, { projectThemeOverride: project.project.theme_override, assets: project.assets, designSystemPack: project.designSystemPack }));
 }
 
 export function compilePageLayout(page, theme, options = {}) {
+  const designSelection = resolveDesignSelection(page, options.designSystemPack);
+  const slots = [...(page.asset_slots ?? [])];
+  for (const asset of designSelection?.assets ?? []) if (!slots.some((slot) => slot.asset_id === asset.id)) slots.push({ asset_id: asset.id, role: asset.type, fit: "contain" });
   const diagramErrors = validateDiagram(page.diagram);
-  if (page.diagram && (page.screen_text.body?.length || page.asset_slots?.length)) diagramErrors.push("diagram pages use their authored nodes instead of body cards or asset slots");
+  if (page.diagram && (page.screen_text.body?.length || slots.length)) diagramErrors.push("diagram pages use their authored nodes instead of body cards or asset slots");
   if (diagramErrors.length) throw Object.assign(new Error(diagramErrors.join("; ")), { code: "DIAGRAM_INVALID" });
-  const templateId = options.templateId ?? page.template_id ?? templateForRelation(page.relation).id;
+  const templateId = designSelection?.template_id ?? options.templateId ?? page.template_id ?? templateForRelation(page.relation).id;
   const selected = byId.get(templateId);
   if (!selected) throw new Error(`unknown template: ${templateId}`);
   if (!selected.relations.includes(page.relation) && options.allowRelationOverride !== true) throw new Error(`template ${templateId} does not support relation ${page.relation}`);
-  const violations = capacityViolations(page, selected.capacity);
+  const limits = [selected.capacity, designSelection?.capacity, ...(designSelection?.components ?? []).map((component) => component.capacity)].filter(Boolean);
+  const capacity = Object.fromEntries(Object.keys(selected.capacity).map((key) => [key, Math.min(...limits.map((limit) => limit[key]).filter((value) => value !== undefined))]));
+  const violations = capacityViolations({ ...page, asset_slots: slots }, capacity);
   if (violations.length) throw new LayoutCapacityError(page.id ?? page.page, violations);
-  const resolvedTheme = resolveTheme(theme, options.projectThemeOverride, page.theme_override);
+  const resolvedTheme = resolveTheme(resolveTheme(theme, designSelection ? options.designSystemPack.tokens : {}), options.projectThemeOverride, page.theme_override);
   const width = resolvedTheme.dimensions.width; const height = resolvedTheme.dimensions.height; const margin = resolvedTheme.spacing.page_margin;
   return Object.freeze({
     version: "1", page: page.page, template_id: selected.id, relation: page.relation,
-    renderer: selected.renderers, capacity: selected.capacity,
-    theme: resolvedTheme, asset_checks: Object.freeze(inspectAssets(page.asset_slots ?? [], options.assets ?? [])),
-    content: Object.freeze({ title: page.screen_text.title, subtitle: page.screen_text.subtitle ?? "", message: page.three_second_message, body: Object.freeze([...(page.screen_text.body ?? [])]), assets: Object.freeze([...(page.asset_slots ?? [])]) }),
+    renderer: designSelection?.renderers ?? selected.renderers, capacity,
+    ...(designSelection ? { design_system: designSelection.identity, design_resources: { components: designSelection.components, assets: designSelection.assets } } : {}),
+    theme: resolvedTheme, asset_checks: Object.freeze(inspectAssets(slots, [...(options.assets ?? []), ...(designSelection?.assets ?? [])])),
+    content: Object.freeze({ title: page.screen_text.title, subtitle: page.screen_text.subtitle ?? "", message: page.three_second_message, body: Object.freeze([...(page.screen_text.body ?? [])]), assets: Object.freeze(slots) }),
     geometry: Object.freeze({
       canvas: rect(0, 0, width, height),
       title: rect(margin + 0.28, margin - 0.02, width - margin * 2 - 0.28, 0.82),
@@ -46,6 +54,40 @@ export function compilePageLayout(page, theme, options = {}) {
       footer: rect(margin, height - margin - 0.2, width - margin * 2, 0.2)
     })
   });
+}
+
+function resolveDesignSelection(page, pack) {
+  const layoutId = page.design_system_layout_id;
+  if (layoutId === undefined) return undefined;
+  if (typeof layoutId !== "string" || !/^[a-z0-9][a-z0-9._-]*$/.test(layoutId)) throw Object.assign(new Error("design_system_layout_id must be a stable ID"), { code: "DESIGN_PACK_INVALID" });
+  if (!pack) throw Object.assign(new Error(`design system pack is required for ${layoutId}`), { code: "DESIGN_PACK_REQUIRED" });
+  const index = indexDesignSystemPack(pack);
+  const layout = resolveDesignSystemResource(index, layoutId, "layout");
+  if (!layout.template_id || (layout.semantic_family && layout.semantic_family !== page.relation)) throw Object.assign(new Error(`layout ${layoutId} needs a compatible template_id and semantic_family`), { code: "DESIGN_PACK_RESOURCE_INCOMPATIBLE" });
+  for (const [target, registry] of [["html", PACK_HTML_RENDERERS], ["pptx", PACK_PPTX_RENDERERS]]) {
+    if (!Object.hasOwn(registry, layout.renderers?.[target] ?? "")) throw Object.assign(new Error(`unsupported ${target} renderer for layout ${layoutId}: ${layout.renderers?.[target]}`), { code: "DESIGN_PACK_RENDERER_UNSUPPORTED" });
+  }
+  const components = (layout.component_ids ?? []).map((id) => resolveDesignSystemResource(index, id, "component"));
+  const assets = (layout.asset_ids ?? []).map((id) => {
+    const resource = resolveDesignSystemResource(index, id, "asset");
+    if (!["image", "icon", "background", "illustration"].includes(resource.type) || typeof resource.source !== "string" || !/\.(png|jpe?g|svg)$/i.test(resource.source)) throw Object.assign(new Error(`asset ${id} needs a local PNG, JPEG or SVG source`), { code: "DESIGN_PACK_RESOURCE_INCOMPATIBLE" });
+    return { ...resource, file: resource.source };
+  });
+  if (components.length > 3 || components.some((component) => component.type !== "label" || typeof component.text !== "string" || !component.text.trim() || component.text.length > 80)) throw Object.assign(new Error("selected components support at most three labels of 1-80 characters"), { code: "DESIGN_PACK_RESOURCE_INCOMPATIBLE" });
+  return Object.freeze({ template_id: layout.template_id, capacity: layout.capacity, components, assets, renderers: Object.freeze({ ...layout.renderers }), identity: Object.freeze({ pack_id: pack.id, layout_id: layout.id, component_ids: Object.freeze(components.map(({ id }) => id)), asset_ids: Object.freeze(assets.map(({ id }) => id)) }) });
+}
+
+// Materialize the same semantic resources for either independent adapter. Reject
+// collisions instead of letting a project asset silently shadow a pack resource.
+export function materializeDesignSystemResources(project) {
+  const plans = compileProjectLayout(project);
+  const assets = new Map((project.assets ?? []).map((asset) => [asset.id, asset]));
+  for (const plan of plans) for (const asset of plan.design_resources?.assets ?? []) {
+    const existing = assets.get(asset.id);
+    if (existing && existing.file !== asset.file) throw new Error(`conflicting project and pack asset: ${asset.id}`);
+    if (!existing) assets.set(asset.id, asset);
+  }
+  return { ...project, assets: [...assets.values()], pages: project.pages.map((page, i) => ({ ...page, asset_slots: plans[i].content.assets })) };
 }
 
 export function templateForRelation(relation) {

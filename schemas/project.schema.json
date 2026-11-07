@@ -5,6 +5,7 @@
   "type": "object",
   "required": ["schema_version", "name", "title", "format", "source_files", "theme_file", "assets_file", "outputs"],
   "properties": {
+    "design_system_pack_file": {"type": "string", "minLength": 1, "pattern": "\\S"},
     "schema_version": { "enum": ["0.1", "1.0"] },
     "name": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9._-]*$" },
     "title": { "type": "string", "minLength": 1 },

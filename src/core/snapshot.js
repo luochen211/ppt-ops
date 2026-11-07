@@ -1,3 +1,5 @@
+import { indexDesignSystemPack } from "../templates/design-system-pack.js";
+
 export function normalizeSnapshot(projectRoot, snapshot) {
   const contracts = {
     project: snapshot["project.json"], sources: snapshot["sources.json"], outline: snapshot["outline.json"],
@@ -6,6 +8,7 @@ export function normalizeSnapshot(projectRoot, snapshot) {
   const sourceById = new Map(contracts.sources.map((source) => [source.id, source]));
   return {
     root: projectRoot,
+    ...(contracts.project.design_system_pack_file !== undefined ? { designSystemPack: indexDesignSystemPack(snapshot[contracts.project.design_system_pack_file]).pack } : {}),
     project: { schema_version: "1.0", name: contracts.project.id, title: contracts.project.title, format: contracts.project.format, source_files: contracts.sources.map(({ file }) => file), theme_file: "theme.json", assets_file: "assets.json", outputs: contracts.project.outputs, ...(contracts.project.corporate_profile ? { corporate_profile: contracts.project.corporate_profile } : {}), ...(contracts.project.theme_override ? { theme_override: contracts.project.theme_override } : {}), ...(contracts.project.delivery_mode ? { delivery_mode: contracts.project.delivery_mode } : {}), ...(contracts.project.accessibility_profile ? { accessibility_profile: structuredClone(contracts.project.accessibility_profile) } : {}), ...(contracts.project.talk_budget ? { talk_budget: structuredClone(contracts.project.talk_budget) } : {}), ...(contracts.project.script_review ? { script_review: structuredClone(contracts.project.script_review) } : {}) },
     pages: contracts.pages.map((page) => {
       const reference = page.source_refs?.[0]; const source = reference ? sourceById.get(reference.source_id) : undefined;

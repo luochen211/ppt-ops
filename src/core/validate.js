@@ -19,6 +19,7 @@ const SCREENSHOT_TREATMENTS = new Set(["crop", "zoom", "callout", "annotation"])
 export function validatePage(page, assetIds = new Set()) {
   const errors = [];
   if (!page || typeof page !== "object" || Array.isArray(page)) return ["page spec must be an object"];
+  if (page.design_system_layout_id !== undefined && (typeof page.design_system_layout_id !== "string" || !ID_PATTERN.test(page.design_system_layout_id))) errors.push("design_system_layout_id must be a stable ID");
   if (!Number.isInteger(page.page) || page.page < 1) errors.push("page must be a positive integer");
   for (const field of ["task", "three_second_message", "visual_job"]) requireText(page, field, errors);
   if (page.source !== undefined && !hasText(page.source)) errors.push("source must be a non-empty string");
@@ -54,6 +55,7 @@ export function validateProject(loaded) {
   }
   const project = loaded.project;
   if (!project || typeof project !== "object") return ["project manifest is required"];
+  if (project.design_system_pack_file !== undefined && !hasText(project.design_system_pack_file)) errors.push("design_system_pack_file must be a non-empty path");
   if (!SCHEMA_VERSIONS.has(project.schema_version)) errors.push("project.schema_version must be 0.1 or 1.0");
   if (!hasText(project.name)) errors.push("project.name is required");
   else if (!ID_PATTERN.test(project.name)) errors.push("project.name must be a stable lowercase identifier");

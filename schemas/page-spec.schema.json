@@ -7,6 +7,7 @@
   "required": ["page", "task", "three_second_message", "relation", "screen_text", "visual_job", "asset_slots", "status"],
   "properties": {
     "diagram": {"$ref": "diagram.schema.json"},
+    "design_system_layout_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
     "page": { "type": "integer", "minimum": 1 },
     "source": { "type": "string", "minLength": 1, "description": "Project-relative source file, optionally followed by a #fragment." },
     "task": { "type": "string", "minLength": 1 },
