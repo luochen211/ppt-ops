@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/design-system-pack.schema.json",
+  "title": "Design System Pack",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "kind",
+    "id",
+    "name",
+    "tokens",
+    "components",
+    "layouts",
+    "assets"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "1.0"
+    },
+    "kind": {
+      "const": "design_system_pack"
+    },
+    "id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "name": {
+      "$ref": "#/$defs/text"
+    },
+    "tokens": {
+      "type": "object",
+      "required": [
+        "colors",
+        "typography",
+        "spacing"
+      ],
+      "properties": {
+        "colors": {
+          "type": "object"
+        },
+        "typography": {
+          "type": "object"
+        },
+        "spacing": {
+          "type": "object"
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "layouts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/resource"
+          },
+          {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "$ref": "#/$defs/text"
+              },
+              "source": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "relation"
+        ],
+        "properties": {
+          "from": {
+            "$ref": "#/$defs/identifier"
+          },
+          "to": {
+            "$ref": "#/$defs/identifier"
+          },
+          "relation": {
+            "$ref": "#/$defs/text"
+          }
+        }
+      }
+    },
+    "migration": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "capacity": {
+      "type": "object",
+      "description": "Optional declared maxima using the layout catalog units: character counts, body item counts and asset slot counts. Zero is allowed; omitted limits are unspecified. This metadata is not rendered-fit evidence.",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "title_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "message_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "body_items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "body_item_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_body_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "asset_slots": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "renderers": {
+      "type": "object",
+      "description": "Separate implementation IDs for independent HTML and PPTX rendering of the same resource semantics. IDs may coincide; neither target is converted from the other.",
+      "required": [
+        "html",
+        "pptx"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "html": {
+          "$ref": "#/$defs/identifier"
+        },
+        "pptx": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "capacity": {
+          "$ref": "#/$defs/capacity"
+        },
+        "renderers": {
+          "$ref": "#/$defs/renderers"
+        }
+      }
+    }
+  }
+}
