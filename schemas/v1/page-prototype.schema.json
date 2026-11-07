@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppt-ops.local/schemas/v1/page-prototype.schema.json",
+  "title": "V1 Semantic Page Prototype",
+  "type": "object",
+  "required": ["contract_version", "kind", "id", "name", "purpose", "relations", "content_mode", "capacity", "material_requirements", "renderers"],
+  "properties": {
+    "contract_version": { "const": "1.0" },
+    "kind": { "const": "page_prototype" },
+    "id": { "type": "string", "pattern": "^prototype-[a-z0-9-]+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "purpose": { "type": "string", "minLength": 1 },
+    "relations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "content_mode": { "enum": ["text-led", "image-led", "interaction", "comparison"] },
+    "capacity": {
+      "type": "object",
+      "required": ["title_chars", "body_items", "body_item_chars", "asset_slots"],
+      "properties": {
+        "title_chars": { "type": "integer", "minimum": 0 },
+        "body_items": { "type": "integer", "minimum": 0 },
+        "body_item_chars": { "type": "integer", "minimum": 0 },
+        "asset_slots": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "material_requirements": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "renderers": {
+      "type": "object",
+      "required": ["html", "pptx"],
+      "properties": { "html": { "type": "string", "minLength": 1 }, "pptx": { "type": "string", "minLength": 1 } }
+    }
+  }
+}
+
