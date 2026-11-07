@@ -53,3 +53,25 @@ structure and PPTX pictures/editable text, compare independent mapping changes,
 and check frozen resource semantics. Browser evidence checks placement and deck
 navigation. None of these constitute real Microsoft PowerPoint or human visual
 acceptance; those remain separate parent-issue gates.
+
+## Multipage machine acceptance
+
+`validateDesignSystemCase` is asynchronous. Supply the pack, V1 `pages`, normalized
+`theme` and `project`, and a local `root` for asset resolution. It checks page
+contracts and unique page identities, compiles the selected layouts, and builds
+HTML and native PPTX independently. Failures return `status: "failed"` and findings.
+The six semantic layouts and three asset types are counted from selected, valid
+pages, not unused catalog declarations. Reuse means the same valid resource is
+referenced on more than one distinct page.
+
+The synthetic six-page case is in
+`test/fixtures/design-system-pack/multipage-reuse.json`; its three local PNGs
+represent a grid, an arrow and an orbit. Run
+`node --test test/design-system-case.test.js` to check embedded images and reusable
+labels in the HTML sections and PPTX slide XML/media relationships, plus invalid
+contracts, resource selections and build inputs.
+
+These are automated construction/output checks. They do not establish visual
+fidelity in Microsoft PowerPoint or a human acceptance decision. The separate
+`powerpoint` and `human_visual_review` gates remain `pending` unless supplied with
+an external accepted record; automated builds do not promote either gate.
