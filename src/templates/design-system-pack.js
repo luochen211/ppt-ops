@@ -29,5 +29,32 @@ export function migrateLegacyTemplate(template) {
   });
 }
 
+export function indexDesignSystemPack(input) {
+  const pack = normalizeDesignSystemPack(input);
+  const resources = new Map();
+  for (const [kind, entries] of [["component", pack.components], ["layout", pack.layouts], ["asset", pack.assets]]) {
+    for (const entry of entries) {
+      if (!hasText(entry.id)) throw packError("DESIGN_PACK_RESOURCE_ID_MISSING", `${kind} id is required`);
+      if (resources.has(entry.id)) throw packError("DESIGN_PACK_RESOURCE_DUPLICATE", `duplicate resource id: ${entry.id}`);
+      if (Object.hasOwn(entry, "kind") && entry.kind !== kind) throw packError("DESIGN_PACK_RESOURCE_INCOMPATIBLE", `${entry.id} belongs to ${kind}, not ${entry.kind}`);
+      resources.set(entry.id, Object.freeze({ ...structuredClone(entry), kind }));
+    }
+  }
+  for (const relationship of pack.relationships ?? []) {
+    for (const endpoint of ["from", "to"]) {
+      resolveDesignSystemResource({ resources }, relationship[endpoint], relationship[`${endpoint}_kind`]);
+    }
+  }
+  const assetTypes = new Set(pack.assets.map(({ type }) => type));
+  return Object.freeze({ pack: Object.freeze(pack), resources, metrics: Object.freeze({ layouts: pack.layouts.length, asset_types: assetTypes.size }) });
+}
+
+export function resolveDesignSystemResource(index, id, expectedKind) {
+  const resource = index?.resources?.get(id);
+  if (!resource) throw packError("DESIGN_PACK_RESOURCE_MISSING", `resource not found: ${id}`);
+  if (expectedKind && resource.kind !== expectedKind) throw packError("DESIGN_PACK_RESOURCE_INCOMPATIBLE", `${id} is ${resource.kind}, expected ${expectedKind}`);
+  return resource;
+}
+
 function hasText(value) { return typeof value === "string" && value.trim().length > 0; }
 function packError(code, message) { return Object.assign(new Error(message), { code }); }

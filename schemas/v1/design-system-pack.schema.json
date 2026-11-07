@@ -99,6 +99,22 @@
           },
           "relation": {
             "$ref": "#/$defs/text"
+          },
+          "from_kind": {
+            "enum": [
+              "component",
+              "layout",
+              "asset"
+            ],
+            "description": "When declared, the from resource must belong to this catalog collection."
+          },
+          "to_kind": {
+            "enum": [
+              "component",
+              "layout",
+              "asset"
+            ],
+            "description": "When declared, the to resource must belong to this catalog collection."
           }
         }
       }
