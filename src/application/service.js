@@ -421,6 +421,10 @@ export class ApplicationService {
 
   async freezeSnapshot(snapshot, metadata = {}) {
     snapshot = await materializeCorporateProfile(this.project.root, snapshot);
+    const packFile = snapshot["project.json"].design_system_pack_file;
+    if (packFile !== undefined && !Object.hasOwn(snapshot, packFile)) {
+      snapshot = { ...snapshot, [packFile]: JSON.parse(await fs.readFile(resolveProjectPath(this.project.root, packFile), "utf8")) };
+    }
     if (snapshot["project.json"].corporate_profile) metadata = { ...metadata, corporate_profile: snapshot["project.json"].corporate_profile };
     const project = this.projectFromSnapshot(snapshot);
     project.referencedFiles = await Promise.all([

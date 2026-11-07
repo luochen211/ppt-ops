@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import JSZip from "jszip";
+import { inspectDesignSystemPack } from "./design-system-pack.js";
 import { analyzeScreenshotEvidence } from "./screenshot-evidence.js";
 import { analyzeImageSemantics } from "./image-semantics.js";
 import { analyzeComprehensionEvidence, unassessedComprehensionEvidence } from "./comprehension.js";
@@ -22,7 +23,8 @@ export async function inspectPresentation({ project, pptxFile, evidenceDir, rend
   const downscaleHeights = project.project?.delivery_mode === ONLINE_LECTURE_MODE ? [720] : [];
   const rendering = render ? await renderPresentation({ pptxFile, evidenceDir, commands, downscaleHeights }) : degradedRendering("rendering disabled");
   return {
-    status: structural.findings.some(({ severity }) => severity === "error") ? "failed" : rendering.status === "rendered" ? "passed" : "degraded",
+    design_system_pack: structural.design_system_pack,
+    status: structural.findings.some(({ severity }) => severity === "error") ? "failed" : structural.design_system_pack.status === "review_required" ? "review_required" : rendering.status === "rendered" ? "passed" : "degraded",
     findings: structural.findings,
     pages: structural.pages,
     screenshot_evidence: structural.screenshot_evidence,
@@ -73,6 +75,8 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
   const imageSemantics = analyzeImageSemantics(project, assetPlacements);
   const comprehensionObservations = collectPptxComprehensionObservations(structuralObservationPages);
   const comprehension = options.comprehensionObservations ? analyzeComprehensionEvidence(project, options.comprehensionObservations) : unassessedComprehensionEvidence();
+  const designSystemPack = inspectDesignSystemPack(project);
+  findings.push(...designSystemPack.findings);
   findings.push(...screenshotEvidence.findings);
   findings.push(...imageSemantics.findings);
   findings.push(...comprehension.findings);
@@ -87,7 +91,7 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
     if (onlineMode) page.checks.push("online-safe-zones", "online-720p-legibility");
     page.finding_count = findings.filter((item) => item.page === page.page).length;
   }
-  return { pages, findings, screenshot_evidence: screenshotEvidence, image_semantics: imageSemantics, comprehension_observations: comprehensionObservations, comprehension_qa: comprehension, ...(onlineLecture ? { online_lecture: onlineLecture } : {}) };
+  return { pages, findings, design_system_pack: designSystemPack, screenshot_evidence: screenshotEvidence, image_semantics: imageSemantics, comprehension_observations: comprehensionObservations, comprehension_qa: comprehension, ...(onlineLecture ? { online_lecture: onlineLecture } : {}) };
 }
 
 export async function renderPresentation({ pptxFile, evidenceDir, commands = defaultCommands(), downscaleHeights = [] }) {
