@@ -4,7 +4,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { buildHtml } from "../src/adapters/html.js";
 import { readProject } from "../src/core/project.js";
-import { createSyncMessage, deckKeyAction, formatClock, parseSyncMessage, SYNC_ACTIONS, timerCommand, timerElapsed } from "../src/adapters/html-runtime.js";
+import { escapeAction, createSyncMessage, deckKeyAction, formatClock, parseSyncMessage, SYNC_ACTIONS, timerCommand, timerElapsed } from "../src/adapters/html-runtime.js";
 
 async function deckWithNotes(mutate = () => {}) {
   const project = await readProject(path.resolve("examples/demo-project"));
@@ -30,7 +30,10 @@ test("main deck DOM keeps speaker notes only inside an inert template", async ()
 test("rendered deck exposes discoverable live hotkeys and controls", async () => {
   const { html } = await deckWithNotes();
   for (const control of ["previous", "next", "fullscreen", "overview", "presenter", "help"]) assert.match(html, new RegExp(`data-nav="${control}"`));
-  assert.match(html, /title="Slide overview \(I \/ G\)"/);
+  assert.match(html, /title="Slide overview \(I \/ G \/ Esc\)"/);
+  assert.match(html, /<dt>Esc<\/dt><dd>Open overview \/ close overlay \/ clear jump<\/dd>/);
+  assert.match(html, /\.thumb-stage \.slide\{[^}]*color:var\(--text\)/, "thumbnails keep the slide text colour instead of the overlay's white");
+  assert.match(html, /\.overview-grid\{[^}]*minmax\(min\(420px,100%\),1fr\)/);
   assert.match(html, /title="Presenter view \(N\)"/);
   assert.match(html, /title="Keyboard shortcuts \(\?\)"/);
   assert.match(html, /<div class="keymap" hidden role="dialog"[\s\S]*<dt>B<\/dt><dd>Blackout \/ restore screen<\/dd>/);
@@ -56,6 +59,13 @@ test("deck key resolver maps live keys without clobbering fullscreen or typing",
   assert.equal(deckKeyAction("f", { metaKey: true }, false), null, "browser shortcuts are left alone");
   assert.equal(deckKeyAction("n", { ctrlKey: true }, false), null);
   assert.equal(deckKeyAction("?", { shiftKey: true }, false), "help");
+});
+
+test("Esc opens the overview unless a jump, help panel or overview is already open", () => {
+  assert.equal(escapeAction({}), "open-overview");
+  assert.equal(escapeAction({ overviewOpen: true }), "close-overview");
+  assert.equal(escapeAction({ helpOpen: true, overviewOpen: true }), "close-help", "help sits above the overview");
+  assert.equal(escapeAction({ jumping: true, helpOpen: true }), "clear-jump", "a pending slide jump is cleared first");
 });
 
 test("sync message format is versioned, deck-scoped and validated", () => {
