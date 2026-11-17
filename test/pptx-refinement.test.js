@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import JSZip from "jszip";
+import { reviewRefinementCandidate } from "../src/refinement/pptx-diff.js";
+import { applyRefinementPptx } from "../src/refinement/pptx-editor.js";
 import { ApplicationService } from "../src/application/service.js";
 import { initializeProject } from "../src/core/init.js";
 import { createRefinementScope, inspectRefinementPptx } from "../src/refinement/pptx-inspection.js";
@@ -112,12 +114,62 @@ test("application service rejects modified inspection evidence", async (t) => {
   } finally { service.close(); }
 });
 
+test("Stage 2 creates an immutable scoped Candidate and preserves the original PPTX", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-candidate-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const projectDir = path.join(root, "project");
+  await initializeProject(projectDir, { name: "candidate-fixture", title: "Candidate Fixture" });
+  const input = path.join(root, "existing.pptx"), bytes = await refinementPptx();
+  await fs.writeFile(input, bytes);
+  const service = await ApplicationService.open(projectDir);
+  try {
+    const inspected = await service.inspectPptxRefinement(input);
+    const textBox = inspected.inspection.slides[0].objects.find((object) => object.type === "text_box");
+    const scoped = await service.proposePptxRefinementScope({ sourceId: inspected.source.id, actor: "user:syna", targets: [{ slide: 1, object_id: textBox.id, properties: ["position", "font_size"] }] });
+    const request = { sourceId: inspected.source.id, scopeId: scoped.scope.id, actor: "user:syna", changes: [{ slide: 1, object_id: textBox.id, properties: { position: { x: 120, y: 240 }, font_size: 24 } }] };
+    const first = await service.createPptxRefinementCandidate(request);
+    const second = await service.createPptxRefinementCandidate(request);
+    assert.equal(second.candidate.id, first.candidate.id);
+    assert.deepEqual(first.candidate.operations[0].properties, ["font_size", "position"]);
+    assert.equal(first.candidate.original_preserved, true);
+    assert.equal(sha(await fs.readFile(path.join(projectDir, inspected.source.file))), sha(bytes));
+    const candidateBytes = await fs.readFile(path.join(projectDir, first.candidate_file));
+    assert.notEqual(sha(candidateBytes), sha(bytes));
+    const archive = await JSZip.loadAsync(candidateBytes);
+    const slide = await archive.file("ppt/slides/slide1.xml").async("string");
+    assert.match(slide, /<a:off x="120" y="240"\/>/);
+    assert.match(slide, /<a:rPr sz="2400"\/>/);
+    const reviewed = await service.reviewPptxRefinementCandidate(first.candidate.id);
+    assert.equal(reviewed.diff.passed, true);
+    assert.deepEqual(reviewed.diff.changed_parts, ["ppt/slides/slide1.xml"]);
+    assert.equal(await fs.readFile(path.join(projectDir, reviewed.preview_file), "utf8").then((value) => value.includes("Scoped refinement preview")), true);
+    await assert.rejects(service.createPptxRefinementCandidate({ ...request, changes: [{ slide: 1, object_id: textBox.id, properties: { fill_color: "FF0000" } }] }), { code: "REFINEMENT_PROPERTY_FORBIDDEN" });
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 }), { code: "REFINEMENT_POWERPOINT_ACCEPTANCE_REQUIRED" });
+    await assert.rejects(service.recordPptxRefinementPowerPointAcceptance(first.candidate.id, { candidate_id: first.candidate.id, candidate_sha256: first.candidate.candidate_sha256, application: "Microsoft PowerPoint", real_presentation: false, case_id: "synthetic-fixture", actor: "user:syna", steps: { opened: true, edited: true, saved: true, reopened: true } }), { code: "REFINEMENT_REAL_CASE_REQUIRED" });
+    const accepted = await service.recordPptxRefinementPowerPointAcceptance(first.candidate.id, { candidate_id: first.candidate.id, candidate_sha256: first.candidate.candidate_sha256, application: "Microsoft PowerPoint", real_presentation: true, case_id: "authorized-case-001", actor: "user:syna", steps: { opened: true, edited: true, saved: true, reopened: true }, notes: "Editable round trip completed." });
+    assert.equal(accepted.acceptance.accepted, true);
+    await fs.writeFile(path.join(projectDir, first.candidate_file), Buffer.from("tampered"));
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 }), { code: "REFINEMENT_CANDIDATE_CHANGED" });
+    await fs.writeFile(path.join(projectDir, first.candidate_file), candidateBytes);
+    const acceptancePath = path.join(projectDir, accepted.acceptance_file);
+    const acceptanceText = await fs.readFile(acceptancePath, "utf8");
+    await fs.writeFile(acceptancePath, JSON.stringify({ ...accepted.acceptance, actor: "different-reviewer" }));
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 }), { code: "REFINEMENT_ACCEPTANCE_CHANGED" });
+    await fs.writeFile(acceptancePath, acceptanceText);
+    const decided = await service.decidePptxRefinementCandidate(first.candidate.id, { decision: "accept", actor: "user:syna", expectedRevision: 0 });
+    assert.equal(decided.decision.state, "accepted");
+    assert.equal(decided.version.delivery_state, "versioned");
+    assert.equal(sha(await fs.readFile(path.join(projectDir, decided.version.artifact))), sha(candidateBytes));
+    await assert.rejects(service.decidePptxRefinementCandidate(first.candidate.id, { decision: "reject", actor: "user:syna", expectedRevision: 0 }), { code: "STALE_BASE_REVISION" });
+  } finally { service.close(); }
+});
+
 async function refinementPptx() {
   const zip = new JSZip();
   zip.file("[Content_Types].xml", "<Types/>");
   zip.file("ppt/presentation.xml", "<p:presentation/>");
   zip.file("ppt/slides/slide1.xml", `<p:sld><p:cSld><p:spTree>
-    <p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm></p:spPr><p:txBody><a:p><a:r><a:t>Confidential result 42</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm></p:spPr><p:txBody><a:p><a:r><a:rPr sz="1800"/><a:t>Confidential result 42</a:t></a:r></a:p></p:txBody></p:sp>
     <p:pic><p:nvPicPr><p:cNvPr id="3" name="Photo"/></p:nvPicPr><p:spPr><a:xfrm><a:off x="500" y="600"/><a:ext cx="700" cy="800"/></a:xfrm></p:spPr></p:pic>
   </p:spTree></p:cSld><p:timing/></p:sld>`);
   zip.file("ppt/slides/slide2.xml", `<p:sld><p:cSld><p:spTree><p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="4" name="Chart"/></p:nvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"/></a:graphic></p:graphicFrame></p:spTree></p:cSld></p:sld>`);
@@ -140,3 +192,54 @@ async function edgeCasePptx() {
 }
 
 function sha(value) { return crypto.createHash("sha256").update(value).digest("hex"); }
+
+
+test("font properties preserve well-formed self-closing run properties", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-font-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const file = path.join(root, "existing.pptx"), bytes = await refinementPptx();
+  await fs.writeFile(file, bytes);
+  const source = { id: "source-font", sha256: sha(bytes), original_name: "existing.pptx", bytes: bytes.length };
+  const inspection = await inspectRefinementPptx(file, source);
+  const target = inspection.slides[0].objects.find((object) => object.type === "text_box");
+  const scope = createRefinementScope(inspection, { actor: "reviewer", inspectionFile: "inspection.json", inspectionSha256: "a".repeat(64), targets: [{ slide: 1, object_id: target.id, properties: ["font_weight", "font_family", "text_color"] }] });
+  const result = await applyRefinementPptx(file, source, inspection, scope, [{ slide: 1, object_id: target.id, properties: { font_weight: "bold", font_family: "Arial", text_color: "FF0000" } }]);
+  const archive = await JSZip.loadAsync(result.bytes);
+  const xml = await archive.file("ppt/slides/slide1.xml").async("string");
+  assert.doesNotMatch(xml, /\/\s+b=/, "attributes must precede the self-closing slash");
+  assert.match(xml, /<a:rPr[^>]*b="1"[^>]*>[\s\S]*?<a:latin typeface="Arial"\/>[\s\S]*?<\/a:rPr>/);
+  assert.match(xml, /<a:rPr[^>]*>[\s\S]*?<a:solidFill><a:srgbClr val="FF0000"\/><\/a:solidFill>[\s\S]*?<\/a:rPr>/);
+  const candidateFile = path.join(root, "candidate.pptx");
+  await fs.writeFile(candidateFile, result.bytes);
+  assert.equal((await reviewRefinementCandidate(file, candidateFile, source, scope, result.evidence)).report.passed, true);
+});
+
+
+test("shape and line fills preserve run colors and unrelated line styling", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "pptops-refinement-fill-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const archive = await JSZip.loadAsync(await refinementPptx());
+  const original = (await archive.file("ppt/slides/slide1.xml").async("string"))
+    .replace("</a:xfrm></p:spPr>", '<' + '/a:xfrm><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill><a:prstDash val="dash"/></a:ln></p:spPr>')
+    .replace('<a:rPr sz="1800"/>', '<a:rPr sz="1800"><a:solidFill><a:srgbClr val="112233"/></a:solidFill></a:rPr>');
+  archive.file("ppt/slides/slide1.xml", original);
+  const bytes = await archive.generateAsync({ type: "nodebuffer" }), file = path.join(root, "source.pptx");
+  await fs.writeFile(file, bytes);
+  const source = { id: "source-fill", sha256: sha(bytes), original_name: "source.pptx", bytes: bytes.length };
+  const inspection = await inspectRefinementPptx(file, source), target = inspection.slides[0].objects[0];
+  const scope = createRefinementScope(inspection, { actor: "reviewer", inspectionFile: "inspection.json", inspectionSha256: "a".repeat(64), targets: [{ slide: 1, object_id: target.id, properties: ["fill_color", "line_color"] }] });
+  const result = await applyRefinementPptx(file, source, inspection, scope, [{ slide: 1, object_id: target.id, properties: { fill_color: "ABCDEF", line_color: "FEDCBA" } }]);
+  const zip = await JSZip.loadAsync(result.bytes), xml = await zip.file("ppt/slides/slide1.xml").async("string");
+  assert.match(xml, /<a:rPr sz="1800"><a:solidFill><a:srgbClr val="112233"\/><\/a:solidFill><\/a:rPr>/);
+  assert.match(xml, /<a:ln w="12700"><a:solidFill><a:srgbClr val="FEDCBA"\/><\/a:solidFill><a:prstDash val="dash"\/><\/a:ln>/);
+  assert.match(xml, /<p:spPr>[\s\S]*?val="ABCDEF"[\s\S]*?<\/p:spPr>/);
+  const candidateFile = path.join(root, "candidate.pptx");
+  await fs.writeFile(candidateFile, result.bytes);
+  assert.equal((await reviewRefinementCandidate(file, candidateFile, source, scope, result.evidence)).report.passed, true);
+  for (const changed of [xml.replace('w="12700"', 'w="25400"'), xml.replace('val="112233"', 'val="445566"')]) {
+    zip.file("ppt/slides/slide1.xml", changed);
+    const tampered = await zip.generateAsync({ type: "nodebuffer" });
+    await fs.writeFile(candidateFile, tampered);
+    await assert.rejects(reviewRefinementCandidate(file, candidateFile, source, scope, { ...result.evidence, candidate_sha256: sha(tampered) }), { code: "REFINEMENT_SCOPE_DIFF_FAILED" });
+  }
+});

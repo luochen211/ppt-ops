@@ -3,7 +3,8 @@ import { applyAccessibilityHtml } from "../accessibility/html.js";
 import { renderHtmlDiagram } from "./diagram.js";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { compileProjectLayout } from "../layout/catalog.js";
+import { PACK_HTML_RENDERERS } from "../templates/pack-renderers.js";
+import { compileProjectLayout, materializeDesignSystemResources } from "../layout/catalog.js";
 import { applyCitationManifest } from "../citations/manifest.js";
 import { compileImageSemanticLayout } from "../layout/image-semantics.js";
 import { DECK_KEYMAP, PRESENTER_KEYMAP, deckRuntimeScript } from "./html-runtime.js";
@@ -18,7 +19,7 @@ const MIME_TYPES = new Map([
 
 /** Build a deterministic, directly openable HTML presentation. */
 export async function buildHtml(project) {
-  project = applyCitationManifest(project);
+  project = materializeDesignSystemResources(applyCitationManifest(project));
   assertAccessibleTextCapacity(project);
   const embeddedAssets = await embedAssets(project);
   const plans = compileProjectLayout(project);
@@ -63,6 +64,8 @@ body{display:grid;place-items:center}
 h1{max-width:1500px;margin:0;font-family:var(--heading),sans-serif;font-size:76px;line-height:1.08;letter-spacing:-.025em}
 .slide-content{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(420px,.65fr);align-items:center;gap:88px;min-height:0}
 .template-template-comparison .slide-content{grid-template-columns:1fr 1fr}.template-template-sequence .body-copy,.template-template-process .body-copy{grid-template-columns:repeat(3,1fr)}.template-template-cycle .slide-content{border:3px solid var(--accent);border-radius:50%;padding:64px}.template-template-hero h1{font-size:92px}.template-template-data .message{font-size:58px}
+.pack-components{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 18px}.pack-label{display:inline-block;padding:8px 16px;border:2px solid var(--accent);border-radius:8px;font-size:24px}
+.pack-stacked .slide-content{display:flex;flex-direction:column;gap:24px;align-items:stretch}.pack-stacked .slide-copy{align-self:stretch}.pack-stacked .assets{min-height:0;height:260px;flex:none}.pack-stacked figure{height:260px;min-height:0;max-height:260px}.pack-stacked figure img{min-height:0;max-height:260px}.pack-stacked .message{font-size:36px}.pack-stacked .body-copy{margin-top:16px;font-size:26px}
 .slide-copy{align-self:center}
 .subtitle{margin:0 0 24px;color:var(--accent);font:600 30px/1.3 var(--heading),sans-serif;letter-spacing:.04em}
 .message{margin:0;max-width:1120px;font-size:46px;line-height:1.25;font-weight:600}
@@ -137,12 +140,14 @@ function renderSlide(page, plan, index, count, assets) {
   const screen = page.screen_text;
   const subtitle = screen.subtitle ? `<p class="subtitle" data-reading-key="subtitle">${escapeHtml(screen.subtitle)}</p>` : "";
   const body = screen.body?.length ? `<ul class="body-copy" data-reading-key="body">${screen.body.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
+  const components = (plan.design_resources?.components ?? []).map((component) => `<span class="pack-label" data-component-id="${escapeAttribute(component.id)}">${escapeHtml(component.text)}</span>`).join("");
+  const mode = plan.design_system ? PACK_HTML_RENDERERS[plan.renderer.html] : undefined;
   const figures = page.asset_slots.map((slot) => renderAsset(slot, assets.get(slot.asset_id), page.page)).join("");
   const citations = page.citation_entries?.length ? `<div class="slide-citations" aria-label="Sources">${page.citation_entries.map((entry) => `<span>[${entry.number}] ${escapeHtml(entry.public_label || entry.title || "Citation metadata pending")}</span>`).join("")}</div>` : "";
   const slideTheme = `--bg:${plan.theme.colors.background};--text:${plan.theme.colors.text};--accent:${plan.theme.colors.accent};--heading:${cssString(plan.theme.typography.heading_font)};--body:${cssString(plan.theme.typography.body_font)}`;
-  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" lang="${escapeAttribute(page.accessibility?.language ?? "")}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
+  return `<section class="slide relation-${escapeAttribute(page.relation)} template-${escapeAttribute(plan.template_id)}${mode ? ` pack-${mode}` : ""}" style="${escapeAttribute(slideTheme)}" data-page="${page.page}" lang="${escapeAttribute(page.accessibility?.language ?? "")}" data-html-layout="${escapeAttribute(plan.renderer.html)}" data-qa-policy="strict" aria-labelledby="slide-title-${page.page}" aria-hidden="${index !== 0}">
   <header class="slide-header" data-qa-id="page-${page.page}-header" data-qa-role="content"><h1 id="slide-title-${page.page}" data-reading-key="title">${escapeHtml(screen.title)}</h1><span class="slide-number">${String(index + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</span></header>
-  <div class="slide-content">${page.diagram ? renderHtmlDiagram(page.diagram, page.page) : `<div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${subtitle}<p class="message" data-reading-key="message">${escapeHtml(page.three_second_message)}</p>${body}</div>`}<div class="assets" data-reading-key="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
+  <div class="slide-content">${page.diagram ? renderHtmlDiagram(page.diagram, page.page) : `<div class="slide-copy" data-qa-id="page-${page.page}-copy" data-qa-role="node">${components ? `<div class="pack-components">${components}</div>` : ""}${subtitle}<p class="message" data-reading-key="message">${escapeHtml(page.three_second_message)}</p>${body}</div>`}<div class="assets" data-reading-key="assets" data-qa-id="page-${page.page}-assets" data-qa-role="node">${figures}</div></div>
   ${citations}<footer class="slide-footer" data-qa-id="page-${page.page}-footer" data-qa-role="content"><span>${escapeHtml(page.task)}</span><span>${escapeHtml(page.visual_job)}</span></footer>
 </section>`;
 }

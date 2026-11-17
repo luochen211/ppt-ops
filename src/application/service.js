@@ -26,6 +26,10 @@ import { buildCitationManifest } from "../citations/manifest.js";
 import { multimodalCapabilities, SourceIntake } from "../sources/intake.js";
 import { compareSourceRevision } from "../sources/revision-impact.js";
 import { createRefinementScope, inspectRefinementPptx, stableHash } from "../refinement/pptx-inspection.js";
+import { applyRefinementPptx } from "../refinement/pptx-editor.js";
+import { reviewRefinementCandidate } from "../refinement/pptx-diff.js";
+import { createRefinementDecision, createRefinementVersion } from "../refinement/lifecycle.js";
+import { validatePowerPointAcceptance } from "../refinement/powerpoint-acceptance.js";
 
 const CONTRACT_FILES = ["project.json", "sources.json", "outline.json", "pages.json", "theme.json", "assets.json", "templates.json"];
 const COLLECTIONS = { source: "sources", page_spec: "pages", asset: "assets", template: "templates" };
@@ -147,6 +151,71 @@ export class ApplicationService {
     const relative = path.join(".pptops", "refinement", "scopes", id, "scope.json");
     await writeImmutableOrVerify(resolveProjectPath(this.project.root, relative), { ...scope, id });
     return { scope: { ...scope, id }, scope_file: relative };
+  }
+
+  async createPptxRefinementCandidate({ sourceId, scopeId, changes, actor }) {
+    const source = this.requireEntity("source", sourceId);
+    if (typeof actor !== "string" || !actor.trim()) throw new ApplicationError("REFINEMENT_ACTOR_REQUIRED", "an explicit actor is required");
+    const scopeRelative = path.join(".pptops", "refinement", "scopes", scopeId, "scope.json");
+    const scope = await readRefinementJson(resolveProjectPath(this.project.root, scopeRelative), "REFINEMENT_SCOPE_REQUIRED", "propose a Scope before creating a refinement Candidate");
+    if (scope.actor !== actor.trim()) throw new ApplicationError("REFINEMENT_ACTOR_MISMATCH", "Candidate actor must match the approved Scope actor");
+    const inspectionFile = resolveProjectPath(this.project.root, scope.inspection_file);
+    const inspection = await readRefinementJson(inspectionFile, "REFINEMENT_INSPECTION_REQUIRED", "approved inspection evidence is missing");
+    const inspectionBytes = await fs.readFile(inspectionFile);
+    if (crypto.createHash("sha256").update(inspectionBytes).digest("hex") !== scope.inspection_sha256) throw new ApplicationError("REFINEMENT_INSPECTION_CHANGED", "approved inspection evidence changed after Scope creation");
+    const result = await applyRefinementPptx(resolveProjectPath(this.project.root, source.file), source, inspection, scope, changes);
+    const id = `refinement-${stableHash({ scope_id: scope.id, changes }).slice(0, 16)}`;
+    const base = path.join(".pptops", "refinement", "candidates", id), artifactRelative = path.join(base, "candidate.pptx"), evidenceRelative = path.join(base, "evidence.json");
+    const evidence = { ...result.evidence, id, actor: actor.trim(), scope_file: scopeRelative.replaceAll("\\", "/"), artifact: artifactRelative.replaceAll("\\", "/") };
+    await writeImmutableBytesOrVerify(resolveProjectPath(this.project.root, artifactRelative), result.bytes);
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, evidenceRelative), evidence);
+    return { candidate: evidence, candidate_file: artifactRelative, evidence_file: evidenceRelative };
+  }
+
+  async reviewPptxRefinementCandidate(candidateId) {
+    const base = path.join(".pptops", "refinement", "candidates", candidateId);
+    const evidence = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "evidence.json")), "REFINEMENT_CANDIDATE_REQUIRED", "create a refinement Candidate before review");
+    const scope = await readRefinementJson(resolveProjectPath(this.project.root, evidence.scope_file), "REFINEMENT_SCOPE_REQUIRED", "Candidate Scope evidence is missing");
+    const source = this.requireEntity("source", evidence.source.id);
+    const result = await reviewRefinementCandidate(resolveProjectPath(this.project.root, source.file), resolveProjectPath(this.project.root, evidence.artifact), source, scope, evidence);
+    const reportRelative = path.join(base, "scoped-diff.json"), previewRelative = path.join(base, "before-after.html");
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, reportRelative), result.report);
+    await writeImmutableTextOrVerify(resolveProjectPath(this.project.root, previewRelative), result.preview);
+    return { diff: result.report, diff_file: reportRelative, preview_file: previewRelative };
+  }
+
+  async decidePptxRefinementCandidate(candidateId, { decision, actor, expectedRevision }) {
+    const base = path.join(".pptops", "refinement", "candidates", candidateId);
+    const candidate = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "evidence.json")), "REFINEMENT_CANDIDATE_REQUIRED", "unknown refinement Candidate");
+    const diff = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "scoped-diff.json")), "REFINEMENT_REVIEW_REQUIRED", "review the refinement Candidate before decision");
+    const decisionFile = resolveProjectPath(this.project.root, path.join(base, "decision.json"));
+    const current = await readOptionalJson(decisionFile);
+    const candidateBytes = await fs.readFile(resolveProjectPath(this.project.root, candidate.artifact));
+    if (crypto.createHash("sha256").update(candidateBytes).digest("hex") !== candidate.candidate_sha256) throw new ApplicationError("REFINEMENT_CANDIDATE_CHANGED", "Candidate bytes changed after scoped review");
+    if (decision === "accept") {
+      const acceptance = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "powerpoint-acceptance.json")), "REFINEMENT_POWERPOINT_ACCEPTANCE_REQUIRED", "record a real Microsoft PowerPoint round trip before acceptance");
+      const validated = validatePowerPointAcceptance(candidate, acceptance);
+      if (validated.acceptance_sha256 !== acceptance.acceptance_sha256) throw new ApplicationError("REFINEMENT_ACCEPTANCE_CHANGED", "PowerPoint acceptance evidence changed after recording");
+    }
+    const record = createRefinementDecision({ candidate, diff, decision, actor, expectedRevision, current });
+    await atomicWriteJson(decisionFile, record);
+    const version = createRefinementVersion(candidate, record);
+    if (!version) return { decision: record, version: null };
+    const versionBase = path.join(".pptops", "refinement", "versions", version.id), artifactRelative = path.join(versionBase, "refined.pptx"), manifestRelative = path.join(versionBase, "manifest.json");
+    await writeImmutableBytesOrVerify(resolveProjectPath(this.project.root, artifactRelative), candidateBytes);
+    const manifest = { ...version, artifact: artifactRelative.replaceAll("\\", "/") };
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, manifestRelative), manifest);
+    return { decision: record, version: manifest, manifest_file: manifestRelative };
+  }
+
+  async recordPptxRefinementPowerPointAcceptance(candidateId, input) {
+    const base = path.join(".pptops", "refinement", "candidates", candidateId);
+    const candidate = await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "evidence.json")), "REFINEMENT_CANDIDATE_REQUIRED", "unknown refinement Candidate");
+    await readRefinementJson(resolveProjectPath(this.project.root, path.join(base, "scoped-diff.json")), "REFINEMENT_REVIEW_REQUIRED", "run scoped review before PowerPoint acceptance");
+    const acceptance = validatePowerPointAcceptance(candidate, input);
+    const relative = path.join(base, "powerpoint-acceptance.json");
+    await writeImmutableOrVerify(resolveProjectPath(this.project.root, relative), acceptance);
+    return { acceptance, acceptance_file: relative };
   }
 
   async previewSourceUpdate(sourceId, inputFile) {
@@ -352,6 +421,10 @@ export class ApplicationService {
 
   async freezeSnapshot(snapshot, metadata = {}) {
     snapshot = await materializeCorporateProfile(this.project.root, snapshot);
+    const packFile = snapshot["project.json"].design_system_pack_file;
+    if (packFile !== undefined && !Object.hasOwn(snapshot, packFile)) {
+      snapshot = { ...snapshot, [packFile]: JSON.parse(await fs.readFile(resolveProjectPath(this.project.root, packFile), "utf8")) };
+    }
     if (snapshot["project.json"].corporate_profile) metadata = { ...metadata, corporate_profile: snapshot["project.json"].corporate_profile };
     const project = this.projectFromSnapshot(snapshot);
     project.referencedFiles = await Promise.all([
@@ -385,14 +458,41 @@ export class ApplicationService {
     return this.runBuild(id);
   }
 
+  async queueBuild({ versionId, targets, citations, requestId }) {
+    const version = this.requireEntity("version", versionId);
+    if (version.state !== "frozen") throw new ApplicationError("VERSION_NOT_FROZEN", "build input must be a Frozen Version");
+    if (!Array.isArray(targets) || targets.length === 0 || targets.some((target) => !["html", "pptx"].includes(target))) throw new ApplicationError("TARGET_UNSUPPORTED", "targets must contain html and/or pptx");
+    const normalizedTargets = [...new Set(targets)].sort();
+    if (!hasText(requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+    const existing = this.store.listBuilds(this.projectId).find((build) => build.config?.mcp_request_id === requestId);
+    if (existing) {
+      if (existing.version_id !== versionId || JSON.stringify([...existing.targets].sort()) !== JSON.stringify(normalizedTargets)) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Build request");
+      return { build: existing, reused: true };
+    }
+    const frozenProject = await this.projectFromVersion(versionId);
+    const citationManifest = citations ? buildCitationManifest({ ledger: frozenProject.factLedger, sources: frozenProject.contracts.sources, pages: frozenProject.contracts.pages, decision: citations.decision, metadata: citations.metadata }) : undefined;
+    const id = nextId("build", this.store.listBuilds(this.projectId));
+    const build = createV1Entity("build", id, { project_id: this.projectId, version_id: versionId, state: "queued", targets: normalizedTargets, attempts: [], config: { mcp_request_id: requestId, ...(version.variant ? { variant: version.variant } : {}), ...(version.corporate_profile ? { corporate_profile: version.corporate_profile } : {}), ...(citationManifest ? { citation_manifest: citationManifest } : {}) } });
+    this.store.enqueueBuild(build);
+    return { build: this.requireBuild(id), reused: false };
+  }
+
   async retryBuild(buildId) {
     this.store.retryBuild(buildId);
     return this.runBuild(buildId);
   }
 
-  async runReview(buildId) {
+  async runReview(buildId, options = {}) {
     const build = this.requireBuild(buildId);
     if (build.state !== "succeeded") throw new ApplicationError("BUILD_NOT_SUCCEEDED", "review requires a succeeded build");
+    if (options.requestId !== undefined) {
+      if (!hasText(options.requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(options.requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+      const existing = this.store.listEntities(this.projectId, "review").find((review) => review.mcp_request_id === options.requestId);
+      if (existing) {
+        if (existing.build_id !== buildId) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Review request");
+        return { review: existing, report: null, reused: true };
+      }
+    }
     const frozenProject = await this.projectFromVersion(build.version_id);
     if (build.config?.citation_manifest) frozenProject.citationManifest = build.config.citation_manifest;
     const pptxFile = build.targets.includes("pptx") ? resolveProjectPath(this.project.root, path.join(".pptops", "builds", buildId, "pptx", "slides.pptx")) : undefined;
@@ -404,11 +504,11 @@ export class ApplicationService {
     const id = nextId("review", this.store.listEntities(this.projectId, "review"));
     const immutableReport = await this.files.writeImmutable(`.pptops/reviews/${id}/review-report.json`, `${JSON.stringify(report, null, 2)}\n`);
     const artifactHashes = await this.buildArtifactHashes(build);
-    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file, report_sha256: immutableReport.sha256 }));
+    let review = this.store.saveEntity(this.projectId, createV1Entity("review", id, { build_id: buildId, ...(options.requestId ? { mcp_request_id: options.requestId } : {}), ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), artifact_hashes: artifactHashes, state: "automated_pending", automated: report.automated_checks, human: report.acceptance, report_file: immutableReport.file, report_sha256: immutableReport.sha256 }));
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "automated_complete" });
     review = this.store.saveEntity(this.projectId, { ...stripRevision(review), state: "human_pending" });
     await this.files.writeManifest("review", id, stripRevision(review));
-    return { review, report };
+    return { review, report, reused: false };
   }
 
   async recordReview(reviewId, { decision, expectedRevision, evidence = {} }) {
@@ -510,6 +610,14 @@ export class ApplicationService {
 
   async createHandoff(buildId, reviewId, options = {}) {
     const review = this.requireEntity("review", reviewId);
+    if (options.requestId !== undefined) {
+      if (!hasText(options.requestId) || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(options.requestId)) throw new ApplicationError("MCP_REQUEST_ID_INVALID", "request_id must be a stable identifier");
+      const existing = this.store.listEntities(this.projectId, "handoff").find((handoff) => handoff.mcp_request_id === options.requestId);
+      if (existing) {
+        if (existing.build_id !== buildId || existing.review_id !== reviewId || existing.delivery_selection_id !== options.deliverySelectionId) throw new ApplicationError("MCP_REQUEST_CONFLICT", "request_id already identifies a different Handoff request");
+        return { handoff: existing, manifest_file: existing.package_manifest, package_dir: existing.package_dir, reused: true };
+      }
+    }
     if (review.state !== "accepted" || review.build_id !== buildId) throw new ApplicationError("REVIEW_NOT_ACCEPTED", "handoff requires an accepted review for the selected build");
     const frozenProject = await this.projectFromVersion(this.requireBuild(buildId).version_id);
     if (!review.report_file) throw new ApplicationError("REVIEW_REPORT_REQUIRED", "handoff requires the selected immutable Review report");
@@ -550,10 +658,12 @@ export class ApplicationService {
     }
     const packageResult = await createHandoff(frozenProject, report, { sourceFiles, deliverySelection: selection, variant: build.config?.variant, corporateProfile: build.config?.corporate_profile, handout });
     const id = nextId("handoff", this.store.listEntities(this.projectId, "handoff"));
-    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
+    const packageManifest = path.relative(this.project.root, packageResult.manifestFile);
+    const packageDirectory = path.relative(this.project.root, packageResult.packageDir);
+    let handoff = this.store.createHandoff(this.projectId, createV1Entity("handoff", id, { build_id: buildId, review_id: reviewId, ...(options.requestId ? { mcp_request_id: options.requestId } : {}), delivery_selection_id: options.deliverySelectionId, package_manifest: packageManifest, package_dir: packageDirectory, ...(build.config?.variant ? { variant: build.config?.variant } : {}), ...(build.config?.corporate_profile ? { corporate_profile: build.config.corporate_profile } : {}), state: "preparing", files: packageResult.manifest.outputs }));
     for (const state of ["packaged", "verified"]) handoff = this.store.saveEntity(this.projectId, { ...stripRevision(handoff), state });
     await this.files.writeManifest("handoff", id, stripRevision(handoff));
-    return { handoff, manifest_file: packageResult.manifestFile, package_dir: packageResult.packageDir };
+    return { handoff, manifest_file: options.requestId ? packageManifest : packageResult.manifestFile, package_dir: options.requestId ? packageDirectory : packageResult.packageDir, reused: false };
   }
 
   async buildHandoffFiles(buildId, review, selectedFormats) {
@@ -573,7 +683,7 @@ export class ApplicationService {
   }
 
   async runBuild(buildId) {
-    const claimed = this.store.claimNextBuild();
+    const claimed = this.store.claimNextBuild(buildId);
     if (!claimed || claimed.id !== buildId) throw new ApplicationError("BUILD_NOT_CLAIMED", `build could not be claimed: ${buildId}`);
     try {
       const project = await this.projectFromVersion(claimed.version_id);
@@ -678,6 +788,24 @@ async function writeImmutableOrVerify(file, value) {
     if (await fs.readFile(file, "utf8") !== serialized) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable evidence differs: ${path.basename(file)}`);
   }
 }
+async function writeImmutableBytesOrVerify(file, value) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  try { await fs.writeFile(file, value, { flag: "wx" }); }
+  catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    if (!(await fs.readFile(file)).equals(value)) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable artifact differs: ${path.basename(file)}`);
+  }
+}
+async function writeImmutableTextOrVerify(file, value) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  try { await fs.writeFile(file, value, { flag: "wx" }); }
+  catch (error) { if (error.code !== "EEXIST") throw error; if (await fs.readFile(file, "utf8") !== value) throw new ApplicationError("IMMUTABLE_EVIDENCE_CONFLICT", `immutable preview differs: ${path.basename(file)}`); }
+}
+async function readRefinementJson(file, code, message) {
+  try { return JSON.parse(await fs.readFile(file, "utf8")); }
+  catch (error) { if (error.code === "ENOENT") throw new ApplicationError(code, message); throw error; }
+}
+async function readOptionalJson(file) { try { return JSON.parse(await fs.readFile(file, "utf8")); } catch (error) { if (error.code === "ENOENT") return null; throw error; } }
 function nextId(prefix, entities) { return `${prefix}-${String(entities.length + 1).padStart(3, "0")}`; }
 function stripRevision({ revision, ...entity }) { return entity; }
 function hashJson(value) { return crypto.createHash("sha256").update(stableJson(value)).digest("hex"); }

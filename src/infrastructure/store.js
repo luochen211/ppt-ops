@@ -98,10 +98,12 @@ export class InfrastructureStore {
     return this.getBuild(build.id);
   }
 
-  claimNextBuild() {
+  claimNextBuild(buildId) {
     this.db.exec("BEGIN IMMEDIATE");
     try {
-      const build = this.db.prepare("SELECT * FROM builds WHERE state='queued' AND cancel_requested=0 ORDER BY created_at, id LIMIT 1").get();
+      const build = buildId === undefined
+        ? this.db.prepare("SELECT * FROM builds WHERE state='queued' AND cancel_requested=0 ORDER BY created_at, id LIMIT 1").get()
+        : this.db.prepare("SELECT * FROM builds WHERE id=? AND state='queued' AND cancel_requested=0").get(buildId);
       if (!build) { this.db.exec("COMMIT"); return undefined; }
       const attempt = this.db.prepare("SELECT COALESCE(MAX(attempt), 0) + 1 next FROM build_attempts WHERE build_id=?").get(build.id).next;
       const now = timestamp();

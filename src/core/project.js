@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { indexDesignSystemPack } from "../templates/design-system-pack.js";
 import { materializeCorporateProfile } from "../templates/corporate-profile.js";
 
 export async function readProject(projectDir) {
@@ -11,8 +12,9 @@ export async function readProject(projectDir) {
   const themeFile = resolveProjectPath(root, project.theme_file ?? "theme.json");
   const assetsFile = resolveProjectPath(root, project.assets_file ?? "assets.json");
   const [pages, theme, assets] = await Promise.all([readJson(pagesFile), readJson(themeFile), readJson(assetsFile)]);
+  const designSystemPack = await readDesignSystemPack(root, project);
   const referencedFiles = await inspectReferencedFiles(root, project, pages, assets);
-  return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, contractModel: "foundation" };
+  return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, designSystemPack, contractModel: "foundation" };
 }
 
 async function readV1Project(root, contract, projectFile, pagesFile) {
@@ -30,12 +32,18 @@ async function readV1Project(root, contract, projectFile, pagesFile) {
   const pages = pageContracts.map((page) => {
     const reference = page.source_refs?.[0];
     const source = reference ? sourceById.get(reference.source_id) : undefined;
-    return { ...(page.template_id ? { template_id: page.template_id } : {}), ...(page.theme_override ? { theme_override: page.theme_override } : {}), id: page.id, page: page.page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, task: page.task, three_second_message: page.three_second_message, relation: page.relation, screen_text: page.screen_text, visual_job: page.visual_job, asset_slots: page.asset_slots, status: page.content_status, html: page.renderers?.html, pptx: page.renderers?.pptx, ...(page.estimated_duration_seconds ? { estimated_duration_seconds: page.estimated_duration_seconds } : {}), ...(page.speaker_notes !== undefined ? { speaker_notes: page.speaker_notes } : {}), ...(page.speaker_note_intent ? { speaker_note_intent: page.speaker_note_intent } : {}), ...(page.script_role ? { script_role: page.script_role } : {}), ...(page.merged_with ? { merged_with: structuredClone(page.merged_with) } : {}), ...(page.audience_interaction ? { audience_interaction: page.audience_interaction } : {}), ...(page.delivery_feedback ? { delivery_feedback: structuredClone(page.delivery_feedback) } : {}), ...(page.diagram ? { diagram: structuredClone(page.diagram) } : {}), ...(page.accessibility ? { accessibility: structuredClone(page.accessibility) } : {}) };
+    return { ...(page.design_system_layout_id !== undefined ? { design_system_layout_id: page.design_system_layout_id } : {}), ...(page.template_id ? { template_id: page.template_id } : {}), ...(page.theme_override ? { theme_override: page.theme_override } : {}), id: page.id, page: page.page, source: source ? `${source.file}${reference.locator ?? ""}` : undefined, task: page.task, three_second_message: page.three_second_message, relation: page.relation, screen_text: page.screen_text, visual_job: page.visual_job, asset_slots: page.asset_slots, status: page.content_status, html: page.renderers?.html, pptx: page.renderers?.pptx, ...(page.estimated_duration_seconds ? { estimated_duration_seconds: page.estimated_duration_seconds } : {}), ...(page.speaker_notes !== undefined ? { speaker_notes: page.speaker_notes } : {}), ...(page.speaker_note_intent ? { speaker_note_intent: page.speaker_note_intent } : {}), ...(page.script_role ? { script_role: page.script_role } : {}), ...(page.merged_with ? { merged_with: structuredClone(page.merged_with) } : {}), ...(page.audience_interaction ? { audience_interaction: page.audience_interaction } : {}), ...(page.delivery_feedback ? { delivery_feedback: structuredClone(page.delivery_feedback) } : {}), ...(page.diagram ? { diagram: structuredClone(page.diagram) } : {}), ...(page.accessibility ? { accessibility: structuredClone(page.accessibility) } : {}) };
   });
+  const designSystemPack = await readDesignSystemPack(root, contract);
   const theme = themeContract.tokens;
   const assets = assetContracts.map(({ contract_version, kind, bytes, mime, provenance, ...asset }) => asset);
   const referencedFiles = await inspectReferencedFiles(root, project, pages, assets);
-  return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, contractModel: "v1", ...(factLedger ? { factLedger } : {}), contracts: { project: contract, sources, outline, pages: rawPageContracts, theme: rawThemeContract, assets: assetContracts, templates, ...(factLedger ? { factLedger } : {}) } };
+  return { root, project, theme, assets, pages, referencedFiles, projectFile, pagesFile, themeFile, assetsFile, designSystemPack, contractModel: "v1", ...(factLedger ? { factLedger } : {}), contracts: { project: contract, sources, outline, pages: rawPageContracts, theme: rawThemeContract, assets: assetContracts, templates, ...(factLedger ? { factLedger } : {}) } };
+}
+
+async function readDesignSystemPack(root, manifest) {
+  if (manifest.design_system_pack_file === undefined) return undefined;
+  return indexDesignSystemPack(await readJson(resolveProjectPath(root, manifest.design_system_pack_file))).pack;
 }
 
 async function readJson(file) {

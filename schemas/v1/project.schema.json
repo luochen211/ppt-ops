@@ -8,6 +8,7 @@
       "type": "object",
       "required": ["title", "format", "source_ids", "outline_id", "theme_id", "asset_ids"],
       "properties": {
+        "design_system_pack_file": {"type": "string", "minLength": 1, "pattern": "\\S"},
         "kind": { "const": "project" },
         "format": { "const": "16:9" },
         "delivery_mode": { "type": "string", "enum": ["live_talk", "workshop", "pitch", "leave_behind", "async", "online_lecture"] },

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { outputDir } from "../core/project.js";
 import { validateProject } from "../core/validate.js";
+import { inspectDesignSystemPack } from "../qa/design-system-pack.js";
 import { inspectPresentation } from "../qa/index.js";
 import { inspectHtmlPresentation } from "../qa/html.js";
 import { inspectDeliveryModeFit } from "../contracts/delivery.js";
@@ -58,6 +59,13 @@ export async function reviewProject(project, options = {}) {
       evidence: deliveryModeFit
     }
   ];
+  // Run before artifact checks so missing builds cannot bypass pack validation.
+  const designSystemPack = inspectDesignSystemPack(project);
+  if (designSystemPack.status !== "not_applicable") automatedChecks.push({
+    id: "design-system-pack", kind: "automated", required: true,
+    status: designSystemPack.status === "review_required" ? "pending" : designSystemPack.status,
+    evidence: designSystemPack
+  });
   const deliveryFeedback = inspectDeliveryFeedback(project);
   if (deliveryFeedback) automatedChecks.push(deliveryFeedback);
   const speakerScript = reviewSpeakerScript(project);
@@ -104,14 +112,15 @@ export async function reviewProject(project, options = {}) {
   });
   try {
     await fs.access(pptxFile);
-    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0" });
+    const qa = await inspectPresentation({ project, pptxFile, evidenceDir: options.evidenceDir ?? path.join(directory, "review-evidence"), render: options.render ?? process.env.PPT_OPS_RENDER_QA !== "0", comprehensionObservations: options.comprehensionObservations });
     automatedChecks.push({
       id: "pptx-visual-qa",
       kind: "automated",
       required: true,
-      status: qa.status === "failed" ? "failed" : qa.status === "degraded" ? "pending" : "passed",
+      status: qa.status === "failed" ? "failed" : ["degraded", "review_required"].includes(qa.status) ? "pending" : "passed",
       evidence: qa
     });
+    automatedChecks.push(comprehensionReviewCheck(qa.comprehension_qa));
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
     automatedChecks.push({ id: "pptx-visual-qa", kind: "automated", required: false, status: "pending", evidence: { reason: "No PPTX build selected for visual QA." } });
@@ -150,12 +159,17 @@ export async function reviewProject(project, options = {}) {
     schema_version: project.contractModel === "v1" ? "1.0" : "0.1",
     command: "review",
     project: project.project.name,
-    passed: requiredFailures.length === 0,
+    passed: requiredFailures.length === 0 && designSystemPack.status !== "review_required",
     required_failure_count: requiredFailures.length,
     automated_checks: automatedChecks,
     acceptance,
     summary: summarizeAcceptance(automatedChecks, acceptance)
   };
+}
+
+export function comprehensionReviewCheck(evidence) {
+  const status = evidence?.status === "no_heuristic_findings" ? "passed" : "pending";
+  return { id: "comprehension-qa", kind: "automated", required: false, status, evidence: evidence ?? { status: "not_assessed", reason: "No comprehension evidence was selected." } };
 }
 
 export async function writeReviewReport(project, report) {

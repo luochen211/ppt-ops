@@ -1,0 +1,297 @@
+{
+  "pack": {
+    "kind": "design_system_pack",
+    "id": "design-pack-blueprint",
+    "name": "Technical Blueprint",
+    "tokens": {
+      "colors": {
+        "accent": "#0057ff"
+      },
+      "typography": {},
+      "spacing": {}
+    },
+    "components": [
+      {
+        "id": "component-title",
+        "type": "label",
+        "text": "Safety practice"
+      },
+      {
+        "id": "component-card",
+        "type": "label",
+        "text": "Check and report"
+      }
+    ],
+    "layouts": [
+      {
+        "id": "layout-cover",
+        "template_id": "template-hero",
+        "component_ids": [
+          "component-title"
+        ],
+        "asset_ids": [
+          "asset-grid"
+        ],
+        "renderers": {
+          "html": "html-pack-split",
+          "pptx": "pptx-pack-split"
+        },
+        "semantic_family": "hero"
+      },
+      {
+        "id": "layout-statement",
+        "template_id": "template-statement",
+        "component_ids": [
+          "component-title"
+        ],
+        "asset_ids": [
+          "asset-grid"
+        ],
+        "renderers": {
+          "html": "html-pack-split",
+          "pptx": "pptx-pack-split"
+        },
+        "semantic_family": "parallel"
+      },
+      {
+        "id": "layout-comparison",
+        "template_id": "template-comparison",
+        "component_ids": [
+          "component-card"
+        ],
+        "asset_ids": [
+          "asset-arrow"
+        ],
+        "renderers": {
+          "html": "html-pack-split",
+          "pptx": "pptx-pack-split"
+        },
+        "semantic_family": "comparison"
+      },
+      {
+        "id": "layout-sequence",
+        "template_id": "template-sequence",
+        "component_ids": [
+          "component-card"
+        ],
+        "asset_ids": [
+          "asset-arrow"
+        ],
+        "renderers": {
+          "html": "html-pack-split",
+          "pptx": "pptx-pack-split"
+        },
+        "semantic_family": "sequence"
+      },
+      {
+        "id": "layout-evidence",
+        "template_id": "template-data",
+        "component_ids": [
+          "component-card"
+        ],
+        "asset_ids": [
+          "asset-orbit"
+        ],
+        "renderers": {
+          "html": "html-pack-split",
+          "pptx": "pptx-pack-split"
+        },
+        "semantic_family": "cause_effect"
+      },
+      {
+        "id": "layout-closing",
+        "template_id": "template-process",
+        "component_ids": [
+          "component-title"
+        ],
+        "asset_ids": [
+          "asset-orbit"
+        ],
+        "renderers": {
+          "html": "html-pack-split",
+          "pptx": "pptx-pack-split"
+        },
+        "semantic_family": "process"
+      }
+    ],
+    "assets": [
+      {
+        "id": "asset-grid",
+        "type": "background",
+        "source": "asset-grid.png",
+        "alt": "Synthetic safety symbol"
+      },
+      {
+        "id": "asset-arrow",
+        "type": "icon",
+        "source": "asset-arrow.png",
+        "alt": "Synthetic safety symbol"
+      },
+      {
+        "id": "asset-orbit",
+        "type": "illustration",
+        "source": "asset-orbit.png",
+        "alt": "Synthetic safety symbol"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "layout-cover",
+        "to": "asset-grid",
+        "relation": "uses"
+      }
+    ],
+    "contract_version": "1.0"
+  },
+  "pages": [
+    {
+      "id": "page-1",
+      "design_system_layout_id": "layout-cover",
+      "contract_version": "1.0",
+      "kind": "page_spec",
+      "page": 1,
+      "task": "Explain safe reporting",
+      "three_second_message": "Spot the hazard",
+      "relation": "hero",
+      "screen_text": {
+        "title": "Safety overview",
+        "body": [
+          "Observe carefully",
+          "Share the next action"
+        ]
+      },
+      "visual_job": "Show a reusable safety symbol",
+      "content_status": "approved",
+      "source_refs": [],
+      "asset_slots": []
+    },
+    {
+      "id": "page-2",
+      "design_system_layout_id": "layout-statement",
+      "contract_version": "1.0",
+      "kind": "page_spec",
+      "page": 2,
+      "task": "Explain safe reporting",
+      "three_second_message": "Pause and assess",
+      "relation": "parallel",
+      "screen_text": {
+        "title": "Assess the scene",
+        "body": [
+          "Observe carefully",
+          "Share the next action"
+        ]
+      },
+      "visual_job": "Show a reusable safety symbol",
+      "content_status": "approved",
+      "source_refs": [],
+      "asset_slots": []
+    },
+    {
+      "id": "page-3",
+      "design_system_layout_id": "layout-comparison",
+      "contract_version": "1.0",
+      "kind": "page_spec",
+      "page": 3,
+      "task": "Explain safe reporting",
+      "three_second_message": "Compare safe choices",
+      "relation": "comparison",
+      "screen_text": {
+        "title": "Choose the safer path",
+        "body": [
+          "Observe carefully",
+          "Share the next action"
+        ]
+      },
+      "visual_job": "Show a reusable safety symbol",
+      "content_status": "approved",
+      "source_refs": [],
+      "asset_slots": []
+    },
+    {
+      "id": "page-4",
+      "design_system_layout_id": "layout-sequence",
+      "contract_version": "1.0",
+      "kind": "page_spec",
+      "page": 4,
+      "task": "Explain safe reporting",
+      "three_second_message": "Report in order",
+      "relation": "sequence",
+      "screen_text": {
+        "title": "Report the hazard",
+        "body": [
+          "Observe carefully",
+          "Share the next action"
+        ]
+      },
+      "visual_job": "Show a reusable safety symbol",
+      "content_status": "approved",
+      "source_refs": [],
+      "asset_slots": []
+    },
+    {
+      "id": "page-5",
+      "design_system_layout_id": "layout-evidence",
+      "contract_version": "1.0",
+      "kind": "page_spec",
+      "page": 5,
+      "task": "Explain safe reporting",
+      "three_second_message": "Keep clear evidence",
+      "relation": "cause_effect",
+      "screen_text": {
+        "title": "Record evidence",
+        "body": [
+          "Observe carefully",
+          "Share the next action"
+        ]
+      },
+      "visual_job": "Show a reusable safety symbol",
+      "content_status": "approved",
+      "source_refs": [],
+      "asset_slots": []
+    },
+    {
+      "id": "page-6",
+      "design_system_layout_id": "layout-closing",
+      "contract_version": "1.0",
+      "kind": "page_spec",
+      "page": 6,
+      "task": "Explain safe reporting",
+      "three_second_message": "Review the next action",
+      "relation": "process",
+      "screen_text": {
+        "title": "Close the loop",
+        "body": [
+          "Observe carefully",
+          "Share the next action"
+        ]
+      },
+      "visual_job": "Show a reusable safety symbol",
+      "content_status": "approved",
+      "source_refs": [],
+      "asset_slots": []
+    }
+  ],
+  "theme": {
+    "dimensions": {
+      "width": 13.333,
+      "height": 7.5
+    },
+    "typography": {
+      "heading_font": "Aptos",
+      "body_font": "Aptos"
+    },
+    "colors": {
+      "background": "#FFFFFF",
+      "text": "#111111",
+      "accent": "#0057FF"
+    },
+    "spacing": {
+      "unit": 0.25,
+      "page_margin": 0.6
+    }
+  },
+  "project": {
+    "name": "safety-case",
+    "title": "Synthetic safety training"
+  }
+}

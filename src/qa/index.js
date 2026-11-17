@@ -5,8 +5,11 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import JSZip from "jszip";
+import { inspectDesignSystemPack } from "./design-system-pack.js";
 import { analyzeScreenshotEvidence } from "./screenshot-evidence.js";
 import { analyzeImageSemantics } from "./image-semantics.js";
+import { analyzeComprehensionEvidence, unassessedComprehensionEvidence } from "./comprehension.js";
+import { collectPptxComprehensionObservations } from "./comprehension-observations.js";
 
 import { densityGuidanceFor, visibleCharacterCount } from "../contracts/delivery.js";
 import { ONLINE_LECTURE_MODE, onlineLectureSettings } from "../contracts/online-lecture.js";
@@ -15,16 +18,18 @@ import { analyzeOnlineLecture, extractPptxOnlineElements } from "./online-lectur
 const execFileAsync = promisify(execFile);
 const POWERPOINT = "/Applications/Microsoft PowerPoint.app";
 
-export async function inspectPresentation({ project, pptxFile, evidenceDir, render = true, commands = defaultCommands() }) {
-  const structural = await inspectPptxStructure(pptxFile, project);
+export async function inspectPresentation({ project, pptxFile, evidenceDir, render = true, commands = defaultCommands(), comprehensionObservations }) {
+  const structural = await inspectPptxStructure(pptxFile, project, { comprehensionObservations });
   const downscaleHeights = project.project?.delivery_mode === ONLINE_LECTURE_MODE ? [720] : [];
   const rendering = render ? await renderPresentation({ pptxFile, evidenceDir, commands, downscaleHeights }) : degradedRendering("rendering disabled");
   return {
-    status: structural.findings.some(({ severity }) => severity === "error") ? "failed" : rendering.status === "rendered" ? "passed" : "degraded",
+    design_system_pack: structural.design_system_pack,
+    status: structural.findings.some(({ severity }) => severity === "error") ? "failed" : structural.design_system_pack.status === "review_required" ? "review_required" : rendering.status === "rendered" ? "passed" : "degraded",
     findings: structural.findings,
     pages: structural.pages,
     screenshot_evidence: structural.screenshot_evidence,
     image_semantics: structural.image_semantics,
+    comprehension_qa: structural.comprehension_qa,
     ...(structural.online_lecture ? { online_lecture: structural.online_lecture } : {}),
     rendering
   };
@@ -36,11 +41,13 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
   const pages = [];
   const findings = [];
   const assetPlacements = [];
+  const structuralObservationPages = [];
   const onlinePages = [];
   for (const [index, name] of slideNames.entries()) {
     const page = index + 1;
     const xml = await archive.file(name).async("string");
     const shapes = parseShapes(xml);
+    structuralObservationPages.push({ page, elements: shapes.map(({ elementId, objectName, kind, semanticRole, decorative }) => ({ element_id: elementId, name: objectName, kind, semantic_role: decorative ? "decoration" : semanticRole })) });
     const relationships = await archive.file(`ppt/slides/_rels/${path.posix.basename(name)}.rels`)?.async("string") ?? "";
     for (const { assetId, x, y, width, height, crop, imageRid } of shapes.filter(({ assetId }) => assetId)) {
       const relationship = [...relationships.matchAll(/<Relationship\b[^>]*\/>/g)].find(([tag]) => tag.match(/\bId="([^"]+)"/)?.[1] === imageRid)?.[0];
@@ -66,8 +73,13 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
   const onlineMode = project.project?.delivery_mode === ONLINE_LECTURE_MODE;
   const screenshotEvidence = analyzeScreenshotEvidence(project, assetPlacements, { ...options, ...(onlineMode ? { downscaledViews: [720] } : {}) });
   const imageSemantics = analyzeImageSemantics(project, assetPlacements);
+  const comprehensionObservations = collectPptxComprehensionObservations(structuralObservationPages);
+  const comprehension = options.comprehensionObservations ? analyzeComprehensionEvidence(project, options.comprehensionObservations) : unassessedComprehensionEvidence();
+  const designSystemPack = inspectDesignSystemPack(project);
+  findings.push(...designSystemPack.findings);
   findings.push(...screenshotEvidence.findings);
   findings.push(...imageSemantics.findings);
+  findings.push(...comprehension.findings);
   let onlineLecture;
   if (onlineMode) {
     const settings = onlineLectureSettings(project);
@@ -75,11 +87,11 @@ export async function inspectPptxStructure(pptxFile, project, options = {}) {
     findings.push(...onlineLecture.findings);
   }
   for (const page of pages) {
-    page.checks.push("screenshot-evidence", "image-semantics");
+    page.checks.push("screenshot-evidence", "image-semantics", "comprehension-qa");
     if (onlineMode) page.checks.push("online-safe-zones", "online-720p-legibility");
     page.finding_count = findings.filter((item) => item.page === page.page).length;
   }
-  return { pages, findings, screenshot_evidence: screenshotEvidence, image_semantics: imageSemantics, ...(onlineLecture ? { online_lecture: onlineLecture } : {}) };
+  return { pages, findings, design_system_pack: designSystemPack, screenshot_evidence: screenshotEvidence, image_semantics: imageSemantics, comprehension_observations: comprehensionObservations, comprehension_qa: comprehension, ...(onlineLecture ? { online_lecture: onlineLecture } : {}) };
 }
 
 export async function renderPresentation({ pptxFile, evidenceDir, commands = defaultCommands(), downscaleHeights = [] }) {
@@ -151,12 +163,16 @@ function parseShapes(xml) {
     if (!geometry) continue;
     const srcRect = block.match(/<a:srcRect\b([^>]*)\/?>/)?.[1] ?? "";
     const crop = Object.fromEntries([["l", "left"], ["r", "right"], ["t", "top"], ["b", "bottom"]].map(([attribute, key]) => [key, Number(srcRect.match(new RegExp(`\\b${attribute}="(-?\\d+)"`))?.[1] ?? 0) / 100000]));
-    const objectName = block.match(/<p:cNvPr[^>]+\bname="([^"]+)"/)?.[1];
+    const nonVisual = block.match(/<p:cNvPr\b([^>]*)/)?.[1] ?? "";
+    const objectName = nonVisual.match(/\bname="([^"]+)"/)?.[1];
+    const elementId = nonVisual.match(/\bid="([^"]+)"/)?.[1];
+    const semanticRole = nonVisual.match(/\bdescr="semantic-role:([a-z_]+)"/)?.[1];
     shapes.push({
       x: Number(geometry[1]), y: Number(geometry[2]), width: Number(geometry[3]), height: Number(geometry[4]),
       hasText: /<a:t>/.test(block), decorative: /<p:cNvPr[^>]+(?:name="(?:Background|Decorative)|descr="decorative")/i.test(block),
       imageRid: block.match(/<asvg:svgBlip[^>]*r:embed="([^"]+)"/)?.[1] ?? block.match(/<a:blip[^>]*r:embed="([^"]+)"/)?.[1],
-      crop, assetId: objectName?.startsWith("Asset ") ? objectName.slice(6) : undefined
+      crop, elementId, objectName, kind: match[1] === "pic" ? "image" : /<a:t>/.test(block) ? "content" : "frame", semanticRole,
+      assetId: objectName?.startsWith("Asset ") ? objectName.slice(6) : undefined
     });
   }
   return shapes;
